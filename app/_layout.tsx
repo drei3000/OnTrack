@@ -1,4 +1,3 @@
-import { Stack } from "expo-router";
 import { Tabs } from "expo-router";
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 
@@ -11,6 +10,7 @@ export default function TabLayout() {
         name="Home"
         options={{
           title: 'Home',
+          headerShown: false,
           tabBarIcon: ({ color }) => <FontAwesome size={28} name="home" color={color} />,
         }}
       />
@@ -18,6 +18,7 @@ export default function TabLayout() {
         name = "Calendar"
         options = {{
           title: 'Calendar',
+          headerShown: false,
           tabBarIcon: ({ color }) => <FontAwesome size={28} name="calendar" color={color} />
         }}
       />
@@ -25,6 +26,7 @@ export default function TabLayout() {
         name="Settings"
         options={{
           title: 'Settings',
+          headerShown: false,
           tabBarIcon: ({ color }) => <FontAwesome size={28} name="cog" color={color} />,
         }}
       />
