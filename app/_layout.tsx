@@ -1,11 +1,19 @@
 import { Tabs } from "expo-router";
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 
-
-
 export default function TabLayout() {
   return (
-    <Tabs screenOptions={{ tabBarActiveTintColor: 'blue' }}>
+    <Tabs
+      screenOptions={{
+        tabBarActiveTintColor: '#FFFFFF',
+        tabBarStyle: {
+          backgroundColor: '#101010', 
+        },
+        tabBarItemStyle: {
+          paddingVertical: 9,
+        },
+      }}
+    >
       <Tabs.Screen
         name="Home"
         options={{
@@ -15,11 +23,11 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name = "Calendar"
-        options = {{
+        name="Calendar"
+        options={{
           title: 'Calendar',
           headerShown: false,
-          tabBarIcon: ({ color }) => <FontAwesome size={28} name="calendar" color={color} />
+          tabBarIcon: ({ color }) => <FontAwesome size={28} name="calendar" color={color} />,
         }}
       />
       <Tabs.Screen
