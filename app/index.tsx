@@ -116,12 +116,15 @@ export default function Index() {
 const progressStyles = {
   progressContainer: {
     alignItems: "center" as const,  // Center align
+    justifyContent: "center" as const,
+    position: "relative" as const,
     marginTop: 60,                  // Push it down slightly
     marginBottom: 20,                // Space before next section
   },
   progressText: {
     position: "absolute" as const,   // Overlay on top of circle
-    transform: [{ translateX: 0 }, { translateY: 37 }], // Offsets text as otherwise sits on top of circle
+    top: 38,
+    left: 29,
     fontSize: 20,                    // Readable size
     fontWeight: "bold" as const,      // Bold text
     color: "white",                   // White text color
