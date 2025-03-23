@@ -1,9 +1,13 @@
-import { Tabs } from "expo-router";
+import { Navigator, Tabs } from "expo-router";
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { SafeAreaView } from "react-native-safe-area-context";
+import { StatusBar } from "react-native";
 
 export default function TabLayout() {
   return (
-    <Tabs
+    <>
+    <StatusBar backgroundColor={'#101010'} barStyle = 'light-content' />
+    {<Tabs
       screenOptions={{
         tabBarActiveTintColor: '#FFFFFF',
         tabBarStyle: {
@@ -12,10 +16,11 @@ export default function TabLayout() {
         tabBarItemStyle: {
           paddingVertical: 9,
         },
+        tabBarShowLabel : false
       }}
     >
       <Tabs.Screen
-        name="Home"
+        name="index"
         options={{
           title: 'Home',
           headerShown: false,
@@ -39,5 +44,7 @@ export default function TabLayout() {
         }}
       />
     </Tabs>
+    }
+  </>
   );
 }
