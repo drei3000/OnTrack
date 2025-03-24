@@ -122,6 +122,7 @@ export default function Index() {
           <Pressable
             onPress={() => Alert.alert("Plus button pressed")}
             style={squareIconButtonStyle}
+            //CREATE TRACKER VIEW
           >
             <AntDesign name="plus" size={30} color="white" />
           </Pressable>
