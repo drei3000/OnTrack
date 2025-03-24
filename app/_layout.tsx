@@ -1,14 +1,13 @@
-import { Navigator, Tabs } from "expo-router";
+import { Tabs } from "expo-router";
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { SafeAreaView } from "react-native-safe-area-context";
 import * as NavigationBar from "expo-navigation-bar"
 import { StatusBar } from "react-native";
 import { openDatabase } from "@/storage/sqlite";
 import { useEffect } from "react";
-import { Stack } from "expo-router";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 export default function TabLayout() {
-  
+
   useEffect(() => { //runs on launch
     const setupDatabase = async () => { //function to copy and open database
       try{
@@ -43,7 +42,7 @@ export default function TabLayout() {
         options={{
           title: 'Home',
           headerShown: false,
-          tabBarIcon: ({ color }) => <FontAwesome size={35} name="home" color={color} />,
+          tabBarIcon: ({ color }) => <MaterialCommunityIcons size={28} name="home" color={color} />,
         }}
       />
       <Tabs.Screen
@@ -51,7 +50,7 @@ export default function TabLayout() {
         options={{
           title: 'Calendar',
           headerShown: false,
-          tabBarIcon: ({ color }) => <FontAwesome size={28} name="calendar" color={color} />,
+          tabBarIcon: ({ color }) => <MaterialCommunityIcons size={28} name="calendar" color={color} />,
         }}
       />
       <Tabs.Screen
@@ -59,7 +58,7 @@ export default function TabLayout() {
         options={{
           title: 'Settings',
           headerShown: false,
-          tabBarIcon: ({ color }) => <FontAwesome size={28} name="cog" color={color} />,
+          tabBarIcon: ({ color }) => <MaterialCommunityIcons size={28} name="cog" color={color} />,
         }}
       />
     </Tabs>

@@ -41,7 +41,7 @@ export default function Index() {
           onPress={() => Alert.alert("Calendar icon pressed")}
           style={cornerButtonsStyle}
         >
-          <AntDesign name="calendar" size={30} color="white" />
+          <Entypo name="plus" size={30} color="white" />
         </Pressable>
       </View>
 
@@ -88,7 +88,7 @@ export default function Index() {
             justifyContent: "flex-start",
             alignItems: "center",
             gap: 16,
-            paddingHorizontal: 35,
+            paddingHorizontal: 25,
           }}
         >
           <Pressable
@@ -148,7 +148,7 @@ export default function Index() {
           justifyContent: "flex-start",
           alignItems: "center",
           gap: 16,
-          paddingHorizontal: 35,
+          paddingHorizontal: 25,
           marginTop: 20,
         }}
         >
