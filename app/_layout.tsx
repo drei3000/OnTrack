@@ -2,7 +2,6 @@ import { Navigator, Tabs } from "expo-router";
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as NavigationBar from "expo-navigation-bar"
-import { useEffect } from "react";
 import { StatusBar } from "react-native";
 import { openDatabase } from "@/storage/sqlite";
 import { useEffect } from "react";
