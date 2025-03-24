@@ -8,10 +8,21 @@ import { useEffect } from "react";
 import { Stack } from "expo-router";
 
 export default function TabLayout() {
-  useEffect(() => {
-      NavigationBar.setPositionAsync("absolute");
-      NavigationBar.setBackgroundColorAsync("transparent");
+  
+  useEffect(() => { //runs on launch
+    const setupDatabase = async () => { //function to copy and open database
+      try{
+        const db = await openDatabase();
+        console.log("Database initialized");
+      } catch (error) {
+        console.error("Database error:",error);
+      }
+    };
+    NavigationBar.setPositionAsync("absolute");
+    NavigationBar.setBackgroundColorAsync("transparent");
+    setupDatabase();
   }, []);
+
   return (
     <>
     <StatusBar backgroundColor={'#101010'} barStyle = 'light-content' />
