@@ -13,8 +13,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/images/adaptive-icon.png"
       }
     },
     "web": {
@@ -30,10 +29,13 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "backgroundColor": "#101010"
         }
       ],
-      "expo-sqlite"
+      "expo-sqlite",
+      [
+        "react-native-edge-to-edge"
+      ]
     ],
     "experiments": {
       "typedRoutes": true
