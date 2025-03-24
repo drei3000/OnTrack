@@ -16,7 +16,7 @@ export default function TabLayout() {
         tabBarItemStyle: {
           paddingVertical: 9,
         },
-        tabBarShowLabel : false
+        tabBarShowLabel : false // maybe do true - looks alright
       }}
     >
       <Tabs.Screen
@@ -24,7 +24,7 @@ export default function TabLayout() {
         options={{
           title: 'Home',
           headerShown: false,
-          tabBarIcon: ({ color }) => <FontAwesome size={28} name="home" color={color} />,
+          tabBarIcon: ({ color }) => <FontAwesome size={35} name="home" color={color} />,
         }}
       />
       <Tabs.Screen
