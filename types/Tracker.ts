@@ -1,13 +1,13 @@
-class Tracker {
+export class Tracker { //export so referencable
     trackerName: string;
     icon: string; // Assuming it's a URL
-    timePeriod: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY'; // Enum alternative
+    timePeriod: TimePeriod; // Enum alternative
     currentAmount: number = 0;
     last_modified: number;
     unit?: string; // Optional field
     bound?: number; //- if limit, +if goal, null if neither
     
-    constructor(trackerName: string, icon: string, timePeriod: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY', last_modified: number, unit?: string, bound?: string) {
+    constructor(trackerName: string, icon: string, timePeriod: TimePeriod, last_modified: number, unit?: string, bound?: string) {
         this.trackerName = trackerName;
         this.icon = icon;
         this.timePeriod = timePeriod;
@@ -47,3 +47,5 @@ class Tracker {
     }
 
 }
+
+export type TimePeriod = 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY'; 

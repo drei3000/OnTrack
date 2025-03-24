@@ -2,8 +2,24 @@ import { Navigator, Tabs } from "expo-router";
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "react-native";
+import { openDatabase } from "@/storage/sqlite";
+import { useEffect } from "react";
+import { Stack } from "expo-router";
 
 export default function TabLayout() {
+  useEffect(() => { //runs on launch
+    const setupDatabase = async () => { //function to copy and open database
+      try{
+        const db = await openDatabase();
+        console.log("Database initialized");
+      } catch (error) {
+        console.error("Database error:",error);
+      }
+    };
+
+    setupDatabase();
+  }, []);
+
   return (
     <>
     <StatusBar backgroundColor={'#101010'} barStyle = 'light-content' />
