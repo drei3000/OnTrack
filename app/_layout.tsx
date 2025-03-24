@@ -1,9 +1,15 @@
 import { Navigator, Tabs } from "expo-router";
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { SafeAreaView } from "react-native-safe-area-context";
+import * as NavigationBar from "expo-navigation-bar"
+import { useEffect } from "react";
 import { StatusBar } from "react-native";
 
 export default function TabLayout() {
+  useEffect(() => {
+      NavigationBar.setPositionAsync("absolute");
+      NavigationBar.setBackgroundColorAsync("transparent");
+  }, []);
   return (
     <>
     <StatusBar backgroundColor={'#101010'} barStyle = 'light-content' />
