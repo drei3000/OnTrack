@@ -29,10 +29,9 @@ const copyDatabase = async () => {
 };
 
 
-/*
+
 // Open the copied database
 export const openDatabase = async () => {
     await copyDatabase();
-    return SQLite.openDatabase(dbName);
+    return SQLite.openDatabaseAsync(dbName);
 };
-*/
