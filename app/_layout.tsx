@@ -1,18 +1,10 @@
-import { Navigator, Tabs } from "expo-router";
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { SafeAreaView } from "react-native-safe-area-context";
-import * as NavigationBar from "expo-navigation-bar"
+import { Stack } from "expo-router";
+import * as NavigationBar from "expo-navigation-bar";
 import { StatusBar } from "react-native";
 import { openDatabase } from "@/storage/sqlite";
 import { useEffect } from "react";
-import { Stack } from "expo-router";
-import Calendar from './Calendar';
-import index from './index';
-import newTrackerView from "./newTrackerView";
-import Settings from "./Settings";
 
-export default function TabLayout() {
-  
+export default function Layout() {
   useEffect(() => { //runs on launch
     const setupDatabase = async () => { //function to copy and open database
       try{
@@ -28,52 +20,12 @@ export default function TabLayout() {
   }, []);
 
   return (
-    <>
-    <StatusBar backgroundColor={'#101010'} barStyle = 'light-content' />
-    {<Tabs
-      screenOptions={{
-        tabBarActiveTintColor: '#FFFFFF',
-        tabBarStyle: {
-          backgroundColor: '#101010', 
-        },
-        tabBarItemStyle: {
-          paddingVertical: 9,
-        },
-        tabBarShowLabel : false // maybe do true - looks alright
-      }}
-    >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          headerShown: false,
-          tabBarIcon: ({ color }) => <FontAwesome size={35} name="home" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="Calendar"
-        options={{
-          title: 'Calendar',
-          headerShown: false,
-          tabBarIcon: ({ color }) => <FontAwesome size={28} name="calendar" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="Settings"
-        options={{
-          title: 'Settings',
-          headerShown: false,
-          tabBarIcon: ({ color }) => <FontAwesome size={28} name="cog" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="newTrackerView"
-        options={{
-          href:null
-        }}
-      />
-    </Tabs>
-    }
-  </>
+    <Stack screenOptions={{ headerShown: false }}>
+      {/* Tabs Navigation */}
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      
+      {/* Modal for New Tracker */}
+      <Stack.Screen name="newTrackerView" options={{ presentation: "modal", title: "New Tracker" }} />
+    </Stack>
   );
 }

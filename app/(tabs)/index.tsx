@@ -1,7 +1,7 @@
 import { View, Alert, Pressable, Text, ScrollView } from "react-native";
 import { Ionicons, MaterialCommunityIcons, AntDesign, Entypo } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
-import newTrackerView from "./newTrackerView";
+import newTrackerView from "../newTrackerView";
 import * as Progress from "react-native-progress"; 
 import { useNavigation } from '@react-navigation/native';
 import { navigate } from "expo-router/build/global-state/routing";
