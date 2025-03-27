@@ -6,6 +6,10 @@ import { StatusBar } from "react-native";
 import { openDatabase } from "@/storage/sqlite";
 import { useEffect } from "react";
 import { Stack } from "expo-router";
+import Calendar from './Calendar';
+import index from './index';
+import newTrackerView from "./newTrackerView";
+import Settings from "./Settings";
 
 export default function TabLayout() {
   
