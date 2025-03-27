@@ -1,7 +1,11 @@
 import { View, Alert, Pressable, Text, ScrollView } from "react-native";
 import { Ionicons, MaterialCommunityIcons, AntDesign, Entypo } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
+import newTrackerView from "./newTrackerView";
 import * as Progress from "react-native-progress"; 
+import { useNavigation } from '@react-navigation/native';
+import { navigate } from "expo-router/build/global-state/routing";
+import { Link } from "expo-router";
 
 export default function Index() {
   return (
@@ -88,11 +92,12 @@ export default function Index() {
             justifyContent: "flex-start",
             alignItems: "center",
             gap: 16,
-            paddingHorizontal: 35,
+            paddingHorizontal: 25,
           }}
         >
           <Pressable
             onPress={() => Alert.alert("Sleep button pressed")}
+            
             style={squareIconButtonStyle}
           >
             <MaterialCommunityIcons name="power-sleep" size={40} color="white" />
@@ -118,14 +123,17 @@ export default function Index() {
           >
             <AntDesign name="codesquareo" size={30} color="white" />
           </Pressable>
-
+    
+          <Link push href="/newTrackerView" asChild>
           <Pressable
-            onPress={() => Alert.alert("Plus button pressed")}
             style={squareIconButtonStyle}
             //CREATE TRACKER VIEW
+            
           >
             <AntDesign name="plus" size={30} color="white" />
           </Pressable>
+          </Link>
+          
           
         </View>
 
@@ -149,7 +157,7 @@ export default function Index() {
           justifyContent: "flex-start",
           alignItems: "center",
           gap: 16,
-          paddingHorizontal: 35,
+          paddingHorizontal: 25,
           marginTop: 20,
         }}
         >
