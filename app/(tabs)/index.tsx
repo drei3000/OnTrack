@@ -1,5 +1,6 @@
 import { View, Alert, Pressable, Text, ScrollView } from "react-native";
 import { Ionicons, MaterialCommunityIcons, AntDesign, Entypo } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import newTrackerView from "../newTrackerView";
 import * as Progress from "react-native-progress"; 
@@ -8,6 +9,8 @@ import { navigate } from "expo-router/build/global-state/routing";
 import { Link } from "expo-router";
 
 export default function Index() {
+  const router = useRouter();
+
   return (
     <SafeAreaView
       style={{
@@ -33,7 +36,7 @@ export default function Index() {
         </Pressable>
       </View>
 
-      {/* This view is for the top-right calendar icon */}
+      {/* This view is for the top-right plus icon */}
       <View
         style={{
           position: "absolute",
@@ -42,10 +45,10 @@ export default function Index() {
         }}
       >
         <Pressable
-          onPress={() => Alert.alert("Calendar icon pressed")}
+          onPress={() => router.push("/newTrackerView")}
           style={cornerButtonsStyle}
         >
-          <AntDesign name="calendar" size={30} color="white" />
+          <AntDesign name="plus" size={30} color="white" />
         </Pressable>
       </View>
 
@@ -124,7 +127,6 @@ export default function Index() {
             <AntDesign name="codesquareo" size={30} color="white" />
           </Pressable>
     
-          <Link push href="/newTrackerView" asChild>
           <Pressable
             style={squareIconButtonStyle}
             //CREATE TRACKER VIEW
@@ -132,7 +134,7 @@ export default function Index() {
           >
             <AntDesign name="plus" size={30} color="white" />
           </Pressable>
-          </Link>
+
           
           
         </View>
@@ -226,11 +228,6 @@ export default function Index() {
 
         </View>
       </ScrollView>
-      
-
-
-
-      
     </SafeAreaView>
   );
 }

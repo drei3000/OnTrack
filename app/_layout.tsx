@@ -20,12 +20,12 @@ export default function Layout() {
   }, []);
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      {/* Tabs Navigation */}
+    <Stack screenOptions={{ headerShown: false }}> {/*Can be true, adds back button and title*/}
+      {/*Will always be one of tabs present*/}
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       
-      {/* Modal for New Tracker */}
-      <Stack.Screen name="newTrackerView" options={{ presentation: "modal", title: "New Tracker" }} />
+      {/* Makes transparent screen for tracker creation*/}
+      <Stack.Screen name="newTrackerView" options={{ presentation: "transparentModal", title: "New Tracker" }} />
     </Stack>
   );
 }
