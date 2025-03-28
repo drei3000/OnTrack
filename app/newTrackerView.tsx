@@ -7,6 +7,7 @@ export default function newTrackerView() {
   const router = useRouter();
   const [isGoal, setIsGoal] = useState(true);  // To toggle between "Goal" and "Limit"
   const [title, setTitle] = useState(''); // Track the title input
+  const [limit, setLimit] = useState(''); // Track limit/goal input
 
   // Confirm action when icon is pressed
   const handleConfirm = () => {
@@ -53,6 +54,17 @@ export default function newTrackerView() {
           style={styles.input}
           placeholder="Limit"
           placeholderTextColor="#aaa"
+          keyboardType="numeric"  // Shows numeric keyboard
+          onChangeText={(text) => {
+            // Only allow numbers and decimal point
+            const cleanedText = text.replace(/[^0-9.]/g, '');
+            // Ensure only one decimal point
+            const decimalCount = (cleanedText.match(/\./g) || []).length;
+            if (decimalCount <= 1) {
+              setLimit(cleanedText);
+            }
+          }}
+          value={limit}
         />
 
         {/* Unit of Tracker (OPTIONAL) */}
@@ -63,19 +75,23 @@ export default function newTrackerView() {
         />
 
         {/* Button to toggle between Goal and Limit */}
-          <Pressable
-            style={[styles.button, isGoal ? styles.goalButton : styles.limitButton]}
-            onPress={toggleButtonState}
-          >
-            <Text style={styles.goalLimitText}>{isGoal ? 'Goal' : 'Limit'}</Text>
-          </Pressable>
+        <Pressable
+          style={[
+            styles.button,
+            limit.length > 0 ? (isGoal ? styles.goalButton : styles.limitButton) : null,
+          ]}
+          onPress={toggleButtonState}
+        >
+          <Text style={limit.length > 0 ? styles.goalLimitText : styles.buttonText}>
+            {isGoal ? 'Goal' : 'Limit'}
+          </Text>
+        </Pressable>
 
         {/* Confirm Button (Only shows if title is not empty) */}
         {title.length > 0 && (
           <Pressable
            onPress={handleConfirm} 
            style={styles.confirmButton}>
-
             <Ionicons name="checkbox" size={30} color="#FFFFFF" />
           </Pressable>
         )}
@@ -94,10 +110,12 @@ export default function newTrackerView() {
 
 const styles = StyleSheet.create({
 
+  //Fixes weird bug to do with text wrapping in container?
   iconPressable: {
     alignItems: 'center',
     justifyContent: 'center',
   },
+
   // Text above popup
   overlayText: {
     fontSize: 18,
@@ -165,6 +183,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#950606",
   },
 
+  //Button if neither goal nor limit
   button: {
     width: "50%",
     justifyContent: "center",
@@ -176,19 +195,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "dimgray",
   },
+  //Text if goal or limit
   goalLimitText: {
     fontSize: 20,
     fontWeight: "bold",
     color: "#FFFFFF",
   },
-  buttonContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "100%",
-    marginTop: 20,
-    marginBottom: 10,
-    marginLeft: 10,
-    marginRight: 10,
+  buttonText:{
+    fontSize: 20,
+    color: "dimgray" //blend in and be invisible
   },
 
   // Exit Button (at the bottom of the modal)
@@ -201,14 +216,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'dimgray',
   },
-
   exitButtonText: {
     fontSize: 18,
     color: 'white',
     fontWeight: 'bold',
   },
 
-  // Confirm Button (icon for confirmation)
+  // checkbox to confirm
   confirmButton: {
     position: 'absolute',
     top: 20,
