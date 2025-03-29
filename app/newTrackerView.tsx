@@ -2,12 +2,49 @@ import React, { useState } from 'react';
 import { Text, StyleSheet, Pressable, View, Button, SafeAreaView, Image, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from "@expo/vector-icons";
+import DropDownPicker from "react-native-dropdown-picker";
 
 export default function newTrackerView() {
   const router = useRouter();
-  const [isGoal, setIsGoal] = useState(true);  // To toggle between "Goal" and "Limit"
-  const [title, setTitle] = useState(''); // Track the title input
-  const [limit, setLimit] = useState(''); // Track limit/goal input
+  const [isGoal, setIsGoal] = useState(true);
+  const [title, setTitle] = useState('');
+  const [limit, setLimit] = useState('');
+  
+  // Dropdown state
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState(null);
+    const [items, setItems] = useState([
+      { label: "NONE", value: ""},
+      { label: "Kilograms", value: "kg" },
+      { label: "Pounds", value: "lb" },
+      { label: "Grams", value: "g" },
+      { label: "Ounces", value: "oz" },
+      { label: "Liters", value: "l" },
+      { label: "Milliliters", value: "ml" },
+      { label: "Gallons", value: "gal" },
+      { label: "Cups", value: "cup" },
+      { label: "Tablespoons", value: "tbsp" },
+      { label: "Teaspoons", value: "tsp" },
+      { label: "Meters", value: "m" },
+      { label: "Centimeters", value: "cm" },
+      { label: "Millimeters", value: "mm" },
+      { label: "Inches", value: "in" },
+      { label: "Feet", value: "ft" },
+      { label: "Yards", value: "yd" },
+      { label: "Miles", value: "mi" },
+      { label: "Kilometers", value: "km" },
+      { label: "Steps", value: "step" },
+      { label: "Minutes", value: "min" },
+      { label: "Hours", value: "hr" },
+      { label: "Seconds", value: "sec" },
+      { label: "Days", value: "day" },
+      { label: "Weeks", value: "week" },
+      { label: "Months", value: "month" },
+      { label: "Calories", value: "kcal" },
+      { label: "Kilojoules", value: "kj" },
+      { label: "Heart Rate (BPM)", value: "bpm" },
+    ]);
+  
 
   // Confirm action when icon is pressed
   const handleConfirm = () => {
@@ -21,6 +58,7 @@ export default function newTrackerView() {
     setIsGoal(prevState => !prevState);
   };
 
+  var dropdownPresent = false;
   return (
     <View style={styles.overlay}>
       
@@ -67,12 +105,34 @@ export default function newTrackerView() {
           value={limit}
         />
 
-        {/* Unit of Tracker (OPTIONAL) */}
+        
+
+        {/* Unit Dropdown */}
+      <View style={styles.dropdownContainer}>
+        <DropDownPicker
+          open={open}
+          value={value}
+          items={items}
+          setOpen={setOpen}
+          setValue={setValue}
+          setItems={setItems}
+          placeholder="Select unit"
+          placeholderStyle={{color: '#aaa'}}
+          style={styles.dropdown}
+          dropDownContainerStyle={styles.dropdownList}
+          textStyle={styles.dropdownText}
+          arrowIconStyle = {styles.dropdownArrow}
+          tickIconStyle = {styles.dropdownTick}
+          
+        />
+      </View>
+        {/*
         <TextInput
           style={styles.input}
           placeholder="Unit"
           placeholderTextColor="#aaa"
         />
+        */}
 
         {/* Button to toggle between Goal and Limit */}
         <Pressable
@@ -97,25 +157,26 @@ export default function newTrackerView() {
         )}
       </SafeAreaView>
 
+    
       {/* Exit Button (placed below the modal content) */}
       <Pressable
        onPress={() => router.back()}
        style={styles.exitButton}
       >
           <Text style={styles.exitButtonText}>Exit</Text>
-        </Pressable>
+      </Pressable>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
 
+  
   //Fixes weird bug to do with text wrapping in container?
   iconPressable: {
     alignItems: 'center',
     justifyContent: 'center',
   },
-
   // Text above popup
   overlayText: {
     fontSize: 18,
@@ -216,11 +277,43 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'dimgray',
   },
+
   exitButtonText: {
     fontSize: 18,
     color: 'white',
     fontWeight: 'bold',
   },
+
+  dropdownContainer: {
+    width: '80%',
+    marginBottom: 10,
+    zIndex: 1000, // Important for dropdown to appear above other elements
+  },
+  dropdown: {
+    backgroundColor: '#101010',
+    borderColor: 'dimgray',
+    borderRadius: 5,
+  },
+  dropdownList: {
+    backgroundColor: '#101010',
+    borderColor: 'dimgray',
+  },
+  dropdownText: {
+    color: 'white',
+    textAlign: 'center',
+    fontSize: 20,
+  },
+  dropdownArrow: {
+    width: 15,
+    height: 15,
+    tintColor: 'white', // This might work for some icon types
+  },
+  dropdownTick: {
+    width: 15,
+    height: 15,
+    tintColor: 'white', // This might work for some icon types
+  },
+
 
   // checkbox to confirm
   confirmButton: {
