@@ -6,10 +6,11 @@ import DropDownPicker from "react-native-dropdown-picker";
 
 
 export default function newTrackerView() {
-  
-  const router = useRouter();
-  const [isGoal, setIsGoal] = useState(true);
-  const [title, setTitle] = useState('');
+  const router = useRouter(); 
+
+  //states
+  const [isGoal, setIsGoal] = useState(true); 
+  const [title, setTitle] = useState(''); 
   const [limit, setLimit] = useState('');
   
   // Dropdown state
@@ -50,9 +51,8 @@ export default function newTrackerView() {
 
   // Confirm action when icon is pressed
   const handleConfirm = () => {
-    // Implement your confirm logic here
     console.log('Confirmed');
-    // You can also navigate or perform other actions
+
   };
 
   const toggleButtonState = () => {
@@ -98,6 +98,7 @@ export default function newTrackerView() {
           placeholder="Goal"
           placeholderTextColor="#aaa"
           keyboardType="numeric"  // Shows numeric keyboard
+          returnKeyType = "done" //allows done button
           onChangeText={(text) => {
             // Only allow numbers and decimal point
             const cleanedText = text.replace(/[^0-9.]/g, '');
@@ -170,7 +171,6 @@ export default function newTrackerView() {
 }
 
 const { width, height } = Dimensions.get('window');
-const smallerWidth = (width * 0.8*0.85); //for some reason
 
 const styles = StyleSheet.create({
   //Fixes weird bug to do with text wrapping in container?
@@ -204,7 +204,8 @@ const styles = StyleSheet.create({
 
   // Content inside overlay (background, size etc)
   container: {
-    flex: 0.6,
+    //flex: 0.6,
+    height: height*0.6,
     width: width*0.85,
     backgroundColor: "#101010",
     padding: 20,
@@ -222,7 +223,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   inputContainer: {
-    width: smallerWidth,
+    width: width*0.85*0.8,
     backgroundColor: "#101010",
     borderColor: "dimgray",
     marginBottom: 10,
@@ -303,7 +304,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   dropdownContainer: {
-    width: smallerWidth,
+    width: width*0.8*0.85,
     marginBottom: 10,
     borderRadius: 5,
     borderWidth: 1,

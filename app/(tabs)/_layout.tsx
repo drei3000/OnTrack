@@ -1,5 +1,6 @@
 import { Tabs } from "expo-router";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 export default function TabLayout() {
   return (
@@ -21,21 +22,21 @@ export default function TabLayout() {
         name="index"
         options={{
           title: "Home",
-          tabBarIcon: ({ color }) => <FontAwesome size={35} name="home" color={color} />,
+          tabBarIcon: ({ color }) => <MaterialCommunityIcons size={28} name="home" color={color} />,
         }}
       />
       <Tabs.Screen
         name="Calendar"
         options={{
           title: "Calendar",
-          tabBarIcon: ({ color }) => <FontAwesome size={28} name="calendar" color={color} />,
+          tabBarIcon: ({ color }) => <MaterialCommunityIcons size={28} name="calendar" color={color} />,
         }}
       />
       <Tabs.Screen
         name="Settings"
         options={{
           title: "Settings",
-          tabBarIcon: ({ color }) => <FontAwesome size={28} name="cog" color={color} />,
+          tabBarIcon: ({ color }) => <MaterialCommunityIcons size={28} name="cog" color={color} />,
         }}
       />
     </Tabs>
