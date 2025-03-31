@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { Text, StyleSheet, Pressable, View, Button, SafeAreaView, Image, TextInput } from 'react-native';
+import { Text, StyleSheet, Pressable, View, Button, SafeAreaView, Image, TextInput, Dimensions} from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from "@expo/vector-icons";
 import DropDownPicker from "react-native-dropdown-picker";
 
+
 export default function newTrackerView() {
+  
   const router = useRouter();
   const [isGoal, setIsGoal] = useState(true);
   const [title, setTitle] = useState('');
@@ -13,7 +15,7 @@ export default function newTrackerView() {
   // Dropdown state
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState(null);
-    const [items, setItems] = useState([
+    const [units, setUnits] = useState([
       { label: "NONE", value: ""},
       { label: "Kilograms", value: "kg" },
       { label: "Pounds", value: "lb" },
@@ -79,6 +81,7 @@ export default function newTrackerView() {
         </Pressable>
 
         {/* Tracker Title */}
+        <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
           placeholder="<Title>"
@@ -86,11 +89,13 @@ export default function newTrackerView() {
           value = {title}
           onChangeText={setTitle}
         />
+        </View>
 
         {/* Limit of Tracker (OPTIONAL) */}
+        <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
-          placeholder="Limit"
+          placeholder="Goal"
           placeholderTextColor="#aaa"
           keyboardType="numeric"  // Shows numeric keyboard
           onChangeText={(text) => {
@@ -104,6 +109,7 @@ export default function newTrackerView() {
           }}
           value={limit}
         />
+        </View>
 
         
 
@@ -112,27 +118,19 @@ export default function newTrackerView() {
         <DropDownPicker
           open={open}
           value={value}
-          items={items}
+          items={units} //List of items is the list of units
           setOpen={setOpen}
           setValue={setValue}
-          setItems={setItems}
-          placeholder="Select unit"
+          setItems={setUnits}
+          placeholder="Set Unit"
           placeholderStyle={{color: '#aaa'}}
           style={styles.dropdown}
           dropDownContainerStyle={styles.dropdownList}
           textStyle={styles.dropdownText}
           arrowIconStyle = {styles.dropdownArrow}
           tickIconStyle = {styles.dropdownTick}
-          
         />
       </View>
-        {/*
-        <TextInput
-          style={styles.input}
-          placeholder="Unit"
-          placeholderTextColor="#aaa"
-        />
-        */}
 
         {/* Button to toggle between Goal and Limit */}
         <Pressable
@@ -158,20 +156,23 @@ export default function newTrackerView() {
       </SafeAreaView>
 
     
-      {/* Exit Button (placed below the modal content) */}
+      {/* Exit Button (placed below the content) */}
       <Pressable
-       onPress={() => router.back()}
-       style={styles.exitButton}
+       onPress={() => {open ? null : router.back()}}
+       style={open ? styles.exitButtonInvisible : styles.exitButton} //if dropdown open invisible
       >
-          <Text style={styles.exitButtonText}>Exit</Text>
+        <Text style={open ? styles.exitButtonTextInvisible : styles.exitButtonText}>
+          Exit
+        </Text>
       </Pressable>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const { width, height } = Dimensions.get('window');
+const smallerWidth = (width * 0.8*0.85); //for some reason
 
-  
+const styles = StyleSheet.create({
   //Fixes weird bug to do with text wrapping in container?
   iconPressable: {
     alignItems: 'center',
@@ -204,7 +205,7 @@ const styles = StyleSheet.create({
   // Content inside overlay (background, size etc)
   container: {
     flex: 0.6,
-    width: "85%",
+    width: width*0.85,
     backgroundColor: "#101010",
     padding: 20,
     borderRadius: 15, // Rounded edges
@@ -220,20 +221,24 @@ const styles = StyleSheet.create({
     height: 150,
     marginBottom: 10,
   },
+  inputContainer: {
+    width: smallerWidth,
+    backgroundColor: "#101010",
+    borderColor: "dimgray",
+    marginBottom: 10,
+    borderRadius: 5,
+    borderWidth: 1,
+    marginLeft : 2,
+    alignSelf: 'center',
+  },
 
   // All input fields
   input: {
-    width: "80%",
     height: 50,
-    backgroundColor: "#101010",
-    borderColor: "dimgray",
     color: "#FFFFFF",
     textAlign: "center",
     fontSize: 20,
-    borderRadius: 5,
-    borderWidth: 1,
-    marginBottom: 10,
-    paddingLeft: 10,
+    //paddingLeft: 10,
   },
 
   // Goal and Limit button styles
@@ -267,7 +272,7 @@ const styles = StyleSheet.create({
     color: "dimgray" //blend in and be invisible
   },
 
-  // Exit Button (at the bottom of the modal)
+  // Exit Button (below the modal)
   exitButton: {
     marginTop: 20, // Adds some space above the button
     backgroundColor: '#101010',
@@ -277,22 +282,40 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'dimgray',
   },
-
+  // Exit Button (below the modal)
+  exitButtonInvisible: {
+    marginTop: 20, // Adds some space above the button
+    backgroundColor: '#transparent',
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 25,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  exitButtonTextInvisible:{
+    fontSize: 18,
+    color: 'transparent',
+    fontWeight: 'bold',
+  },
   exitButtonText: {
     fontSize: 18,
     color: 'white',
     fontWeight: 'bold',
   },
-
   dropdownContainer: {
-    width: '80%',
+    width: smallerWidth,
     marginBottom: 10,
+    borderRadius: 5,
+    borderWidth: 1,
     zIndex: 1000, // Important for dropdown to appear above other elements
+    alignSelf: 'center',
   },
   dropdown: {
     backgroundColor: '#101010',
     borderColor: 'dimgray',
+    borderWidth: 1,
     borderRadius: 5,
+    paddingLeft: 34, //padding according to arrow size to center (for some reason 45 if central?)
   },
   dropdownList: {
     backgroundColor: '#101010',
@@ -302,6 +325,7 @@ const styles = StyleSheet.create({
     color: 'white',
     textAlign: 'center',
     fontSize: 20,
+    
   },
   dropdownArrow: {
     width: 15,
@@ -313,8 +337,6 @@ const styles = StyleSheet.create({
     height: 15,
     tintColor: 'white', // This might work for some icon types
   },
-
-
   // checkbox to confirm
   confirmButton: {
     position: 'absolute',
