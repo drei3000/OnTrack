@@ -7,6 +7,17 @@ import * as Progress from "react-native-progress";
 import { useNavigation } from '@react-navigation/native';
 import { navigate } from "expo-router/build/global-state/routing";
 import { Link } from "expo-router";
+import { Dimensions } from "react-native";
+
+
+// Used in square icon styling for dynamic styles - grid same for all phone sizes
+const screenWidth = Dimensions.get("window").width;
+const itemsPerRow = 4;
+const spacing = 12;
+const totalSpacing = spacing * (itemsPerRow + 1);
+const sidesPadding = 16; // for grid mostly
+const itemSize = (screenWidth - totalSpacing - (sidesPadding * 2)) / itemsPerRow;
+
 
 export default function Index() {
   const router = useRouter();
@@ -48,8 +59,9 @@ export default function Index() {
           onPress={() => router.push("/newTrackerView")}
           style={cornerButtonsStyle}
         >
-          <AntDesign name="plus" size={30} color="white" />
+          <Entypo name="plus" size={30} color="white" />
         </Pressable>
+        
       </View>
 
       {/* Used as spaces so content does not cover tl and tr icons */}
@@ -92,45 +104,56 @@ export default function Index() {
           style={{
             flexDirection: "row",
             flexWrap: "wrap",
-            justifyContent: "flex-start",
-            alignItems: "center",
-            gap: 16,
-            paddingHorizontal: 25,
+            justifyContent: "center",
+            // marginHorizontal: spacing / 2,
+            paddingHorizontal: sidesPadding,
           }}
         >
           <Pressable
             onPress={() => Alert.alert("Sleep button pressed")}
-            
-            style={squareIconButtonStyle}
+            style={squareIconButtonStyle(itemSize)}
           >
             <MaterialCommunityIcons name="power-sleep" size={40} color="white" />
           </Pressable>
 
           <Pressable
             onPress={() => Alert.alert("Food button pressed")}
-            style={squareIconButtonStyle}
+            style={squareIconButtonStyle(itemSize)}
           >
             <Ionicons name="fast-food-outline" size={40} color="white" />
           </Pressable>
 
           <Pressable
             onPress={() => Alert.alert("Calorie button pressed")}
-            style={squareIconButtonStyle}
+            style={squareIconButtonStyle(itemSize)}
           >
             <Ionicons name="flame-outline" size={40} color="white" />
           </Pressable>
 
           <Pressable
             onPress={() => Alert.alert("Code button pressed")}
-            style={squareIconButtonStyle}
+            style={squareIconButtonStyle(itemSize)}
           >
             <AntDesign name="codesquareo" size={30} color="white" />
           </Pressable>
     
           <Pressable
-            style={squareIconButtonStyle}
-            //CREATE TRACKER VIEW
-            
+            onPress={() => Alert.alert("Plus button pressed")}
+            style={squareIconButtonStyle(itemSize)}
+          >
+            <AntDesign name="plus" size={30} color="white" />
+          </Pressable>
+
+          <Pressable
+            onPress={() => Alert.alert("Plus button pressed")}
+            style={squareIconButtonStyle(itemSize)}
+          >
+            <AntDesign name="plus" size={30} color="white" />
+          </Pressable>
+
+          <Pressable
+            onPress={() => Alert.alert("Plus button pressed")}
+            style={squareIconButtonStyle(itemSize)}
           >
             <AntDesign name="plus" size={30} color="white" />
           </Pressable>
@@ -156,72 +179,71 @@ export default function Index() {
         style = {{
           flexDirection: "row",
           flexWrap: "wrap",
-          justifyContent: "flex-start",
-          alignItems: "center",
-          gap: 16,
-          paddingHorizontal: 25,
+          justifyContent: "center",
+          // marginHorizontal: spacing / 2,
+          paddingHorizontal: sidesPadding,
           marginTop: 20,
         }}
         >
           <Pressable
             onPress={() => Alert.alert("Limit button alert")}
-            style={squareIconButtonStyle}
+            style={squareIconButtonStyle(itemSize)}
           >
             <Ionicons name="cash-outline" size={40} color="white"/> 
           </Pressable> 
 
           <Pressable
             onPress={() => Alert.alert("Button pressed")}
-            style={squareIconButtonStyle}
+            style={squareIconButtonStyle(itemSize)}
           >
             <MaterialCommunityIcons name="spoon-sugar" size={40} color="white" />
           </Pressable>
 
           <Pressable
             onPress={() => Alert.alert("Button pressed")}
-            style={squareIconButtonStyle}
+            style={squareIconButtonStyle(itemSize)}
           >
             <AntDesign name="dashboard" size={30} color="white" />
           </Pressable>
 
           <Pressable
             onPress={() => Alert.alert("Limit button alert")}
-            style={squareIconButtonStyle}
+            style={squareIconButtonStyle(itemSize)}
           >
             <AntDesign name="instagram" size={40} color="white"/> 
           </Pressable> 
 
           <Pressable
             onPress={() => Alert.alert("Button pressed")}
-            style={squareIconButtonStyle}
+            style={squareIconButtonStyle(itemSize)}
           >
             <Entypo name="area-graph" size={40} color="white" />
           </Pressable>
 
           <Pressable
             onPress={() => Alert.alert("Button pressed")}
-            style={squareIconButtonStyle}
+            style={squareIconButtonStyle(itemSize)}
           >
             <Entypo name="bowl" size={30} color="white" />
           </Pressable>
 
           <Pressable
             onPress={() => Alert.alert("Limit button alert")}
-            style={squareIconButtonStyle}
+            style={squareIconButtonStyle(itemSize)}
           >
             <Entypo name="credit" size={40} color="white"/> 
           </Pressable> 
 
           <Pressable
             onPress={() => Alert.alert("Button pressed")}
-            style={squareIconButtonStyle}
+            style={squareIconButtonStyle(itemSize)}
           >
             <Entypo name="game-controller" size={40} color="white" />
           </Pressable>
 
           <Pressable
             onPress={() => Alert.alert("Button pressed")}
-            style={squareIconButtonStyle}
+            style={squareIconButtonStyle(itemSize)}
           >
             <AntDesign name="plus" size={30} color="white" />
           </Pressable>
@@ -251,17 +273,18 @@ const progressStyles = {
 };
 
 // Styling for square icon buttons
-const squareIconButtonStyle = {
+const squareIconButtonStyle = (size: number) => ({
   backgroundColor: "#101010",
   borderColor: "dimgray",
   padding: 12,
   borderRadius: 5,
   borderWidth: 1,
-  width: 70,
-  height: 70,
+  width: size,
+  height: size,
   justifyContent: "center" as const,
   alignItems: "center" as const,
-};
+  margin: spacing / 2,
+});
 
 // Styling for corner buttons
 const cornerButtonsStyle = {

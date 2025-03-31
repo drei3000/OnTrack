@@ -1,3 +1,5 @@
+import { Tabs } from "expo-router";
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Stack } from "expo-router";
 import * as NavigationBar from "expo-navigation-bar";
 import { StatusBar } from "react-native";
