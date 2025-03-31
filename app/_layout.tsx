@@ -1,13 +1,12 @@
 import { Tabs } from "expo-router";
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import * as NavigationBar from "expo-navigation-bar"
+import { Stack } from "expo-router";
+import * as NavigationBar from "expo-navigation-bar";
 import { StatusBar } from "react-native";
 import { openDatabase } from "@/storage/sqlite";
 import { useEffect } from "react";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 
-export default function TabLayout() {
-
+export default function Layout() {
   useEffect(() => { //runs on launch
     const setupDatabase = async () => { //function to copy and open database
       try{
@@ -23,46 +22,12 @@ export default function TabLayout() {
   }, []);
 
   return (
-    <>
-    <StatusBar backgroundColor={'#101010'} barStyle = 'light-content' />
-    {<Tabs
-      screenOptions={{
-        tabBarActiveTintColor: '#FFFFFF',
-        tabBarStyle: {
-          backgroundColor: '#101010', 
-        },
-        tabBarItemStyle: {
-          paddingVertical: 9,
-        },
-        tabBarShowLabel : false // maybe do true - looks alright
-      }}
-    >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          headerShown: false,
-          tabBarIcon: ({ color }) => <MaterialCommunityIcons size={28} name="home" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="Calendar"
-        options={{
-          title: 'Calendar',
-          headerShown: false,
-          tabBarIcon: ({ color }) => <MaterialCommunityIcons size={28} name="calendar" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="Settings"
-        options={{
-          title: 'Settings',
-          headerShown: false,
-          tabBarIcon: ({ color }) => <MaterialCommunityIcons size={28} name="cog" color={color} />,
-        }}
-      />
-    </Tabs>
-    }
-  </>
+    <Stack screenOptions={{ headerShown: false }}> {/*Can be true, adds back button and title*/}
+      {/*Will always be one of tabs present*/}
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      
+      {/* Makes transparent screen for tracker creation*/}
+      <Stack.Screen name="newTrackerView" options={{ presentation: "transparentModal", title: "New Tracker" }} />
+    </Stack>
   );
 }

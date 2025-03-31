@@ -1,7 +1,12 @@
 import { View, Alert, Pressable, Text, ScrollView } from "react-native";
 import { Ionicons, MaterialCommunityIcons, AntDesign, Entypo } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
+import newTrackerView from "../newTrackerView";
 import * as Progress from "react-native-progress"; 
+import { useNavigation } from '@react-navigation/native';
+import { navigate } from "expo-router/build/global-state/routing";
+import { Link } from "expo-router";
 import { Dimensions } from "react-native";
 
 
@@ -15,6 +20,8 @@ const itemSize = (screenWidth - totalSpacing - (sidesPadding * 2)) / itemsPerRow
 
 
 export default function Index() {
+  const router = useRouter();
+
   return (
     <SafeAreaView
       style={{
@@ -40,7 +47,7 @@ export default function Index() {
         </Pressable>
       </View>
 
-      {/* This view is for the top-right calendar icon */}
+      {/* This view is for the top-right plus icon */}
       <View
         style={{
           position: "absolute",
@@ -49,7 +56,7 @@ export default function Index() {
         }}
       >
         <Pressable
-          onPress={() => Alert.alert("Calendar icon pressed")}
+          onPress={() => router.push("/newTrackerView")}
           style={cornerButtonsStyle}
         >
           <Entypo name="plus" size={30} color="white" />
@@ -129,7 +136,7 @@ export default function Index() {
           >
             <AntDesign name="codesquareo" size={30} color="white" />
           </Pressable>
-
+    
           <Pressable
             onPress={() => Alert.alert("Plus button pressed")}
             style={squareIconButtonStyle(itemSize)}
@@ -150,6 +157,8 @@ export default function Index() {
           >
             <AntDesign name="plus" size={30} color="white" />
           </Pressable>
+
+          
           
         </View>
 
@@ -241,11 +250,6 @@ export default function Index() {
 
         </View>
       </ScrollView>
-      
-
-
-
-      
     </SafeAreaView>
   );
 }
