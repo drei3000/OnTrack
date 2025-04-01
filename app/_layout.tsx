@@ -28,6 +28,8 @@ export default function Layout() {
       
       {/* Makes transparent screen for tracker creation*/}
       <Stack.Screen name="newTrackerView" options={{ presentation: "transparentModal", title: "New Tracker" }} />
+      {/* Makes transparent screen for image selection*/}
+      <Stack.Screen name="selectImage" options={{ presentation: "transparentModal", title: "Select Image" }} />
     </Stack>
   );
 }

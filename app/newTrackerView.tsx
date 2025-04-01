@@ -3,7 +3,7 @@ import { Text, StyleSheet, Pressable, View, Button, SafeAreaView, Image, TextInp
 import { useRouter } from 'expo-router';
 import { Ionicons } from "@expo/vector-icons";
 import DropDownPicker from "react-native-dropdown-picker";
-
+import { PixelRatio } from 'react-native';
 
 export default function newTrackerView() {
   const router = useRouter(); 
@@ -50,6 +50,7 @@ export default function newTrackerView() {
   
 
   // Confirm action when icon is pressed
+  //TO DO: Create tracker and exit in this function given state variables
   const handleConfirm = () => {
     console.log('Confirmed');
 
@@ -70,7 +71,7 @@ export default function newTrackerView() {
       <SafeAreaView style={styles.container}>
 
         {/* Tracker Icon Option */}
-        <Pressable onPress={() => console.log("Image Pressed")}
+        <Pressable onPress={() => router.push('./selectImage')}
           style={styles.iconPressable}
           >
 
@@ -84,7 +85,7 @@ export default function newTrackerView() {
         <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
-          placeholder="<Title>"
+          placeholder="Title"
           placeholderTextColor="#aaa"
           value = {title}
           onChangeText={setTitle}
@@ -123,11 +124,14 @@ export default function newTrackerView() {
           setOpen={setOpen}
           setValue={setValue}
           setItems={setUnits}
+          autoScroll = {true}
           placeholder="Set Unit"
           placeholderStyle={{color: '#aaa'}}
           style={styles.dropdown}
           dropDownContainerStyle={styles.dropdownList}
           textStyle={styles.dropdownText}
+          arrowIconContainerStyle = {styles.arrowContainerStyle}
+          tickIconContainerStyle = {styles.tickContainerStyle}
           arrowIconStyle = {styles.dropdownArrow}
           tickIconStyle = {styles.dropdownTick}
         />
@@ -170,7 +174,10 @@ export default function newTrackerView() {
   );
 }
 
-const { width, height } = Dimensions.get('window');
+const width = Dimensions.get('window').width-1
+const height = Dimensions.get('window').height-1
+
+const scale = PixelRatio.get(); //For exact pixel adjustments adjust according to scale
 
 const styles = StyleSheet.create({
   //Fixes weird bug to do with text wrapping in container?
@@ -178,6 +185,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+
   // Text above popup
   overlayText: {
     fontSize: 18,
@@ -205,7 +213,7 @@ const styles = StyleSheet.create({
   // Content inside overlay (background, size etc)
   container: {
     //flex: 0.6,
-    height: height*0.6,
+    height: height*0.52, //Maybe adjust is a tad manual
     width: width*0.85,
     backgroundColor: "#101010",
     padding: 20,
@@ -217,7 +225,7 @@ const styles = StyleSheet.create({
 
   // Image button user can add
   icon: {
-    marginTop: 30,
+    marginTop: 10,
     width: 150,
     height: 150,
     marginBottom: 10,
@@ -229,7 +237,6 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     borderRadius: 5,
     borderWidth: 1,
-    marginLeft : 2,
     alignSelf: 'center',
   },
 
@@ -239,6 +246,7 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     textAlign: "center",
     fontSize: 20,
+
     //paddingLeft: 10,
   },
 
@@ -252,7 +260,7 @@ const styles = StyleSheet.create({
 
   //Button if neither goal nor limit
   button: {
-    width: "50%",
+    width: width*0.85*0.5, //button half of the container
     justifyContent: "center",
     alignItems: "center",
     marginTop: 10,
@@ -308,15 +316,17 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     borderRadius: 5,
     borderWidth: 1,
+    borderColor: 'dimgray',
     zIndex: 1000, // Important for dropdown to appear above other elements
     alignSelf: 'center',
+    alignContent: 'center',
+    //marginLeft: pixelMlt, //Is off by one pixel
   },
   dropdown: {
     backgroundColor: '#101010',
-    borderColor: 'dimgray',
-    borderWidth: 1,
-    borderRadius: 5,
-    paddingLeft: 34, //padding according to arrow size to center (for some reason 45 if central?)
+    borderColor: 'transparent',
+    //paddingLeft: 12*scale, //padding according to arrow size to center (for some reason 45 if central?)
+    
   },
   dropdownList: {
     backgroundColor: '#101010',
@@ -326,16 +336,22 @@ const styles = StyleSheet.create({
     color: 'white',
     textAlign: 'center',
     fontSize: 20,
+  },
 
+  tickContainerStyle: {
+    marginLeft: -15,
+  },
+  arrowContainerStyle: {
+    marginLeft: -15,
   },
   dropdownArrow: {
-    width: 15,
-    height: 15,
+    width: 5*scale,
+    height: 5*scale,
     tintColor: 'white', // This might work for some icon types
   },
   dropdownTick: {
-    width: 15,
-    height: 15,
+    width: 5*scale,
+    height: 5*scale,
     tintColor: 'white', // This might work for some icon types
   },
   // checkbox to confirm
