@@ -50,6 +50,7 @@ export default function newTrackerView() {
   
 
   // Confirm action when icon is pressed
+  //TO DO: Create tracker and exit in this function given state variables
   const handleConfirm = () => {
     console.log('Confirmed');
 
@@ -70,7 +71,7 @@ export default function newTrackerView() {
       <SafeAreaView style={styles.container}>
 
         {/* Tracker Icon Option */}
-        <Pressable onPress={() => console.log("Image Pressed")}
+        <Pressable onPress={() => router.push('./selectImage')}
           style={styles.iconPressable}
           >
 
@@ -184,6 +185,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+
   // Text above popup
   overlayText: {
     fontSize: 18,
