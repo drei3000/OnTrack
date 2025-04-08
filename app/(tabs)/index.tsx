@@ -34,9 +34,11 @@ export default function Index() {
       {/* This view is for the top-left pfp */}
       <View
         style={{
-          position: "absolute",
-          top: 50,
-          left: 22,
+          width: screenWidth,
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          paddingHorizontal: 16,
+          paddingTop: 8,
         }}
       >
         <Pressable
@@ -45,16 +47,8 @@ export default function Index() {
         >
           <MaterialCommunityIcons name="account" size={40} color="white" />
         </Pressable>
-      </View>
 
       {/* This view is for the top-right plus icon */}
-      <View
-        style={{
-          position: "absolute",
-          top: 50,
-          right: 10,
-        }}
-      >
         <Pressable
           onPress={() => router.push("/newTrackerView")}
           style={cornerButtonsStyle}
@@ -63,9 +57,6 @@ export default function Index() {
         </Pressable>
         
       </View>
-
-      {/* Used as spaces so content does not cover tl and tr icons */}
-      <View style = {{ height: 35}} />  
 
       <ScrollView
       contentContainerStyle={{

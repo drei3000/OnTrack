@@ -4,7 +4,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
 import Calendar from '../../components/CalendarComponent';
-import { defineLocale } from "moment";
 
 
 const styles = StyleSheet.create({
