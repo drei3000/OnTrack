@@ -1,23 +1,41 @@
 import React, { useState } from 'react';
-import { Text, StyleSheet, Pressable, View, Button, SafeAreaView, Image, TextInput, Dimensions} from 'react-native';
+import {FlatListComponent, FlatListProps, Text, StyleSheet, Pressable, View, Button, SafeAreaView, Image, TextInput, Dimensions, ScrollView, FlatList} from 'react-native';
 import { useRouter } from 'expo-router';
 import { FontAwesome5, FontAwesome6 } from "@expo/vector-icons";
 import DropDownPicker from "react-native-dropdown-picker";
 import { PixelRatio } from 'react-native';
+import { iconsToChoose } from '@/assets/images/iconsToChoose';
+//import IconComponent
+
 
 export default function newTrackerView() {
-
+    const icons = iconsToChoose
     return(
         <View style={styles.overlay}>
             <SafeAreaView style={styles.container}>
                 <View style = {styles.selectedContainer}>
-                    <Pressable style = {styles.icon}>
-
+                    <Pressable style = {styles.icon}> {/* Probably will change from pressable */}
+                        
                     </Pressable>
-
                 </View>
                 <View style = {styles.iconContainer}>
-                    
+                  {/*
+                <FlatList
+                    data={icons}
+                    numColumns={5} // 5 icons per row
+                    keyExtractor={(item) => item.name}
+                    renderItem={({ item }) => (
+                        <Pressable 
+                        onPress={() => handleIconPress(item)} 
+                        style={styles.individualIcons}
+                        >
+                        <IconComponent icon={item} />
+                        </Pressable>
+                    )}
+                    onEndReached={loadMoreIcons}
+                    onEndReachedThreshold={0.5}
+                    />
+                    */}
                 </View>
                 <View style = {styles.SelectImageContainer}>
 
@@ -98,5 +116,9 @@ overlay: {
     borderColor: '#FFFFFF',
     borderWidth: 1,
   },
+  individualIcons: {
+    aspectRatio: 1,
+
+  }
 
 });
