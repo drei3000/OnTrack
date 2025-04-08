@@ -1,11 +1,13 @@
 import { View, Alert, Pressable, Text, StyleSheet } from "react-native";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons, Entypo } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
+import { useRouter } from "expo-router";
 import Calendar from '../../components/CalendarComponent';
+import { Dimensions } from "react-native";
 
-
+const screenWidth = Dimensions.get("window").width;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -79,28 +81,36 @@ const styles = StyleSheet.create({
 
 export default function Index() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-
+  const router = useRouter();
   return (
     <SafeAreaView style={styles.container}>
       {/* Header buttons */}
-      <View style={styles.header}>
-        <Pressable onPress={() => Alert.alert("Home button pressed")}>
-          <MaterialCommunityIcons name="home" size={40} color="white" />
-        </Pressable>
-
-        <Pressable onPress={() => Alert.alert("Account button pressed")}>
+            {/* This view is for the top-left pfp */}
+            <View
+        style={{
+          width: screenWidth,
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          paddingHorizontal: 16,
+          paddingTop: 8,
+        }}
+      >
+        <Pressable
+          onPress={() => Alert.alert("Pfp icon pressed")}
+          style={cornerButtonsStyle}
+        >
           <MaterialCommunityIcons name="account" size={40} color="white" />
         </Pressable>
 
-        <Pressable onPress={() => Alert.alert("Settings button pressed")}>
-          <MaterialCommunityIcons name="cog" size={40} color="white" />
+      {/* This view is for the top-right plus icon */}
+        <Pressable
+          onPress={() => router.push("/newTrackerView")}
+          style={cornerButtonsStyle}
+        >
+          <Entypo name="plus" size={30} color="white" />
         </Pressable>
-
-        <Pressable onPress={() => Alert.alert("Plus button pressed")}>
-          <MaterialCommunityIcons name="plus" size={50} color="white" />
-        </Pressable>
+        
       </View>
-
       {/* Calendar component positioned below */}
       <View style={styles.calendarContainer}>
         <Calendar onSelectDate={setSelectedDate} selected={selectedDate || ""} />
@@ -110,3 +120,10 @@ export default function Index() {
     </SafeAreaView>
   );
 }
+const cornerButtonsStyle = {
+  backgroundColor: "#101010",
+  width: 45,
+  height: 45,
+  justifyContent: "center" as const,
+  alignItems: "flex-start" as const,
+};
