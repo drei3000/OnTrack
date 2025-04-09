@@ -8,6 +8,7 @@ import Calendar from '../../components/CalendarComponent';
 import { Dimensions } from "react-native";
 
 const screenWidth = Dimensions.get("window").width;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
