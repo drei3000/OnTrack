@@ -101,7 +101,7 @@ const width = Dimensions.get('window').width-1
 const height = Dimensions.get('window').height-1
 const paddingContainer = 20
 const scale = PixelRatio.get(); //For exact pixel adjustments adjust according to scale
-const iconContainerWidth = width * 0.85 - paddingContainer * 2; // Subtract horizontal padding
+const iconContainerWidth = (width * 0.85 - paddingContainer * 2) * 0.95 - 10; // Subtract horizontal padding
 const iconSize = iconContainerWidth / 5; // Divide by number of columns
 
 const styles = StyleSheet.create({
@@ -167,7 +167,6 @@ const styles = StyleSheet.create({
   },
   //individual items in scrollable list
   item: {
-    padding: 0,
     borderRadius: 0,
     alignItems: 'center',
     justifyContent: 'center',
