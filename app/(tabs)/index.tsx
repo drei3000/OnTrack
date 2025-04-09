@@ -53,7 +53,7 @@ export default function Index() {
           onPress={() => router.push("/newTrackerView")}
           style={cornerButtonsStyle}
         >
-          <Entypo name="plus" size={30} color="white" />
+          <Entypo name="plus" size={40} color="white" />
         </Pressable>
         
       </View>
@@ -283,5 +283,5 @@ const cornerButtonsStyle = {
   width: 45,
   height: 45,
   justifyContent: "center" as const,
-  alignItems: "flex-start" as const,
+  alignItems: "center" as const,
 };

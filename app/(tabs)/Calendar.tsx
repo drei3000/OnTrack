@@ -20,30 +20,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  homeButton: {
-    position: "absolute",
-    top: 55,
-    left: 20,
-    zIndex: 2,
-  },
-  accountButton: {
-    position: "absolute",
-    top: 55,
-    right: 12,
-    zIndex: 2,
-  },
-  settingsButton: {
-    position: "absolute",
-    top: 55,
-    right: 55,
-    zIndex: 2,
-  },
-  plusButton: {
-    position: "absolute",
-    top: 50,
-    right: 95,
-    zIndex: 2,
-  },
   pager: {
     flex: 1,
     marginTop: -550,
@@ -108,7 +84,7 @@ export default function Index() {
           onPress={() => router.push("/newTrackerView")}
           style={cornerButtonsStyle}
         >
-          <Entypo name="plus" size={30} color="white" />
+          <Entypo name="plus" size={40} color="white" />
         </Pressable>
         
       </View>
