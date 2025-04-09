@@ -86,6 +86,7 @@ export default function newTrackerView() {
                     keyExtractor={item => item.name}
                     extraData={selectedName}
                     numColumns={5}
+                    showsVerticalScrollIndicator = {false}
                   />
                 </SafeAreaView>
                 <View style = {styles.SelectImageContainer}>
