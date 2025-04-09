@@ -45,7 +45,7 @@ export default function newTrackerView() {
   const [selectedName, setSelectedName] = useState<string>();
 
   const renderItem = ({ item }: { item: IconItem }) => {
-    const backgroundColor = item.name === selectedName ? 'white' : 'black'; //first element changed for color (to be implemented)
+    const backgroundColor = item.name === selectedName ? 'white' : 'black'; //first
     const iconColor = item.name === selectedName ? 'black' : 'white';
 
     return (
@@ -68,13 +68,13 @@ export default function newTrackerView() {
                     <Pressable 
                       style = {styles.icon}
                       onLayout={(event) => {
-                        const { height } = event.nativeEvent.layout;
+                        const { height, } = event.nativeEvent.layout;
                         setIconSize(height * 0.7);
                       }}
                     > 
                       {selectedName && iconSize > 0 && (
                         <FontAwesome5 
-                          name={selectedName}
+                          name={selectedName as any}
                           color="white" 
                           size = {iconSize}
                           alignSelf = 'center'

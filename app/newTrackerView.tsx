@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Text, StyleSheet, Pressable, View, Button, SafeAreaView, Image, TextInput, Dimensions} from 'react-native';
+import { Keyboard, Text, StyleSheet, Pressable, View, Button, SafeAreaView, Image, TextInput, Dimensions} from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from "@expo/vector-icons";
 import DropDownPicker from "react-native-dropdown-picker";
 import { PixelRatio } from 'react-native';
+
 export default function newTrackerView() {
   const router = useRouter(); 
 
@@ -11,7 +12,14 @@ export default function newTrackerView() {
   const [isGoal, setIsGoal] = useState(true); 
   const [title, setTitle] = useState(''); 
   const [limit, setLimit] = useState('');
-  
+  //When title 
+  const handleTextChange = (newTitle: string) => {
+    setTitle(newTitle); 
+    setOpen(false); 
+    Keyboard.dismiss(); 
+  };
+
+
   // Dropdown state
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState(null);
@@ -87,17 +95,21 @@ export default function newTrackerView() {
           placeholder="Title"
           placeholderTextColor="#aaa"
           value = {title}
+          returnKeyType = "done" //allows done button
           onChangeText={setTitle}
+          onPressIn={() => setOpen(false)} //close dropdown
         />
-        
+        </View>
 
         {/* Limit of Tracker (OPTIONAL) */}
+        <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
           placeholder="Goal"
           placeholderTextColor="#aaa"
           keyboardType="numeric"  // Shows numeric keyboard
-          returnKeyType = "done" //allows done button
+          returnKeyType = "done" 
+          onPressIn={() => setOpen(false)} //close dropdown
           onChangeText={(text) => {
             // Only allow numbers and decimal point
             const cleanedText = text.replace(/[^0-9.]/g, '');
@@ -109,18 +121,17 @@ export default function newTrackerView() {
           }}
           value={limit}
         />
-        
+        </View>
 
-        
-
+      
         {/* Unit Dropdown */}
-        
+      <View style={styles.dropdownContainer}>
         <DropDownPicker
-          //zIndex={100}
           open={open}
           value={value}
           items={units} //List of items is the list of units
-          setOpen={setOpen}
+          setOpen = {setOpen}
+          onOpen={() => Keyboard.dismiss()}
           setValue={setValue}
           setItems={setUnits}
           autoScroll = {true}
@@ -246,6 +257,8 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     textAlign: "center",
     fontSize: 20,
+
+    //paddingLeft: 10,
   },
 
   // Goal and Limit button styles
@@ -308,6 +321,17 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: 'white',
     fontWeight: 'bold',
+  },
+  dropdownContainer: {
+    width: width*0.8*0.85,
+    marginBottom: 10,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: 'dimgray',
+    zIndex: 1000, // Important for dropdown to appear above other elements
+    alignSelf: 'center',
+    alignContent: 'center',
+    //marginLeft: pixelMlt, //Is off by one pixel
   },
   dropdown: {
     backgroundColor: '#101010',
