@@ -17,6 +17,9 @@ expo-env.d.ts
 *.key
 *.mobileprovision
 
+#Not 100% on but it says its ok!
+.idea/workspace.xml
+
 # Metro
 .metro-health-check*
 
