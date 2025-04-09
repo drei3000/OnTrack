@@ -40,7 +40,7 @@ const Item = ({ item, onPress, backgroundColor, iconColor }: ItemProps) => (
   </TouchableOpacity>
 );
 
-export default function newTrackerView() {
+export default function selectImage() {
   const router = useRouter(); 
   const [selectedName, setSelectedName] = useState<string>();
 

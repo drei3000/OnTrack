@@ -12,12 +12,6 @@ export default function newTrackerView() {
   const [isGoal, setIsGoal] = useState(true); 
   const [title, setTitle] = useState(''); 
   const [limit, setLimit] = useState('');
-  //When title 
-  const handleTextChange = (newTitle: string) => {
-    setTitle(newTitle); 
-    setOpen(false); 
-    Keyboard.dismiss(); 
-  };
 
 
   // Dropdown state
@@ -68,9 +62,12 @@ export default function newTrackerView() {
     setIsGoal(prevState => !prevState);
   };
 
-  var dropdownPresent = false;
+  const [iconSize, setIconSize] = useState(0);
+    
   return (
+    
     <View style={styles.overlay}>
+      
       
       {/* Text Above Popup */}
       <Text style={styles.overlayText}>Create Tracker</Text>
@@ -78,22 +75,25 @@ export default function newTrackerView() {
       <SafeAreaView style={styles.container}>
 
         {/* Tracker Icon Option */}
-        <Pressable onPress={() => router.push('./selectImage')}
-          style={styles.iconPressable}
-          >
-
-          <Image
-            source={require("../assets/images/addImage.png")}
-            style={styles.icon}
-          />
+        <Pressable 
+          style = {styles.icon}
+          onPress={() => router.push('./selectImage')}
+        > 
+          <Ionicons
+            name={'add'} //unsure about this
+            color="dimgray" 
+            size = {70}
+            alignSelf = 'center'
+            justifySelf = 'center'
+            ></Ionicons>
         </Pressable>
-
         {/* Tracker Title */}
         <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
           placeholder="Title"
           placeholderTextColor="#aaa"
+          maxLength={25} //titles should be brief
           value = {title}
           returnKeyType = "done" //allows done button
           onChangeText={setTitle}
@@ -107,6 +107,7 @@ export default function newTrackerView() {
           style={styles.input}
           placeholder="Goal"
           placeholderTextColor="#aaa"
+          maxLength={10}
           keyboardType="numeric"  // Shows numeric keyboard
           returnKeyType = "done" 
           onPressIn={() => setOpen(false)} //close dropdown
@@ -160,12 +161,12 @@ export default function newTrackerView() {
           </Text>
         </Pressable>
 
-        {/* Confirm Button (Only shows if title is not empty) */}
-        {title.length > 0 && (
+        {/* Confirm Button (Only shows if title has at least 2 letters) */}
+        {title.length > 2 && (
           <Pressable
            onPress={handleConfirm} 
            style={styles.confirmButton}>
-            <Ionicons name="checkbox" size={30} color="#FFFFFF" />
+            <Ionicons name="checkbox" size={30} color="#5DBB63" />
           </Pressable>
         )}
       </SafeAreaView>
@@ -236,10 +237,15 @@ const styles = StyleSheet.create({
 
   // Image button user can add
   icon: {
-    marginTop: 5,
-    marginBottom: 5,
-    width: 150,
-    height: 150,
+    aspectRatio: 1,
+    marginVertical: 30,
+    width: 100,
+    height: 100,
+    borderColor: 'dimgray',
+    borderWidth: 1,
+
+    justifyContent: 'center',
+    alignContent: 'center',
   },
   inputContainer: {
     width: width*0.85*0.8,
@@ -257,7 +263,6 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     textAlign: "center",
     fontSize: 20,
-
     //paddingLeft: 10,
   },
 
@@ -331,13 +336,10 @@ const styles = StyleSheet.create({
     zIndex: 1000, // Important for dropdown to appear above other elements
     alignSelf: 'center',
     alignContent: 'center',
-    //marginLeft: pixelMlt, //Is off by one pixel
   },
   dropdown: {
     backgroundColor: '#101010',
     borderColor: 'transparent',
-    //paddingLeft: 12*scale, //padding according to arrow size to center (for some reason 45 if central?)
-    
   },
   dropdownList: {
     backgroundColor: '#101010',
