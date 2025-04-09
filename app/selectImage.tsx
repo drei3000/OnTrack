@@ -7,7 +7,7 @@ import { PixelRatio } from 'react-native';
 import { iconsToChoose } from '@/assets/images/iconsToChoose';
 //import IconComponent
 
-type IconItem = {
+type IconItem = { //
   name: string;
   type: string; 
 };
@@ -54,13 +54,28 @@ export default function newTrackerView() {
     );
   };
 
+  const [iconSize, setIconSize] = useState(0);
+
     return(
+    
         <View style={styles.overlay}>
             <SafeAreaView style={styles.container}>
                 <View style = {styles.selectedContainer}>
-                    <Pressable style = {styles.icon}> {/* Probably will change from pressable */}
-                      {selectedName && (
-                        <FontAwesome5 name={selectedName as any} size={48} color="#333" />
+                    <Pressable 
+                      style = {styles.icon}
+                      onLayout={(event) => {
+                        const { height, } = event.nativeEvent.layout;
+                        setIconSize(height * 0.7);
+                      }}
+                    > 
+                      {selectedName && iconSize > 0 && (
+                        <FontAwesome5 
+                          name={selectedName as any}
+                          color="white" 
+                          size = {iconSize}
+                          alignSelf = 'center'
+                          justifySelf = 'center'
+                        />
                       )}
                     </Pressable>
                 </View>
@@ -89,8 +104,8 @@ const iconContainerWidth = width * 0.85 - paddingContainer * 2; // Subtract hori
 const iconSize = iconContainerWidth / 5; // Divide by number of columns
 
 const styles = StyleSheet.create({
-// Overlay itself
-overlay: {
+  //Modal overlay itself
+  overlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.8)", // 0.8 opacity of darkness
     justifyContent: "center",
@@ -116,7 +131,8 @@ overlay: {
     alignItems: "center",
     justifyContent: 'center'
   },
-  selectedContainer: { //Container for selected image
+  //Container at top (contains selected image box)
+  selectedContainer: {
     flex: 2,
     width: '95%',
     marginTop: 10,
@@ -128,7 +144,18 @@ overlay: {
     borderColor: 'transparent',
     borderBottomColor: 'dimgray',
   },
-  iconContainer: { //container for icon section
+  //Selected icon square
+  icon: {
+    aspectRatio: 1,
+    height: '90%',
+    borderColor: '#FFFFFF',
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  //Container for scrollable icon list
+  iconContainer: {
     flex: 7,
     width: '95%',
     paddingHorizontal: 5,
@@ -137,29 +164,25 @@ overlay: {
     justifyContent: 'center',
     alignItems: 'center',
   },
-  SelectImageContainer: { //container for screen image selection
-    flex: 1,
-    width: '100%',
-    aspectRatio: 1, //width = height
-    borderWidth: 1,
-    borderRadius: 0,
-    borderColor: 'transparent',
-    borderTopColor: 'dimgray',
-    alignItems: 'center',
-  },
-
-  // Image user can add to 
-  icon: {
-    aspectRatio: 1,
-    height: '90%',
-    borderColor: '#FFFFFF',
-    borderWidth: 1,
-  },
+  //individual items in scrollable list
   item: {
     padding: 0,
     borderRadius: 0,
     alignItems: 'center',
     justifyContent: 'center',
   },
+
+  //container for personal image selection
+  SelectImageContainer: { 
+    flex: 1,
+    width: '100%',
+    aspectRatio: 1,
+    borderWidth: 1,
+    borderRadius: 0,
+    borderColor: 'transparent',
+    borderTopColor: 'dimgray',
+    alignItems: 'center',
+  },
+  
 
 });
