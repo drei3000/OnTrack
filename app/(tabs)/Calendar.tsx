@@ -83,7 +83,7 @@ export default function Index() {
           onPress={() => router.push("/newTrackerView")}
           style={cornerButtonsStyle}
         >
-          <Entypo name="plus" size={30} color="white" />
+          <Entypo name="plus" size={40} color="white" />
         </Pressable>
         
       </View>
