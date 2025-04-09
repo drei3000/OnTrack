@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import {FlatListComponent, FlatListProps, Text, StyleSheet, Pressable, View, Button, SafeAreaView, Image, TextInput, Dimensions, ScrollView, FlatList} from 'react-native';
+import {TouchableOpacity, FlatListComponent, FlatListProps, Text, StyleSheet, Pressable, View, Button, SafeAreaView, Image, TextInput, Dimensions, ScrollView, FlatList} from 'react-native';
 import { useRouter } from 'expo-router';
 import { FontAwesome5, FontAwesome6 } from "@expo/vector-icons";
 import DropDownPicker from "react-native-dropdown-picker";
@@ -7,36 +7,72 @@ import { PixelRatio } from 'react-native';
 import { iconsToChoose } from '@/assets/images/iconsToChoose';
 //import IconComponent
 
+type IconItem = {
+  name: string;
+  type: string; 
+};
+
+type ItemProps = {
+  item: IconItem;
+  onPress: () => void;
+  backgroundColor: string;
+  iconColor: string;
+};
+
+const Item = ({ item, onPress, backgroundColor, iconColor }: ItemProps) => (
+  <TouchableOpacity 
+    onPress={onPress} 
+    style={[
+      styles.item, 
+      { 
+        backgroundColor,
+        width: iconSize,
+        height: iconSize,
+      }
+    ]}
+  >
+    {item.type === 'fa5' && (
+      <FontAwesome5 name={item.name as any} size={iconSize * 0.6} color={iconColor} />
+    )}
+  </TouchableOpacity>
+);
 
 export default function newTrackerView() {
-    const icons = iconsToChoose
+  const [selectedName, setSelectedName] = useState<string>();
+
+  const renderItem = ({ item }: { item: IconItem }) => {
+    const backgroundColor = item.name === selectedName ? 'white' : 'black';
+    const iconColor = item.name === selectedName ? 'black' : 'white';
+
+    return (
+      <Item
+        item={item}
+        onPress={() => setSelectedName(item.name)}
+        backgroundColor={backgroundColor}
+        iconColor={iconColor}
+      />
+    );
+  };
+
     return(
         <View style={styles.overlay}>
             <SafeAreaView style={styles.container}>
                 <View style = {styles.selectedContainer}>
                     <Pressable style = {styles.icon}> {/* Probably will change from pressable */}
-                        
+                      {selectedName && (
+                        <FontAwesome5 name={selectedName as any} size={48} color="#333" />
+                      )}
                     </Pressable>
                 </View>
-                <View style = {styles.iconContainer}>
-                  {/*
-                <FlatList
-                    data={icons}
-                    numColumns={5} // 5 icons per row
-                    keyExtractor={(item) => item.name}
-                    renderItem={({ item }) => (
-                        <Pressable 
-                        onPress={() => handleIconPress(item)} 
-                        style={styles.individualIcons}
-                        >
-                        <IconComponent icon={item} />
-                        </Pressable>
-                    )}
-                    onEndReached={loadMoreIcons}
-                    onEndReachedThreshold={0.5}
-                    />
-                    */}
-                </View>
+                <SafeAreaView style = {styles.iconContainer}>
+                  <FlatList
+                    data = {iconsToChoose}
+                    renderItem={renderItem}
+                    keyExtractor={item => item.name}
+                    extraData={selectedName}
+                    numColumns={5}
+                  />
+                </SafeAreaView>
                 <View style = {styles.SelectImageContainer}>
 
                 </View>
@@ -49,7 +85,8 @@ const width = Dimensions.get('window').width-1
 const height = Dimensions.get('window').height-1
 const paddingContainer = 20
 const scale = PixelRatio.get(); //For exact pixel adjustments adjust according to scale
-
+const iconContainerWidth = width * 0.85 - paddingContainer * 2; // Subtract horizontal padding
+const iconSize = iconContainerWidth / 5; // Divide by number of columns
 
 const styles = StyleSheet.create({
 // Overlay itself
@@ -94,9 +131,11 @@ overlay: {
   iconContainer: { //container for icon section
     flex: 7,
     width: '95%',
-    aspectRatio: 1, //width = height
     paddingHorizontal: 5,
     paddingVertical: 5,
+    marginVertical: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   SelectImageContainer: { //container for screen image selection
     flex: 1,
@@ -116,9 +155,11 @@ overlay: {
     borderColor: '#FFFFFF',
     borderWidth: 1,
   },
-  individualIcons: {
-    aspectRatio: 1,
-
-  }
+  item: {
+    padding: 0,
+    borderRadius: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 
 });
