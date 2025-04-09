@@ -10,10 +10,6 @@ import { Dimensions } from "react-native";
 const screenWidth = Dimensions.get("window").width;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#101010",
-  },
   calendarContainer: {
     flex: 1,
     backgroundColor: '#fff',
@@ -60,10 +56,17 @@ export default function Index() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const router = useRouter();
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView 
+      style={{
+        flex: 1,
+        justifyContent: "flex-start",
+        alignItems: "center",
+        backgroundColor: "#101010",
+      }}
+    >
       {/* Header buttons */}
-            {/* This view is for the top-left pfp */}
-            <View
+      {/* This view is for the top-left pfp */}
+      <View
         style={{
           width: screenWidth,
           flexDirection: 'row',
@@ -92,7 +95,6 @@ export default function Index() {
       <View style={styles.calendarContainer}>
         <Calendar onSelectDate={setSelectedDate} selected={selectedDate || ""} />
       </View>
-
       <StatusBar style="light" />
     </SafeAreaView>
   );
@@ -102,5 +104,5 @@ const cornerButtonsStyle = {
   width: 45,
   height: 45,
   justifyContent: "center" as const,
-  alignItems: "flex-start" as const,
+  alignItems: "center" as const,
 };
