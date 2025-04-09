@@ -19,7 +19,8 @@ expo-env.d.ts
 
 #Not 100% on but it says its ok!
 .idea/workspace.xml
-
+.idea/caches/deviceStreaming.xml
+.idea/vcs.xml
 # Metro
 .metro-health-check*
 
