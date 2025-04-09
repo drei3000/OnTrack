@@ -18,8 +18,8 @@ const Calendar: React.FC<CalendarProps> = ({ onSelectDate, selected }) => {
   // Generate dates from today to 10 days ahead
   const getDates = () => {
     const _dates: Moment[] = [];
-    for (let i = 0; i < 10; i++) {
-      _dates.push(moment().add(i, 'days'));
+    for (let i = -5; i < 5; i++) {
+      _dates.push(moment().subtract(i, 'days'));
     }
     setDates(_dates);
   };
@@ -30,9 +30,6 @@ const Calendar: React.FC<CalendarProps> = ({ onSelectDate, selected }) => {
 
   return (
     <>
-      <View style={styles.centered}>
-        <Text style={styles.title}>Current month</Text>
-      </View>
       <View style={styles.dateSection}>
         <View style={styles.scroll}>
           <ScrollView
@@ -64,12 +61,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: 'bold',
+    color: 'white'
   },
   dateSection: {
     width: '100%',
     padding: 20,
   },
   scroll: {
-    height: 150,
+    height: 100,
   },
 }) 

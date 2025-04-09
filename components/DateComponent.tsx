@@ -41,21 +41,23 @@ export default Date;
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#eee',
+    backgroundColor: '#101010',
     borderRadius: 10,
     borderColor: '#ddd',
     padding: 10,
     marginVertical: 10,
     alignItems: 'center',
-    height: 90,
-    width: 80,
+    height: 70,
+    width: 70,
     marginHorizontal: 5,
   },
   big: {
     fontWeight: 'bold',
-    fontSize: 20,
+    fontSize: 15,
+    color: 'dimgray'
   },
   medium: {
-    fontSize: 16,
+    color: 'dimgray',
+    fontSize: 17,
   },
 });

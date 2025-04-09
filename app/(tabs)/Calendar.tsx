@@ -15,42 +15,9 @@ const styles = StyleSheet.create({
   },
   calendarContainer: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#101010',
     alignItems: 'center',
-    justifyContent: 'center',
-  },
-  pager: {
-    flex: 1,
-    marginTop: -550,
-    backgroundColor: "transparent",
-  },
-  page: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingTop: 20,
-  },
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    width: "100%",
-  },
-  dateBox: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 40, 
-  },
-  text: {
-    color: "white",
-    fontSize: 16,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-    marginTop: 30,
+    // justifyContent: 'center',
   },
 });
 
