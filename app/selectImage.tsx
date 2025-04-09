@@ -7,20 +7,23 @@ import { PixelRatio } from 'react-native';
 import { iconsToChoose } from '@/assets/images/iconsToChoose';
 //import IconComponent
 
-type IconItem = { //
+//iconsToChoose data type
+type IconItem = { 
   name: string;
-  type: string; 
+  type: string; //what icon is a part of (fa5 as of right now)
 };
 
-type ItemProps = {
-  item: IconItem;
+//Visuals/function of each item
+type ItemProps = { 
+  item: IconItem; 
   onPress: () => void;
   backgroundColor: string;
   iconColor: string;
 };
 
+//functional component to be used
 const Item = ({ item, onPress, backgroundColor, iconColor }: ItemProps) => (
-  <TouchableOpacity 
+  <TouchableOpacity //not pressable for visual effect
     onPress={onPress} 
     style={[
       styles.item, 
@@ -31,17 +34,18 @@ const Item = ({ item, onPress, backgroundColor, iconColor }: ItemProps) => (
       }
     ]}
   >
-    {item.type === 'fa5' && (
+    {item.type === 'fa5' && ( //if fa5 render fontawesome5
       <FontAwesome5 name={item.name as any} size={iconSize * 0.6} color={iconColor} />
     )}
   </TouchableOpacity>
 );
 
 export default function newTrackerView() {
+  const router = useRouter(); 
   const [selectedName, setSelectedName] = useState<string>();
 
   const renderItem = ({ item }: { item: IconItem }) => {
-    const backgroundColor = item.name === selectedName ? 'white' : 'black';
+    const backgroundColor = item.name === selectedName ? 'white' : 'black'; //first element changed for color (to be implemented)
     const iconColor = item.name === selectedName ? 'black' : 'white';
 
     return (
@@ -64,13 +68,13 @@ export default function newTrackerView() {
                     <Pressable 
                       style = {styles.icon}
                       onLayout={(event) => {
-                        const { height, } = event.nativeEvent.layout;
+                        const { height } = event.nativeEvent.layout;
                         setIconSize(height * 0.7);
                       }}
                     > 
                       {selectedName && iconSize > 0 && (
                         <FontAwesome5 
-                          name={selectedName as any}
+                          name={selectedName}
                           color="white" 
                           size = {iconSize}
                           alignSelf = 'center'
@@ -93,6 +97,15 @@ export default function newTrackerView() {
 
                 </View>
             </SafeAreaView>
+            {/* Exit Button (placed below the content) */}
+      <Pressable
+       onPress={() => {router.back()}}
+       style={styles.exitButton}
+      >
+        <Text style={styles.exitButtonText}>
+          Exit
+        </Text>
+      </Pressable>
         </View>
     )
 }
@@ -102,7 +115,7 @@ const height = Dimensions.get('window').height-1
 const paddingContainer = 20
 const scale = PixelRatio.get(); //For exact pixel adjustments adjust according to scale
 const iconContainerWidth = (width * 0.85 - paddingContainer * 2) * 0.95 - 10; // Subtract horizontal padding
-const iconSize = iconContainerWidth / 5; // Divide by number of columns
+const iconSize = iconContainerWidth / 5; // 5 columns (could change for small devices?)
 
 const styles = StyleSheet.create({
   //Modal overlay itself
@@ -182,6 +195,22 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
     borderTopColor: 'dimgray',
     alignItems: 'center',
+  },
+
+  // Exit Button (below the modal)
+  exitButton: {
+    marginTop: 20, // Adds some space above the button
+    backgroundColor: '#101010',
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 25,
+    borderWidth: 1,
+    borderColor: 'dimgray',
+  },
+  exitButtonText: {
+    fontSize: 18,
+    color: 'white',
+    fontWeight: 'bold',
   },
   
 
