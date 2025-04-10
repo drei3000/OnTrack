@@ -5,6 +5,8 @@ import { FontAwesome5, FontAwesome6 } from "@expo/vector-icons";
 import DropDownPicker from "react-native-dropdown-picker";
 import { PixelRatio } from 'react-native';
 import { iconsToChoose } from '@/assets/images/iconsToChoose';
+import { imageBoxStyles } from './newTrackerView';
+import { Ionicons } from '@expo/vector-icons';
 //import IconComponent
 
 //iconsToChoose data type
@@ -20,6 +22,10 @@ type ItemProps = {
   backgroundColor: string;
   iconColor: string;
 };
+
+const handleReturn = () => {
+  
+}
 
 //functional component to be used
 const Item = ({ item, onPress, backgroundColor, iconColor }: ItemProps) => (
@@ -59,29 +65,50 @@ export default function selectImage() {
   };
 
   const [iconSize, setIconSize] = useState(0);
-
+  const [iconChanged, setIconChanged] = useState(false);
     return(
-    
+
+      //IF YOU ARE READING THIS I KNOW ITS A LOT OF VIEWS BUT THEY ARE GENUINELY ALL IMPORTANT
         <View style={styles.overlay}>
             <SafeAreaView style={styles.container}>
                 <View style = {styles.selectedContainer}>
-                    <Pressable 
-                      style = {styles.icon}
-                      onLayout={(event) => {
-                        const { height, } = event.nativeEvent.layout;
-                        setIconSize(height * 0.7);
-                      }}
-                    > 
-                      {selectedName && iconSize > 0 && (
-                        <FontAwesome5 
-                          name={selectedName as any}
-                          color="white" 
-                          size = {iconSize}
-                          alignSelf = 'center'
-                          justifySelf = 'center'
-                        />
+                  <View style = {imageBoxStyles.imageButtonsContainer}>
+
+                    {/* Left cross button*/}
+                    {!!(selectedName) && ( //if selectedName undefined dont render pressable
+                      <Pressable style={imageBoxStyles.crossButton}
+                        onPress={() => {setSelectedName(undefined)}}
+                      >
+                        <Ionicons name="close" size={24} color="white" />
+                      </Pressable>
                       )}
-                    </Pressable>
+                      <Pressable 
+                        style = {imageBoxStyles.icon}
+                        onLayout={(event) => {
+                          const { height, } = event.nativeEvent.layout;
+                          setIconSize(height * 0.7);
+                        }}
+                      > 
+                        {selectedName && iconSize > 0 && (
+                          <FontAwesome5 
+                            name={selectedName as any}
+                            color="white" 
+                            size = {iconSize}
+                            alignSelf = 'center'
+                            justifySelf = 'center'
+                          />
+                        )}
+                      </Pressable>
+
+                      <Pressable style={imageBoxStyles.tickButton}
+                      onPress={() =>
+                        handleReturn()
+                      }
+                      >
+                        <Ionicons name="checkmark" size={24} color="white" />
+                      </Pressable>
+        
+                    </View>
                 </View>
                 <SafeAreaView style = {styles.iconContainer}>
                   <FlatList
@@ -132,13 +159,14 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
   },
+
   //Entire container
   container: {
     height: height*0.8,
     width: width*0.85,
     backgroundColor: "#101010",
     paddingHorizontal: paddingContainer, // Keep horizontal padding
-    paddingVertical: paddingContainer, // Add vertical padding
+    //paddingVertical: paddingContainer, // Add vertical padding
     borderRadius: 15, // Rounded edges
     borderWidth: 1,
     borderColor: 'dimgray',
@@ -149,10 +177,10 @@ const styles = StyleSheet.create({
   selectedContainer: {
     flex: 2,
     width: '95%',
-    marginTop: 10,
     paddingHorizontal: 5,
     alignItems: 'center',
     alignSelf: 'center',
+    justifyContent: 'center',
     borderWidth: 1,
     borderRadius: 0,
     borderColor: 'transparent',

@@ -57,6 +57,10 @@ export default function newTrackerView() {
 
   };
 
+  const handleImagePressed = () => {
+    router.push('./selectImage');
+  }
+
   const toggleButtonState = () => {
     // Toggle between "Goal" and "Limit" on press
     setIsGoal(prevState => !prevState);
@@ -73,17 +77,17 @@ export default function newTrackerView() {
       <Text style={styles.overlayText}>Create Tracker</Text>
       
       <SafeAreaView style={styles.container}>
-        <View style = {styles.imageButtonsContainer}>
+        <View style = {imageBoxStyles.imageButtonsContainer}>
 
         {/* Left cross button*/}
-        <Pressable style={styles.crossButton}>
+        <Pressable style={imageBoxStyles.crossButton}>
           <Ionicons name="close" size={24} color="white" />
         </Pressable>
 
         {/* Tracker Icon Option */}
         <Pressable 
-          style = {styles.icon}
-          onPress={() => router.push('./selectImage')}
+          style = {imageBoxStyles.icon}
+          onPress={handleImagePressed}
         > 
           <Ionicons
             name={'add'} //unsure about this
@@ -96,7 +100,7 @@ export default function newTrackerView() {
 
         {/* Right tick button */}
         {title.length > 2 && (
-        <Pressable style={styles.tickButton}>
+        <Pressable style={imageBoxStyles.tickButton}>
           <Ionicons name="checkmark" size={24} color="white" />
         </Pressable>
         )}
@@ -197,6 +201,66 @@ const height = Dimensions.get('window').height-1
 
 const scale = PixelRatio.get(); //For exact pixel adjustments adjust according to scale
 
+export const imageBoxStyles = StyleSheet.create({
+  //For image cancellation, image and confirm tracker buttons
+  imageButtonsContainer: {
+    height: 100,
+    width: 220,
+    marginVertical: 30,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignContent: 'center',
+  },
+  tickButton: {
+    //flex: 3,
+    width: 60,
+    height: '100%',
+
+    borderRadius: 10,
+    borderTopLeftRadius: 0,
+    borderBottomLeftRadius: 0,
+    borderWidth: 1,
+    borderColor: 'dimgray',
+    borderRightColor: 'transparent',
+    borderTopColor: '#101010',
+    //borderTopRightRadius: 5,
+    borderBottomColor: '#094F23',
+    borderBottomWidth: 7,
+    backgroundColor: '#075F28',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  crossButton: {
+    //flex: 3,
+    width: 60,
+    height: '100%',
+
+    borderRadius: 10,
+    borderTopRightRadius: 0,
+    borderBottomRightRadius: 0,
+    borderWidth: 1,
+    borderColor: 'dimgray',
+    borderTopColor: '#101010',
+
+    borderBottomColor: '#860B0B', 
+    borderBottomWidth: 7,
+    borderLeftColor: 'transparent',
+    backgroundColor: '#a30a0a',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  
+  // Image button user can add
+  icon: {
+    //flex: 5,
+    width: 100,
+    height: '100%',
+    borderColor: 'dimgray',
+    borderWidth: 1,
+    justifyContent: 'center',
+    alignContent: 'center',
+  },
+})
 const styles = StyleSheet.create({
   //Fixes weird bug to do with text wrapping in container?
   iconPressable: {
@@ -242,74 +306,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  //For image cancellation, image and confirm tracker buttons
-  imageButtonsContainer: {
-    height: 100,
-    width: 220,
-    marginVertical: 30,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignContent: 'center',
-  },
-  tickButton: {
-    //flex: 3,
-    width: 60,
-    height: '100%',
-
-    borderRadius: 10,
-    borderTopLeftRadius: 0,
-    borderBottomLeftRadius: 0,
-    borderWidth: 1,
-    borderColor: 'dimgray',
-    borderRightColor: 'transparent',
-    borderTopColor: '#06402B',
-    //borderTopRightRadius: 5,
-    borderBottomColor: '#094F23',
-    borderBottomWidth: 7,
-    backgroundColor: '#075F28',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  crossButton: {
-    //flex: 3,
-    width: 60,
-    height: '100%',
-
-    borderRadius: 10,
-    borderTopRightRadius: 0,
-    borderBottomRightRadius: 0,
-    borderWidth: 1,
-    borderColor: 'dimgray',
-    borderTopColor: '#490016',
-    borderBottomColor: '#400215', //85% opacity (probably not even relevant)
-    borderLeftColor: 'transparent',
-    backgroundColor: '#490016',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  //UGLY -> TO BE REMOVED
-  crossFade: {
-    position: 'absolute',
-    width: 12,
-    height: 100,
-    zIndex: 1,
-    
-    right: -1,
-    top: -1,
-    bottom: +1,
-  },
-  
-  // Image button user can add
-  icon: {
-    //flex: 5,
-    width: 100,
-    height: '100%',
-    borderColor: 'dimgray',
-    borderWidth: 1,
-    justifyContent: 'center',
-    alignContent: 'center',
-  },
 
   inputContainer: {
     width: width*0.85*0.8,
