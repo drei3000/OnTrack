@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from "@expo/vector-icons";
 import DropDownPicker from "react-native-dropdown-picker";
 import { PixelRatio } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function newTrackerView() {
   const router = useRouter(); 
@@ -48,7 +49,6 @@ export default function newTrackerView() {
       { label: "Kilojoules", value: "kj" },
       { label: "Heart Rate (BPM)", value: "bpm" },
     ]);
-  
 
   // Confirm action when icon is pressed
   //TO DO: Create tracker and exit in this function given state variables
@@ -73,6 +73,12 @@ export default function newTrackerView() {
       <Text style={styles.overlayText}>Create Tracker</Text>
       
       <SafeAreaView style={styles.container}>
+        <View style = {styles.imageButtonsContainer}>
+
+        {/* Left cross button*/}
+        <Pressable style={styles.crossButton}>
+          <Ionicons name="close" size={24} color="white" />
+        </Pressable>
 
         {/* Tracker Icon Option */}
         <Pressable 
@@ -82,11 +88,21 @@ export default function newTrackerView() {
           <Ionicons
             name={'add'} //unsure about this
             color="dimgray" 
-            size = {70}
+            size = {50}
             alignSelf = 'center'
             justifySelf = 'center'
             ></Ionicons>
         </Pressable>
+
+        {/* Right tick button */}
+        {title.length > 2 && (
+        <Pressable style={styles.tickButton}>
+          <Ionicons name="checkmark" size={24} color="white" />
+        </Pressable>
+        )}
+        </View>
+
+
         {/* Tracker Title */}
         <View style={styles.inputContainer}>
         <TextInput
@@ -160,15 +176,6 @@ export default function newTrackerView() {
             {isGoal ? 'Goal' : 'Limit'}
           </Text>
         </Pressable>
-
-        {/* Confirm Button (Only shows if title has at least 2 letters) */}
-        {title.length > 2 && (
-          <Pressable
-           onPress={handleConfirm} 
-           style={styles.confirmButton}>
-            <Ionicons name="checkbox" size={30} color="#5DBB63" />
-          </Pressable>
-        )}
       </SafeAreaView>
 
     
@@ -235,18 +242,75 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  // Image button user can add
-  icon: {
-    aspectRatio: 1,
-    marginVertical: 30,
-    width: 100,
+  //For image cancellation, image and confirm tracker buttons
+  imageButtonsContainer: {
     height: 100,
-    borderColor: 'dimgray',
-    borderWidth: 1,
-
+    width: 220,
+    marginVertical: 30,
+    flexDirection: 'row',
     justifyContent: 'center',
     alignContent: 'center',
   },
+  tickButton: {
+    //flex: 3,
+    width: 60,
+    height: '100%',
+
+    borderRadius: 10,
+    borderTopLeftRadius: 0,
+    borderBottomLeftRadius: 0,
+    borderWidth: 1,
+    borderColor: 'dimgray',
+    borderRightColor: 'transparent',
+    borderTopColor: '#06402B',
+    //borderTopRightRadius: 5,
+    borderBottomColor: '#094F23',
+    borderBottomWidth: 7,
+    backgroundColor: '#075F28',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  crossButton: {
+    //flex: 3,
+    width: 60,
+    height: '100%',
+
+    borderRadius: 10,
+    borderTopRightRadius: 0,
+    borderBottomRightRadius: 0,
+    borderWidth: 1,
+    borderColor: 'dimgray',
+    borderTopColor: '#490016',
+    borderBottomColor: '#400215', //85% opacity (probably not even relevant)
+    borderLeftColor: 'transparent',
+    backgroundColor: '#490016',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  //UGLY -> TO BE REMOVED
+  crossFade: {
+    position: 'absolute',
+    width: 12,
+    height: 100,
+    zIndex: 1,
+    
+    right: -1,
+    top: -1,
+    bottom: +1,
+  },
+  
+  // Image button user can add
+  icon: {
+    //flex: 5,
+    width: 100,
+    height: '100%',
+    borderColor: 'dimgray',
+    borderWidth: 1,
+    justifyContent: 'center',
+    alignContent: 'center',
+  },
+
   inputContainer: {
     width: width*0.85*0.8,
     backgroundColor: "#101010",
@@ -254,6 +318,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     borderRadius: 5,
     borderWidth: 1,
+    
     alignSelf: 'center',
   },
 
@@ -367,12 +432,6 @@ const styles = StyleSheet.create({
     height: 5*scale,
     tintColor: 'white', // This might work for some icon types
   },
-  // checkbox to confirm
-  confirmButton: {
-    position: 'absolute',
-    top: 20,
-    right: 20,
-    backgroundColor: 'transparent',
-    padding: 10,
-  },
+
+  
 });
