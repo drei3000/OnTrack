@@ -15,10 +15,6 @@ const screenWidth = Dimensions.get("window").width;
 
 // Global styles for main layout containers
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#101010",
-  },
   calendarContainer: {
     flex: 1,
     backgroundColor: "#101010",
@@ -33,8 +29,18 @@ export default function Index() {
   const router = useRouter();
 
   return (
-    <SafeAreaView style={styles.container}>
+
       {/* HEADER - Fixed at the top */}
+    <SafeAreaView 
+      style={{
+        flex: 1,
+        justifyContent: "flex-start",
+        alignItems: "center",
+        backgroundColor: "#101010",
+      }}
+    >
+      {/* Header buttons */}
+      {/* This view is for the top-left pfp */}
       <View
         style={{
           width: screenWidth,
@@ -56,7 +62,6 @@ export default function Index() {
       <View>
         <Calendar onSelectDate={setSelectedDate} selected={selectedDate || ""} />
       </View>
-
       {/* SCROLLVIEW - Contains gradient pressable buttons only */}
       <ScrollView>
         <View>
@@ -167,3 +172,6 @@ const pressableTextStyle = {
     marginLeft: 12,
     fontWeight: "bold" as const,
   };
+=======
+  alignItems: "center" as const,
+};
