@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
-import {TouchableOpacity, FlatListComponent, FlatListProps, Text, StyleSheet, Pressable, View, Button, SafeAreaView, Image, TextInput, Dimensions, ScrollView, FlatList} from 'react-native';
+import {TouchableOpacity, Text, StyleSheet, Pressable, View, Button, SafeAreaView, Dimensions, FlatList} from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { FontAwesome5, FontAwesome6 } from "@expo/vector-icons";
-import DropDownPicker from "react-native-dropdown-picker";
+import { FontAwesome5 } from "@expo/vector-icons";
 import { PixelRatio } from 'react-native';
 import { iconsToChoose } from '@/assets/images/iconsToChoose';
 import { imageBoxStyles, IconItem } from './newTrackerView';
 import { Ionicons } from '@expo/vector-icons';
-import { RouteParams } from 'expo-router';
 
 //Visuals/function of each item
 type ItemProps = { 
@@ -17,7 +15,7 @@ type ItemProps = {
   iconColor: string;
 };
 
-//functional component to be used
+//the item to be rendered (selectable icons)
 const Item = ({ item, onPress, backgroundColor, iconColor }: ItemProps) => (
   <TouchableOpacity //not pressable for visual effect
     onPress={onPress} 
@@ -30,37 +28,29 @@ const Item = ({ item, onPress, backgroundColor, iconColor }: ItemProps) => (
       }
     ]}
   >
-    {item.type === 'fa5' && ( //if fa5 render fontawesome5
-      <FontAwesome5 name={item.name as any} size={iconSize * 0.6} color={iconColor} />
+    {item.type === 'fa5' && ( //if fa5 render fontawesome5 : to introduce more itemtypes would have to change the way rendered
+      <FontAwesome5 name={item.name as string} size={iconSize * 0.6} color={iconColor} />
     )}
   </TouchableOpacity>
 );
 
 export default function selectImage() {
-
   const router = useRouter(); 
 
-  const handleSelect = (imageName: string) => {
-    router.back();
-    router.setParams({image: imageName});
-  };
-
+  //if typematch (should be always) then use inputted image
   const params = useLocalSearchParams();
-  const originalImage = typeof params.selectedImage === 'string'? params.selectedImage: ''; //if typematch (should be always) then use inputted image
-  //const {selectedImage} = router;
-  
+  const originalImage = typeof params.selectedImage === 'string'? params.selectedImage: ''; 
   const [selectedName, setSelectedName] = useState<string>(originalImage);
 
+  //rendering each icon
   const renderItem = ({ item }: { item: IconItem }) => {
-    const backgroundColor = item.name === selectedName ? 'white' : 'black'; // render white with black backgtound if unselected, inverse if selected
+    const backgroundColor = item.name === selectedName ? 'white' : 'black'; // render white with black background if unselected, inverse if selected
     const iconColor = item.name === selectedName ? 'black' : 'white';
-
     return (
       <Item
         item={item}
         onPress={() => {
           setSelectedName(item.name)
-          //handleSelect(item.name)
         }}
         backgroundColor={backgroundColor}
         iconColor={iconColor}
@@ -68,83 +58,85 @@ export default function selectImage() {
     );
   };
 
-  //When confirm pressed
-  const handleConfirm = () => {
-    handleSelect(selectedName);
-    //router.back();
-  };
-
-  const [iconSize, setIconSize] = useState(0); //icon size state
-  const [iconChanged, setIconChanged] = useState(false); //icon changed (unused right now)
+  const [iconSize, setIconSize] = useState(0); //icon size state (used to calculate necessary size)
     return(
 
-      
-
       //IF YOU ARE READING THIS I KNOW ITS A LOT OF VIEWS BUT THEY ARE GENUINELY ALL IMPORTANT
-        <View style={styles.overlay}>
-            <SafeAreaView style={styles.container}>
-                <View style = {styles.selectedContainer}>
-                  <View style = {imageBoxStyles.imageButtonsContainer}>
+      //full screen overlay
+      <View style={styles.overlay}> 
+          {/* 'popup' box */}
+          <SafeAreaView style={styles.container}> 
+              {/* all image related buttons */}
+              <View style = {imageBoxStyles.imageButtonsContainer}>
+                {/* Left cross button*/}
+                {selectedName && ( //if selectedName '' dont render pressable
+                  <Pressable 
+                    style={imageBoxStyles.crossButton}
+                    onPress={() => {setSelectedName('')}}
+                  >
+                    <Ionicons name="close" size={24} color="white" /> 
+                  </Pressable>
+                )}
 
-                    {/* Left cross button*/}
-                    {selectedName != '' && ( //if selectedName '' dont render pressable
-                      <Pressable style={imageBoxStyles.crossButton}
-                        onPress={() => {setSelectedName('')}}
-                      >
-                        <Ionicons name="close" size={24} color="white" />
-                      </Pressable>
-                      )}
-                      <Pressable 
-                        style = {imageBoxStyles.icon}
-                        onLayout={(event) => {
-                          const { height, } = event.nativeEvent.layout;
-                          setIconSize(height * 0.7);
-                        }}
-                      > 
-                        {selectedName && iconSize > 0 && (
-                          <FontAwesome5 
-                            name={selectedName as any}
-                            color="white" 
-                            size = {iconSize}
-                            alignSelf = 'center'
-                            justifySelf = 'center'
-                          />
-                        )}
-                      </Pressable>
-                      {selectedName != originalImage && (
-                      <Pressable style={imageBoxStyles.tickButton}
-                      onPress={handleConfirm}
-                      
-                      >
-                        <Ionicons name="checkmark" size={24} color="white" />
-                      </Pressable>
-                      )}
-                    </View>
-                </View>
-                <SafeAreaView style = {styles.iconContainer}>
-                  <FlatList
-                    data = {iconsToChoose}
-                    renderItem={renderItem}
-                    keyExtractor={item => item.name}
-                    extraData={selectedName}
-                    numColumns={5}
-                    showsVerticalScrollIndicator = {false}
-                  />
-                </SafeAreaView>
-                <View style = {styles.SelectImageContainer}>
+                {/* icon display */}
+                <Pressable 
+                  style = {imageBoxStyles.icon}
+                  onLayout={(event) => { {/* get size according to box size on layout*/}
+                    const { height, } = event.nativeEvent.layout;
+                    setIconSize(height * 0.7);
+                  }}
+                > 
+                  {selectedName && iconSize > 0 && ( // if selectedName and iconSize valid then render icon
+                    <FontAwesome5 
+                      name={selectedName as string}
+                      color="white" 
+                      size = {iconSize}
+                      alignSelf = 'center'
+                    />
+                  )}
+                </Pressable>
 
-                </View>
-            </SafeAreaView>
-            {/* Exit Button (placed below the content) */}
-      <Pressable
-       onPress={() => {router.back()}}
-       style={styles.exitButton}
-      >
-        <Text style={styles.exitButtonText}>
-          Exit
-        </Text>
-      </Pressable>
-        </View>
+                {/* Tick button, render if selectedimage has changed and route back with image on press*/}
+                {selectedName != originalImage && (
+                  <Pressable 
+                  style={imageBoxStyles.tickButton}
+                  onPress = {() => {
+                    router.back();
+                    router.setParams({ image: selectedName });
+                  }}
+                  >
+                    <Ionicons name="checkmark" size={24} color="white" />
+                  </Pressable>
+                )}
+              </View>
+
+              {/* Icon selection, render selectable icons*/}
+              <SafeAreaView style = {styles.iconContainer}>
+                <FlatList
+                  data = {iconsToChoose}
+                  renderItem={renderItem}
+                  keyExtractor={item => item.name}
+                  extraData={selectedName}
+                  numColumns={5}
+                  showsVerticalScrollIndicator = {false}
+                />
+              </SafeAreaView>
+
+
+              <View style = {styles.SelectImageContainer}>
+
+              </View>
+          </SafeAreaView>
+          {/* Exit Button (placed below the content) */}
+    <Pressable
+      onPress={() => {router.back()}}
+      style={styles.exitButton}
+    >
+      <Text style={styles.exitButtonText}>
+        Exit
+      </Text>
+    </Pressable>
+      </View>
         
     )
 }
@@ -184,19 +176,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: 'center'
   },
-  //Container at top (contains selected image box)
-  selectedContainer: {
-    flex: 2,
-    width: '95%',
-    paddingHorizontal: 5,
-    alignItems: 'center',
-    alignSelf: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderRadius: 0,
-    borderColor: 'transparent',
-    borderBottomColor: 'dimgray',
-  },
   //Selected icon square
   icon: {
     aspectRatio: 1,
@@ -209,7 +188,7 @@ const styles = StyleSheet.create({
 
   //Container for scrollable icon list
   iconContainer: {
-    flex: 7,
+    flex: 1,
     width: '95%',
     paddingHorizontal: 5,
     paddingVertical: 5,
@@ -226,7 +205,7 @@ const styles = StyleSheet.create({
 
   //container for personal image selection
   SelectImageContainer: { 
-    flex: 1,
+    height: 70,
     width: '100%',
     aspectRatio: 1,
     borderWidth: 1,

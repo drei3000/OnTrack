@@ -21,8 +21,9 @@ export default function newTrackerView() {
   const [title, setTitle] = useState(''); 
   const [limit, setLimit] = useState('');
   const [selectedImage, setSelectedImage] = useState("");
-
-   // When we return from child, update state if image param is present : pmo
+  const [iconSize, setIconSize] = useState(0);
+  const [goalLimitColor, setGoalLimitColor] = useState('white');
+   // When we return from child, update state if image param is present
    useEffect(() => {
     if (image && typeof image === 'string') {
       setSelectedImage(image);
@@ -86,8 +87,7 @@ export default function newTrackerView() {
     // Toggle between "Goal" and "Limit" on press
     setIsGoal(prevState => !prevState);
   };
-
-  const [iconSize, setIconSize] = useState(0);
+  
     
   
   return (
@@ -130,7 +130,7 @@ export default function newTrackerView() {
           )}
         </Pressable>
 
-        {/* Right tick button */}
+        {/* Right tick button, render if title > 2 */}
         {title.length > 2 && (
         <Pressable style={imageBoxStyles.tickButton}>
           <Ionicons name="checkmark" size={24} color="white" />
@@ -143,7 +143,7 @@ export default function newTrackerView() {
         <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
-          placeholder="Title"
+          placeholder="Title(*)"
           placeholderTextColor="#aaa"
           maxLength={25} //titles should be brief
           value = {title}
@@ -153,20 +153,22 @@ export default function newTrackerView() {
         />
         </View>
 
-        {/* Limit of Tracker (OPTIONAL) */}
+        {/* Limit/Goal of Tracker (OPTIONAL) */}
         <View style={styles.inputContainer}>
         <TextInput
-          style={styles.input}
-          placeholder="Goal"
+          style={[styles.input, {color: isGoal ? "#06402B" : "#950606"}]}
+          
+          placeholder="Goal(?)"
           placeholderTextColor="#aaa"
+          
           maxLength={10}
-          keyboardType="numeric"  // Shows numeric keyboard
+          keyboardType="numeric" 
           returnKeyType = "done" 
           onPressIn={() => setOpen(false)} //close dropdown
           onChangeText={(text) => {
-            // Only allow numbers and decimal point
+            //only allow numbers and decimal point
             const cleanedText = text.replace(/[^0-9.]/g, '');
-            // Ensure only one decimal point
+            //only one decimal point
             const decimalCount = (cleanedText.match(/\./g) || []).length;
             if (decimalCount <= 1) {
               setLimit(cleanedText);
@@ -177,7 +179,7 @@ export default function newTrackerView() {
         </View>
 
       
-        {/* Unit Dropdown */}
+        {/* Unit Dropdown (OPTIONAL) */}
       <View style={styles.dropdownContainer}>
         <DropDownPicker
           open={open}
@@ -188,7 +190,7 @@ export default function newTrackerView() {
           setValue={setValue}
           setItems={setUnits}
           autoScroll = {true}
-          placeholder="Set Unit"
+          placeholder="Set Unit(?)"
           placeholderStyle={{color: '#aaa'}}
           style={styles.dropdown}
           dropDownContainerStyle={styles.dropdownList}
@@ -204,11 +206,17 @@ export default function newTrackerView() {
         <Pressable
           style={[
             styles.button,
-            limit.length > 0 ? (isGoal ? styles.goalButton : styles.limitButton) : null,
+            limit.length > 0 
+            ? (isGoal ? styles.goalButton : styles.limitButton) 
+            : null,
           ]}
-          onPress={toggleButtonState}
+          onPress={
+            toggleButtonState
+  
+          }
         >
-          <Text style={limit.length > 0 ? styles.goalLimitText : styles.buttonText}>
+
+          <Text style={limit.length > 0 ? styles.goalLimitText : styles.buttonText}> 
             {isGoal ? 'Goal' : 'Limit'}
           </Text>
         </Pressable>
@@ -255,7 +263,6 @@ export const imageBoxStyles = StyleSheet.create({
     borderColor: 'dimgray',
     borderRightColor: 'transparent',
     borderTopColor: '#101010',
-    //borderTopRightRadius: 5,
     borderBottomColor: '#094F23',
     borderBottomWidth: 7,
     backgroundColor: '#075F28',
@@ -263,7 +270,6 @@ export const imageBoxStyles = StyleSheet.create({
     alignItems: 'center',
   },
   crossButton: {
-    //flex: 3,
     width: 60,
     height: '100%',
 
