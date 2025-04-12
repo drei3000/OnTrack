@@ -25,13 +25,15 @@ export default function newTrackerView() {
   const { image } = useLocalSearchParams(); // receives param from child
 
   //states
+  const timePeriods = ['Daily','Weekly','Monthly','Yearly']
+  const [currentTPIndex, setCurrentTPIndex] = useState(0); //TimePeriod button
   const [isGoal, setIsGoal] = useState(true); 
   const [title, setTitle] = useState(''); 
   const [limit, setLimit] = useState('');
   const [selectedImage, setSelectedImage] = useState("");
   const [iconSize, setIconSize] = useState(0);
-  const [goalLimitColor, setGoalLimitColor] = useState('white');
-   // When we return from child, update state if image param is present
+
+   // When return from child, update state if image param is present
    useEffect(() => {
     if (image && typeof image === 'string') {
       setSelectedImage(image);
@@ -92,7 +94,7 @@ export default function newTrackerView() {
   });
   }
 
-  const toggleButtonState = () => {
+  const toggleGoalButton = () => {
     // Toggle between "Goal" and "Limit" on press
     setIsGoal(prevState => !prevState);
   };
@@ -126,7 +128,7 @@ export default function newTrackerView() {
 
           onPress={() => handleImagePressed()}
         > 
-        {isUri(selectedImage) ? (
+        {isUri(selectedImage) ? ( //use image if imageUri
           <Image
           source={{ uri: selectedImage }}
           style={{
@@ -135,7 +137,7 @@ export default function newTrackerView() {
           }}
           resizeMode="cover"
         />
-        ) : selectedImage && iconSize > 0 && (
+        ) : selectedImage && iconSize > 0 && ( //otherwise if valid use icon
           <FontAwesome5 
               name={selectedImage as any}
               color="white" 
@@ -175,7 +177,7 @@ export default function newTrackerView() {
         <TextInput
           style={[styles.input, {color: isGoal ? "#06402B" : "#950606"}]}
           
-          placeholder="Goal(?)"
+          placeholder = {isGoal ? "Goal" : "Limit"}
           placeholderTextColor="#aaa"
           
           maxLength={10}
@@ -207,7 +209,7 @@ export default function newTrackerView() {
           setValue={setValue}
           setItems={setUnits}
           autoScroll = {true}
-          placeholder="Set Unit(?)"
+          placeholder="Set Unit"
           placeholderStyle={{color: '#aaa'}}
           style={styles.dropdown}
           dropDownContainerStyle={styles.dropdownList}
@@ -218,25 +220,38 @@ export default function newTrackerView() {
           tickIconStyle = {styles.dropdownTick}
         />
       </View>
-
+      <View style = {styles.buttonsContainer}>
+      {/* Time period pressable */}
+      <Pressable
+        style = {styles.timePeriodButton}
+        onPress={() => (setCurrentTPIndex((currentTPIndex + 1) % timePeriods.length))}
+      >
+        <Text style = {{
+          color: '#FFFFFF',
+          fontSize: 20,
+          fontWeight: 'bold',
+        }}>
+          {timePeriods[currentTPIndex]}(*)
+        </Text>
+      </Pressable>
         {/* Button to toggle between Goal and Limit */}
         <Pressable
           style={[
-            styles.button,
+            styles.goalLimitButton,
             limit.length > 0 
             ? (isGoal ? styles.goalButton : styles.limitButton) 
             : null,
           ]}
           onPress={
-            toggleButtonState
+            toggleGoalButton
   
           }
         >
-
           <Text style={limit.length > 0 ? styles.goalLimitText : styles.buttonText}> 
             {isGoal ? 'Goal' : 'Limit'}
           </Text>
         </Pressable>
+      </View>
       </SafeAreaView>
 
     
@@ -351,7 +366,7 @@ const styles = StyleSheet.create({
   container: {
     //flex: 0.6,
    //height: height*0.52, //Maybe adjust is a tad manual
-    height: 440,
+    height: 410,
     width: width*0.85,
     backgroundColor: "#101010",
     paddingHorizontal: 20,
@@ -361,12 +376,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-
   inputContainer: {
     width: width*0.85*0.8,
     backgroundColor: "#101010",
     borderColor: "dimgray",
-    marginBottom: 10,
+    marginBottom: 5,
     borderRadius: 5,
     borderWidth: 1,
     
@@ -382,6 +396,45 @@ const styles = StyleSheet.create({
     //paddingLeft: 10,
   },
 
+  //container for both
+  buttonsContainer: {
+    height: 50,
+    width: width * 0.85 * 0.8,
+    flexDirection: 'row',
+  },
+
+  timePeriodButton: {
+    height: '100%',
+    flex: 1,
+    backgroundColor: 'black',
+    borderRadius: 5,
+    borderWidth: 2,
+    borderColor: "dimgray",
+
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  
+
+  //goalLimit button
+  goalLimitButton: {
+    flex: 1,
+    height: '100%',
+
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "black",
+
+    borderRadius: 5,
+    borderWidth: 2,
+    borderColor: "dimgray",
+
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#FFFFFF",
+  },
+
   // Goal and Limit button styles
   goalButton: {
     backgroundColor: "#06402B",
@@ -390,24 +443,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#950606",
   },
 
-  //Button if neither goal nor limit
-  button: {
-    width: width*0.85*0.5, //button half of the container
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 10,
-    backgroundColor: "dimgray",
-    height: 50,
-    borderRadius: 5,
-    borderWidth: 1,
-    borderColor: "dimgray",
-  },
   //Text if goal or limit
   goalLimitText: {
     fontSize: 20,
     fontWeight: "bold",
     color: "#FFFFFF",
   },
+
   buttonText:{
     fontSize: 20,
     color: "dimgray" //blend in and be invisible
