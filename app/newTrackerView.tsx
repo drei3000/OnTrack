@@ -6,6 +6,14 @@ import DropDownPicker from "react-native-dropdown-picker";
 import { PixelRatio } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
+//check if is a uri
+export const isUri = (value: string): boolean => {
+  return (
+    typeof value === 'string' &&
+    (value.startsWith('http') || value.startsWith('file://') || value.startsWith('data:image/'))
+  );
+};
+
 //iconsToChoose data type
 export type IconItem = { 
   name: string;
@@ -30,6 +38,7 @@ export default function newTrackerView() {
     }
   }, [image]);
 
+  
   
 
   // Dropdown state
@@ -88,8 +97,6 @@ export default function newTrackerView() {
     setIsGoal(prevState => !prevState);
   };
   
-    
-  
   return (
     
     <View style={styles.overlay}>
@@ -119,15 +126,25 @@ export default function newTrackerView() {
 
           onPress={() => handleImagePressed()}
         > 
-          {selectedImage && iconSize > 0 && (
-            <FontAwesome5 
+        {isUri(selectedImage) ? (
+          <Image
+          source={{ uri: selectedImage }}
+          style={{
+            width: 98,
+            aspectRatio: 1,
+          }}
+          resizeMode="cover"
+        />
+        ) : selectedImage && iconSize > 0 && (
+          <FontAwesome5 
               name={selectedImage as any}
               color="white" 
               size = {iconSize}
               alignSelf = 'center'
               justifySelf = 'center'
             />
-          )}
+        )}
+          
         </Pressable>
 
         {/* Right tick button, render if title > 2 */}

@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
-import {TouchableOpacity, Text, StyleSheet, Pressable, View, Button, SafeAreaView, Dimensions, FlatList} from 'react-native';
+import React, { useState, useEffect } from 'react';
+import {Image, TouchableOpacity, Text, StyleSheet, Pressable, View, Button, SafeAreaView, Dimensions, FlatList} from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { FontAwesome5 } from "@expo/vector-icons";
 import { PixelRatio } from 'react-native';
 import { iconsToChoose } from '@/assets/images/iconsToChoose';
-import { imageBoxStyles, IconItem } from './newTrackerView';
+import { imageBoxStyles, IconItem, isUri } from './newTrackerView';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 
 
 //Visuals/function of each item
@@ -36,12 +37,20 @@ const Item = ({ item, onPress, backgroundColor, iconColor }: ItemProps) => (
 );
 
 export default function selectImage() {
+  const [selectedName, setSelectedName] = useState<string>('');
+  const [selectedImageUri, setSelectedImageUri] = useState<string>('');
   const router = useRouter(); 
 
   //if typematch (should be always) then use inputted image
   const params = useLocalSearchParams();
-  const originalImage = typeof params.selectedImage === 'string'? params.selectedImage: ''; 
-  const [selectedName, setSelectedName] = useState<string>(originalImage);
+  const originalImage = typeof params.selectedImage === 'string' ? params.selectedImage : '';
+  useEffect(() => {
+    if (isUri(originalImage)) {
+      setSelectedImageUri(originalImage);
+    } else {
+      setSelectedName(originalImage);
+    }
+  }, [originalImage]);
 
   //rendering each icon
   const renderItem = ({ item }: { item: IconItem }) => {
@@ -52,6 +61,7 @@ export default function selectImage() {
         item={item}
         onPress={() => {
           setSelectedName(item.name)
+          setSelectedImageUri('')
         }}
         backgroundColor={backgroundColor}
         iconColor={iconColor}
@@ -60,6 +70,7 @@ export default function selectImage() {
   };
 
   const [iconSize, setIconSize] = useState(0); //icon size state (used to calculate necessary size)
+  const [imageSize, setImageSize] = useState(0); //icon size state (used to calculate necessary size)
     return(
 
       //IF YOU ARE READING THIS I KNOW ITS A LOT OF VIEWS BUT THEY ARE GENUINELY ALL IMPORTANT
@@ -70,10 +81,13 @@ export default function selectImage() {
               {/* all image related buttons */}
               <View style = {imageBoxStyles.imageButtonsContainer}>
                 {/* Left cross button*/}
-                {selectedName && ( //if selectedName '' dont render pressable
+                {(selectedName || selectedImageUri ) && ( //if selectedName '' dont render pressable
                   <Pressable 
                     style={imageBoxStyles.crossButton}
-                    onPress={() => {setSelectedName('')}}
+                    onPress={() => {
+                      setSelectedName('')
+                      setSelectedImageUri('')
+                    }}
                   >
                     <Ionicons name="close" size={24} color="white" /> 
                   </Pressable>
@@ -84,10 +98,20 @@ export default function selectImage() {
                   style = {imageBoxStyles.icon}
                   onLayout={(event) => { {/* get size according to box size on layout*/}
                     const { height, } = event.nativeEvent.layout;
-                    setIconSize(height * 0.7);
+                    setIconSize(height * 0.7); //size of icon
                   }}
                 > 
-                  {selectedName && iconSize > 0 && ( // if selectedName and iconSize valid then render icon
+                  {(selectedImageUri && iconSize > 0) ? (  //Render image if exists otherwise carry on to icon
+                  <Image
+                    source={{ uri: selectedImageUri }}
+                    style={{
+                      width: 98,
+                      aspectRatio: 1,
+                    }}
+                    resizeMode="cover"
+                  />
+                  ) :
+                  selectedName && iconSize > 0 && ( // if selectedName and iconSize valid then render icon
                     <FontAwesome5 
                       name={selectedName as string}
                       color="white" 
@@ -98,12 +122,16 @@ export default function selectImage() {
                 </Pressable>
 
                 {/* Tick button, render if selectedimage has changed and route back with image on press*/}
-                {selectedName != originalImage && (
+                {(
+                  (originalImage === '' && (selectedImageUri !== '' || selectedName !== '')) || 
+                  (originalImage !== '' && selectedImageUri !== originalImage && selectedName !== originalImage) 
+                ) && (
                   <Pressable 
                   style={imageBoxStyles.tickButton}
                   onPress = {() => {
                     router.back();
-                    router.setParams({ image: selectedName });
+                    //return either image uri or icon name
+                    selectedImageUri ? router.setParams({ image: selectedImageUri }) : router.setParams({ image: selectedName });
                   }}
                   >
                     <Ionicons name="checkmark" size={24} color="white" />
@@ -125,7 +153,29 @@ export default function selectImage() {
 
               {/*personal image selection (someone can fix styling can't be bothered right now) */}
               <View style = {styles.SelectImageContainer}>
-                <TouchableOpacity style = {styles.selectImageButton}>
+                <TouchableOpacity 
+                style = {styles.selectImageButton}
+
+                onPress={async () => { //Press function to get the image
+                  const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+                  if (status !== 'granted') {
+                    alert('Permissions were declined');
+                    return;
+                  }
+              
+                  const result = await ImagePicker.launchImageLibraryAsync({
+                    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                    allowsEditing: true,
+                    quality: 1,
+                  });
+              
+                  if (!result.canceled) { //If result successful
+                    const selectedUri = result.assets[0].uri;
+                    setSelectedImageUri(selectedUri); //save Uri
+                    setSelectedName('');
+                  }
+                }}
+                >
                   <MaterialCommunityIcons
                     name = 'file-image-plus-outline'
                     color = 'dimgray'
