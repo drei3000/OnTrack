@@ -5,7 +5,8 @@ import { FontAwesome5 } from "@expo/vector-icons";
 import { PixelRatio } from 'react-native';
 import { iconsToChoose } from '@/assets/images/iconsToChoose';
 import { imageBoxStyles, IconItem } from './newTrackerView';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+
 
 //Visuals/function of each item
 type ItemProps = { 
@@ -122,9 +123,28 @@ export default function selectImage() {
                 />
               </SafeAreaView>
 
-
+              {/*personal image selection (someone can fix styling can't be bothered right now) */}
               <View style = {styles.SelectImageContainer}>
-
+                <TouchableOpacity style = {styles.selectImageButton}>
+                  <MaterialCommunityIcons
+                    name = 'file-image-plus-outline'
+                    color = 'dimgray'
+                    size = {30}
+                    style ={{
+                      marginRight: 5
+                    }}
+                  />
+                  <Text
+                    style = {{
+                      color: 'dimgray',
+                      fontSize: 24,
+                      fontStyle: 'italic',
+                      fontWeight: '400',
+                    }}
+                  >
+                    Custom Image
+                  </Text>
+                </TouchableOpacity>
               </View>
           </SafeAreaView>
           {/* Exit Button (placed below the content) */}
@@ -195,6 +215,8 @@ const styles = StyleSheet.create({
     marginVertical: 5,
     justifyContent: 'center',
     alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: 'dimgray',
   },
   //individual items in scrollable list
   item: {
@@ -207,12 +229,27 @@ const styles = StyleSheet.create({
   SelectImageContainer: { 
     height: 70,
     width: '100%',
-    aspectRatio: 1,
     borderWidth: 1,
     borderRadius: 0,
     borderColor: 'transparent',
     borderTopColor: 'dimgray',
     alignItems: 'center',
+    justifyContent: 'center',
+  },
+  selectImageButton: {
+    height: '85%',
+    width: '95%',
+
+    borderWidth: 2,
+    borderRadius: 10,
+    borderColor: 'dimgray',
+    backgroundColor: 'transparent',
+
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'row',
+
+    
   },
 
   // Exit Button (below the modal)
