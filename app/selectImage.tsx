@@ -1,19 +1,13 @@
 import React, { useState } from 'react';
 import {TouchableOpacity, FlatListComponent, FlatListProps, Text, StyleSheet, Pressable, View, Button, SafeAreaView, Image, TextInput, Dimensions, ScrollView, FlatList} from 'react-native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { FontAwesome5, FontAwesome6 } from "@expo/vector-icons";
 import DropDownPicker from "react-native-dropdown-picker";
 import { PixelRatio } from 'react-native';
 import { iconsToChoose } from '@/assets/images/iconsToChoose';
-import { imageBoxStyles } from './newTrackerView';
+import { imageBoxStyles, IconItem } from './newTrackerView';
 import { Ionicons } from '@expo/vector-icons';
-//import IconComponent
-
-//iconsToChoose data type
-type IconItem = { 
-  name: string;
-  type: string; //what icon is a part of (fa5 as of right now)
-};
+import { RouteParams } from 'expo-router';
 
 //Visuals/function of each item
 type ItemProps = { 
@@ -22,10 +16,6 @@ type ItemProps = {
   backgroundColor: string;
   iconColor: string;
 };
-
-const handleReturn = () => {
-  
-}
 
 //functional component to be used
 const Item = ({ item, onPress, backgroundColor, iconColor }: ItemProps) => (
@@ -47,26 +37,48 @@ const Item = ({ item, onPress, backgroundColor, iconColor }: ItemProps) => (
 );
 
 export default function selectImage() {
+
   const router = useRouter(); 
-  const [selectedName, setSelectedName] = useState<string>();
+
+  const handleSelect = (imageName: string) => {
+    router.back();
+    router.setParams({image: imageName});
+  };
+
+  const params = useLocalSearchParams();
+  const originalImage = typeof params.selectedImage === 'string'? params.selectedImage: ''; //if typematch (should be always) then use inputted image
+  //const {selectedImage} = router;
+  
+  const [selectedName, setSelectedName] = useState<string>(originalImage);
 
   const renderItem = ({ item }: { item: IconItem }) => {
-    const backgroundColor = item.name === selectedName ? 'white' : 'black'; //first
+    const backgroundColor = item.name === selectedName ? 'white' : 'black'; // render white with black backgtound if unselected, inverse if selected
     const iconColor = item.name === selectedName ? 'black' : 'white';
 
     return (
       <Item
         item={item}
-        onPress={() => setSelectedName(item.name)}
+        onPress={() => {
+          setSelectedName(item.name)
+          //handleSelect(item.name)
+        }}
         backgroundColor={backgroundColor}
         iconColor={iconColor}
       />
     );
   };
 
-  const [iconSize, setIconSize] = useState(0);
-  const [iconChanged, setIconChanged] = useState(false);
+  //When confirm pressed
+  const handleConfirm = () => {
+    handleSelect(selectedName);
+    //router.back();
+  };
+
+  const [iconSize, setIconSize] = useState(0); //icon size state
+  const [iconChanged, setIconChanged] = useState(false); //icon changed (unused right now)
     return(
+
+      
 
       //IF YOU ARE READING THIS I KNOW ITS A LOT OF VIEWS BUT THEY ARE GENUINELY ALL IMPORTANT
         <View style={styles.overlay}>
@@ -75,9 +87,9 @@ export default function selectImage() {
                   <View style = {imageBoxStyles.imageButtonsContainer}>
 
                     {/* Left cross button*/}
-                    {!!(selectedName) && ( //if selectedName undefined dont render pressable
+                    {selectedName != '' && ( //if selectedName '' dont render pressable
                       <Pressable style={imageBoxStyles.crossButton}
-                        onPress={() => {setSelectedName(undefined)}}
+                        onPress={() => {setSelectedName('')}}
                       >
                         <Ionicons name="close" size={24} color="white" />
                       </Pressable>
@@ -99,15 +111,14 @@ export default function selectImage() {
                           />
                         )}
                       </Pressable>
-
+                      {selectedName != originalImage && (
                       <Pressable style={imageBoxStyles.tickButton}
-                      onPress={() =>
-                        handleReturn()
-                      }
+                      onPress={handleConfirm}
+                      
                       >
                         <Ionicons name="checkmark" size={24} color="white" />
                       </Pressable>
-        
+                      )}
                     </View>
                 </View>
                 <SafeAreaView style = {styles.iconContainer}>
@@ -134,6 +145,7 @@ export default function selectImage() {
         </Text>
       </Pressable>
         </View>
+        
     )
 }
 
@@ -166,7 +178,6 @@ const styles = StyleSheet.create({
     width: width*0.85,
     backgroundColor: "#101010",
     paddingHorizontal: paddingContainer, // Keep horizontal padding
-    //paddingVertical: paddingContainer, // Add vertical padding
     borderRadius: 15, // Rounded edges
     borderWidth: 1,
     borderColor: 'dimgray',

@@ -1,19 +1,35 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Keyboard, Text, StyleSheet, Pressable, View, Button, SafeAreaView, Image, TextInput, Dimensions} from 'react-native';
-import { useRouter } from 'expo-router';
-import { Ionicons } from "@expo/vector-icons";
+import { useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { FontAwesome5, Ionicons } from "@expo/vector-icons";
 import DropDownPicker from "react-native-dropdown-picker";
 import { PixelRatio } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
+//iconsToChoose data type
+export type IconItem = { 
+  name: string;
+  type: string; //what icon is a part of (fa5 as of right now)
+};
+
 export default function newTrackerView() {
   const router = useRouter(); 
+  const { image } = useLocalSearchParams(); // receives param from child
 
   //states
   const [isGoal, setIsGoal] = useState(true); 
   const [title, setTitle] = useState(''); 
   const [limit, setLimit] = useState('');
+  const [selectedImage, setSelectedImage] = useState("");
 
+   // When we return from child, update state if image param is present : pmo
+   useEffect(() => {
+    if (image && typeof image === 'string') {
+      setSelectedImage(image);
+    }
+  }, [image]);
+
+  
 
   // Dropdown state
   const [open, setOpen] = useState(false);
@@ -58,7 +74,12 @@ export default function newTrackerView() {
   };
 
   const handleImagePressed = () => {
-    router.push('./selectImage');
+    router.push({
+      pathname: './selectImage',
+      params: {
+        selectedImage: selectedImage, //pass current image
+    },
+  });
   }
 
   const toggleButtonState = () => {
@@ -68,11 +89,11 @@ export default function newTrackerView() {
 
   const [iconSize, setIconSize] = useState(0);
     
+  
   return (
     
     <View style={styles.overlay}>
-      
-      
+
       {/* Text Above Popup */}
       <Text style={styles.overlayText}>Create Tracker</Text>
       
@@ -80,22 +101,33 @@ export default function newTrackerView() {
         <View style = {imageBoxStyles.imageButtonsContainer}>
 
         {/* Left cross button*/}
-        <Pressable style={imageBoxStyles.crossButton}>
+        {selectedImage != "" && (
+        <Pressable
+          style={imageBoxStyles.crossButton}
+          onPress={() => setSelectedImage("")}
+        >
           <Ionicons name="close" size={24} color="white" />
         </Pressable>
-
+        )}
         {/* Tracker Icon Option */}
         <Pressable 
           style = {imageBoxStyles.icon}
-          onPress={handleImagePressed}
+          onLayout={(event) => {
+            const { height, } = event.nativeEvent.layout;
+            setIconSize(height * 0.7);
+          }}
+
+          onPress={() => handleImagePressed()}
         > 
-          <Ionicons
-            name={'add'} //unsure about this
-            color="dimgray" 
-            size = {50}
-            alignSelf = 'center'
-            justifySelf = 'center'
-            ></Ionicons>
+          {selectedImage && iconSize > 0 && (
+            <FontAwesome5 
+              name={selectedImage as any}
+              color="white" 
+              size = {iconSize}
+              alignSelf = 'center'
+              justifySelf = 'center'
+            />
+          )}
         </Pressable>
 
         {/* Right tick button */}
