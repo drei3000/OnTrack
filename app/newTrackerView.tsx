@@ -7,7 +7,7 @@ import { PixelRatio } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 
-//check if is a uri
+//check if string is a uri (image)
 export const isUri = (value: string): boolean => {
   return (
     typeof value === 'string' &&
@@ -18,41 +18,28 @@ export const isUri = (value: string): boolean => {
 //iconsToChoose data type
 export type IconItem = { 
   name: string;
-  type: string; //what icon is a part of (fa5 as of right now)
+  type: string; //what icon is a part of (fa5 as of right now, no further implementation yet)
 };
 
 export default function newTrackerView() {
   const router = useRouter(); 
-  const { image, color } = useLocalSearchParams(); // receives param from child
+  const { image, color } = useLocalSearchParams(); // receives updated params from selectImage
 
-  
+
   //states
+  //input states
   const timePeriods = ['Daily','Weekly','Monthly','Yearly']
   const [currentTPIndex, setCurrentTPIndex] = useState(0); //TimePeriod button
   const [isGoal, setIsGoal] = useState(true); 
   const [title, setTitle] = useState(''); 
   const [limit, setLimit] = useState('');
+
+  //image adjustment states
   const [selectedImage, setSelectedImage] = useState("");
-  const [iconSize, setIconSize] = useState(0);
   const [selectedColor, setSelectedColor] = useState('#ffffff')
+  const [iconSize, setIconSize] = useState(0);
 
-   // When return from child, update state if image param is present
-   useEffect(() => {
-    if (image && typeof image === 'string') {
-      setSelectedImage(image);
-    }else{
-      setSelectedImage('');
-    }
-    
-    if(color && typeof color === 'string'){
-      setSelectedColor(color);
-    }
-  }, [image, color] );
-
-  
-  
-
-  // Dropdown state
+  // Dropdown states
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState(null);
     const [units, setUnits] = useState([
@@ -87,6 +74,24 @@ export default function newTrackerView() {
       { label: "Heart Rate (BPM)", value: "bpm" },
     ]);
 
+   // When return from child, update state if image param is present
+   useEffect(() => {
+    if (image && typeof image === 'string') {//set selected image unless blank
+      setSelectedImage(image);
+    }else{
+      setSelectedImage(''); 
+    }
+
+    if(color && typeof color === 'string'){
+      setSelectedColor(color);
+    }
+  }, [image, color] );
+
+  
+  
+
+  
+
   // Confirm action when icon is pressed
   //TO DO: Create tracker and exit in this function given state variables
   const handleConfirm = () => {
@@ -94,6 +99,7 @@ export default function newTrackerView() {
 
   };
 
+  //When icon is pressed (for selection)
   const handleImagePressed = () => {
     router.push({
       pathname: './selectImage',
@@ -104,13 +110,13 @@ export default function newTrackerView() {
   });
   }
 
+  // Toggle between "Goal" and "Limit" on press
   const toggleGoalButton = () => {
-    // Toggle between "Goal" and "Limit" on press
     setIsGoal(prevState => !prevState);
   };
   
+  //View itself
   return (
-    
     <View style={styles.overlay}>
 
       {/* Text Above Popup */}
@@ -119,7 +125,7 @@ export default function newTrackerView() {
       <SafeAreaView style={styles.container}>
         <View style = {imageBoxStyles.imageButtonsContainer}>
 
-        {/* Left cross button*/}
+        {/* Left cross button (render if image)*/}
         {selectedImage != "" && (
         <Pressable
           style={imageBoxStyles.crossButton}
@@ -128,6 +134,7 @@ export default function newTrackerView() {
           <Ionicons name="close" size={24} color="white" />
         </Pressable>
         )}
+
         {/* Tracker Icon Option */}
         <Pressable 
           style = {imageBoxStyles.icon}
@@ -156,10 +163,9 @@ export default function newTrackerView() {
               justifySelf = 'center'
             />
         )}
-          
         </Pressable>
 
-        {/* Right tick button, render if title > 2 */}
+        {/* Right tick button, render if title > 2 (can be changed) */}
         {title.length > 2 && (
         <Pressable style={imageBoxStyles.tickButton}>
           <Ionicons name="checkmark" size={24} color="white" />
@@ -170,34 +176,32 @@ export default function newTrackerView() {
 
         {/* Tracker Title */}
         <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Title(*)"
-          placeholderTextColor="#aaa"
-          maxLength={25} //titles should be brief
-          value = {title}
-          returnKeyType = "done" //allows done button
-          onChangeText={setTitle}
-          onPressIn={() => setOpen(false)} //close dropdown
-        />
+          <TextInput
+            style={styles.input}
+            placeholder="Title(*)"
+            placeholderTextColor="#aaa"
+            maxLength={25} //titles should be brief
+            value = {title}
+            returnKeyType = "done"
+            onChangeText={setTitle}
+            onPressIn={() => setOpen(false)} //close dropdown
+          />
         </View>
 
         {/* Limit/Goal of Tracker (OPTIONAL) */}
         <View style={styles.inputContainer}>
         <TextInput
-          style={[styles.input, {color: isGoal ? "#06402B" : "#950606"}]}
+          style={[styles.input, {color: isGoal ? "#06402B" : "#950606"}]} //if goal text red otherwise green
           
           placeholder = {isGoal ? "Goal" : "Limit"}
           placeholderTextColor="#aaa"
-          
           maxLength={10}
           keyboardType="numeric" 
           returnKeyType = "done" 
           onPressIn={() => setOpen(false)} //close dropdown
           onChangeText={(text) => {
-            //only allow numbers and decimal point
+            //only allow numbers and a single decimal point 
             const cleanedText = text.replace(/[^0-9.]/g, '');
-            //only one decimal point
             const decimalCount = (cleanedText.match(/\./g) || []).length;
             if (decimalCount <= 1) {
               setLimit(cleanedText);
@@ -208,53 +212,55 @@ export default function newTrackerView() {
         </View>
 
       
-        {/* Unit Dropdown (OPTIONAL) */}
-      <View style={styles.dropdownContainer}>
-        <DropDownPicker
-          open={open}
-          value={value}
-          items={units} //List of items is the list of units
-          setOpen = {setOpen}
-          onOpen={() => Keyboard.dismiss()}
-          setValue={setValue}
-          setItems={setUnits}
-          autoScroll = {true}
-          placeholder="Set Unit"
-          placeholderStyle={{color: '#aaa'}}
-          style={styles.dropdown}
-          dropDownContainerStyle={styles.dropdownList}
-          textStyle={styles.dropdownText}
-          arrowIconContainerStyle = {styles.arrowContainerStyle}
-          tickIconContainerStyle = {styles.tickContainerStyle}
-          arrowIconStyle = {styles.dropdownArrow}
-          tickIconStyle = {styles.dropdownTick}
-        />
-      </View>
+        {/* Unit Dropdown <bugged for android> (OPTIONAL) */}
+        <View style={styles.dropdownContainer}>
+          <DropDownPicker
+            open={open}
+            value={value}
+            items={units} //List of items is the list of units
+            setOpen = {setOpen}
+            onOpen={() => Keyboard.dismiss()}
+            setValue={setValue}
+            setItems={setUnits}
+            autoScroll = {true}
+            placeholder="Set Unit"
+            placeholderStyle={{color: '#aaa'}}
+            style={styles.dropdown}
+            dropDownContainerStyle={styles.dropdownList}
+            textStyle={styles.dropdownText}
+            arrowIconContainerStyle = {styles.arrowContainerStyle}
+            tickIconContainerStyle = {styles.tickContainerStyle}
+            arrowIconStyle = {styles.dropdownArrow}
+            tickIconStyle = {styles.dropdownTick}
+          />
+        </View>
+      {/*View with time period + goal/limit buttons in*/}
       <View style = {styles.buttonsContainer}>
-      {/* Time period pressable */}
-      <Pressable
-        style = {styles.timePeriodButton}
-        onPress={() => (setCurrentTPIndex((currentTPIndex + 1) % timePeriods.length))}
-      >
-        <Text style = {{
-          color: '#FFFFFF',
-          fontSize: 20,
-          fontWeight: 'bold',
-        }}>
-          {timePeriods[currentTPIndex]}(*)
-        </Text>
-      </Pressable>
+
+      {/* Time period pressable (cycles through time periods) */}
+        <Pressable
+          style = {styles.timePeriodButton}
+          onPress={() => (setCurrentTPIndex((currentTPIndex + 1) % timePeriods.length))}
+        >
+          <Text style = {{
+            color: '#FFFFFF',
+            fontSize: 20,
+            fontWeight: 'bold',
+          }}>
+            {timePeriods[currentTPIndex]}(*)
+          </Text>
+        </Pressable>
+
         {/* Button to toggle between Goal and Limit */}
         <Pressable
           style={[
             styles.goalLimitButton,
             limit.length > 0 
-            ? (isGoal ? styles.goalButton : styles.limitButton) 
-            : null,
+            ? (isGoal ? styles.goalButton : styles.limitButton) //if {goal} then goal style else limit style
+            : null, 
           ]}
           onPress={
             toggleGoalButton
-  
           }
         >
           <Text style={limit.length > 0 ? styles.goalLimitText : styles.buttonText}> 
@@ -263,8 +269,7 @@ export default function newTrackerView() {
         </Pressable>
       </View>
       </SafeAreaView>
-
-    
+      
       {/* Exit Button (placed below the content) */}
       <Pressable
        onPress={() => {open ? null : router.back()}}
@@ -280,9 +285,9 @@ export default function newTrackerView() {
 
 const width = Dimensions.get('window').width-1
 const height = Dimensions.get('window').height-1
-
 const scale = PixelRatio.get(); //For exact pixel adjustments adjust according to scale
 
+//Cross, Icon box and tick (used in select image)
 export const imageBoxStyles = StyleSheet.create({
   //For image cancellation, image and confirm tracker buttons
   imageButtonsContainer: {
@@ -293,8 +298,8 @@ export const imageBoxStyles = StyleSheet.create({
     justifyContent: 'center',
     alignContent: 'center',
   },
+
   tickButton: {
-    //flex: 3,
     width: 60,
     height: '100%',
 
@@ -307,6 +312,7 @@ export const imageBoxStyles = StyleSheet.create({
     borderTopColor: '#101010',
     borderBottomColor: '#094F23',
     borderBottomWidth: 7,
+
     backgroundColor: '#075F28',
     justifyContent: 'center',
     alignItems: 'center',
@@ -321,18 +327,15 @@ export const imageBoxStyles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'dimgray',
     borderTopColor: '#101010',
-
     borderBottomColor: '#860B0B', 
     borderBottomWidth: 7,
     borderLeftColor: 'transparent',
+
     backgroundColor: '#a30a0a',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  
-  // Image button user can add
   icon: {
-    //flex: 5,
     width: 100,
     height: '100%',
     borderColor: 'dimgray',
@@ -342,12 +345,6 @@ export const imageBoxStyles = StyleSheet.create({
   },
 })
 const styles = StyleSheet.create({
-  //Fixes weird bug to do with text wrapping in container?
-  iconPressable: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
   // Text above popup
   overlayText: {
     fontSize: 18,
@@ -374,8 +371,6 @@ const styles = StyleSheet.create({
 
   // Content inside overlay (background, size etc)
   container: {
-    //flex: 0.6,
-   //height: height*0.52, //Maybe adjust is a tad manual
     height: 410,
     width: width*0.85,
     backgroundColor: "#101010",
@@ -386,6 +381,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
+  // Contains input fields
   inputContainer: {
     width: width*0.85*0.8,
     backgroundColor: "#101010",
@@ -396,112 +392,22 @@ const styles = StyleSheet.create({
     
     alignSelf: 'center',
   },
-
   // All input fields
   input: {
     height: 50,
     color: "#FFFFFF",
     textAlign: "center",
     fontSize: 20,
-    //paddingLeft: 10,
   },
 
-  //container for both
-  buttonsContainer: {
-    height: 50,
-    width: width * 0.85 * 0.8,
-    flexDirection: 'row',
-  },
-
-  timePeriodButton: {
-    height: '100%',
-    flex: 1,
-    backgroundColor: 'black',
-    borderRadius: 5,
-    borderWidth: 2,
-    borderColor: "dimgray",
-
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  
-
-  //goalLimit button
-  goalLimitButton: {
-    flex: 1,
-    height: '100%',
-
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "black",
-
-    borderRadius: 5,
-    borderWidth: 2,
-    borderColor: "dimgray",
-
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#FFFFFF",
-  },
-
-  // Goal and Limit button styles
-  goalButton: {
-    backgroundColor: "#06402B",
-  },
-  limitButton: {
-    backgroundColor: "#950606",
-  },
-
-  //Text if goal or limit
-  goalLimitText: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#FFFFFF",
-  },
-
-  buttonText:{
-    fontSize: 20,
-    color: "dimgray" //blend in and be invisible
-  },
-
-  // Exit Button (below the modal)
-  exitButton: {
-    marginTop: 20, // Adds some space above the button
-    backgroundColor: '#101010',
-    paddingVertical: 12,
-    paddingHorizontal: 30,
-    borderRadius: 25,
-    borderWidth: 1,
-    borderColor: 'dimgray',
-  },
-  // Exit Button (below the modal)
-  exitButtonInvisible: {
-    marginTop: 20, // Adds some space above the button
-    backgroundColor: '#transparent',
-    paddingVertical: 12,
-    paddingHorizontal: 30,
-    borderRadius: 25,
-    borderWidth: 1,
-    borderColor: 'transparent',
-  },
-  exitButtonTextInvisible:{
-    fontSize: 18,
-    color: 'transparent',
-    fontWeight: 'bold',
-  },
-  exitButtonText: {
-    fontSize: 18,
-    color: 'white',
-    fontWeight: 'bold',
-  },
+  // Dropdown styling
   dropdownContainer: {
     width: width*0.8*0.85,
     marginBottom: 10,
     borderRadius: 5,
     borderWidth: 1,
     borderColor: 'dimgray',
-    zIndex: 1000, // Important for dropdown to appear above other elements
+    zIndex: 1000, 
     alignSelf: 'center',
     alignContent: 'center',
   },
@@ -526,15 +432,100 @@ const styles = StyleSheet.create({
     marginLeft: -15,
   },
   dropdownArrow: {
-    width: 5*scale,
+    width: 5*scale, //should probably adjust as no longer using screen size based rendering
     height: 5*scale,
-    tintColor: 'white', // This might work for some icon types
+    tintColor: 'white', 
   },
   dropdownTick: {
     width: 5*scale,
     height: 5*scale,
-    tintColor: 'white', // This might work for some icon types
+    tintColor: 'white', 
   },
+
+  //Contains buttons (important for row display)
+  buttonsContainer: {
+    height: 50,
+    width: width * 0.85 * 0.8,
+    flexDirection: 'row',
+  },
+  timePeriodButton: {
+    height: '100%',
+    flex: 1,
+    backgroundColor: 'black',
+    borderRadius: 5,
+    borderWidth: 2,
+    borderColor: "dimgray",
+
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  goalLimitButton: {
+    flex: 1,
+    height: '100%',
+
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "black",
+
+    borderRadius: 5,
+    borderWidth: 2,
+    borderColor: "dimgray",
+
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#FFFFFF",
+  },
+
+  // Color of goalLimit button dependent on {goal or limit}
+  goalButton: {
+    backgroundColor: "#06402B",
+  },
+  limitButton: {
+    backgroundColor: "#950606",
+  },
+
+  //Text if goal or limit {otherwise buttonText}
+  goalLimitText: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#FFFFFF",
+  },
+  buttonText:{
+    fontSize: 20,
+    color: "dimgray" //dull display
+  },
+
+  // Exit Button (below the modal)
+  exitButton: {
+    marginTop: 20, // Adds some space above the button
+    backgroundColor: '#101010',
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 25,
+    borderWidth: 1,
+    borderColor: 'dimgray',
+  },
+  exitButtonText: {
+    fontSize: 18,
+    color: 'white',
+    fontWeight: 'bold',
+  },
+
+  exitButtonInvisible: {
+    marginTop: 20, // Adds some space above the button
+    backgroundColor: '#transparent',
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 25,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  exitButtonTextInvisible:{
+    fontSize: 18,
+    color: 'transparent',
+    fontWeight: 'bold',
+  },
+  
 
   
 });

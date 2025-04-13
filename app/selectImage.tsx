@@ -192,7 +192,8 @@ export default function selectImage() {
                 {/* Tick button, render if selectedimage has changed and route back with image on press*/}
                 {(
                   (originalImage === '' && (selectedImageUri !== '' || selectedName !== '')) || 
-                  (originalImage !== '' && selectedImageUri !== originalImage && selectedName !== originalImage) 
+                  (originalImage !== '' && selectedImageUri !== originalImage && selectedName !== originalImage) ||
+                  (originalImage !== '' && !isUri(originalImage) && (selectedColor != originalColor)) //colour changed (not relevant in non-icons)
                 ) && (
                   <Pressable 
                   style={imageBoxStyles.tickButton}
@@ -342,13 +343,13 @@ export default function selectImage() {
                 </TouchableOpacity>
               </View>
           </SafeAreaView>
-          {/* Exit Button (placed below the content) */}
+          {/* Cancel Button (placed below the content) */}
     <Pressable
       onPress={() => {router.back()}}
       style={styles.exitButton}
     >
       <Text style={styles.exitButtonText}>
-        Exit
+        Cancel
       </Text>
     </Pressable>
       </View>
