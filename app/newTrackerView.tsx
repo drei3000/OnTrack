@@ -4,7 +4,6 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from "@expo/vector-icons";
 import DropDownPicker from "react-native-dropdown-picker";
 import { PixelRatio } from 'react-native';
-
 export default function newTrackerView() {
   const router = useRouter(); 
 
@@ -90,10 +89,9 @@ export default function newTrackerView() {
           value = {title}
           onChangeText={setTitle}
         />
-        </View>
+        
 
         {/* Limit of Tracker (OPTIONAL) */}
-        <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
           placeholder="Goal"
@@ -111,13 +109,14 @@ export default function newTrackerView() {
           }}
           value={limit}
         />
-        </View>
+        
 
         
 
         {/* Unit Dropdown */}
-      <View style={styles.dropdownContainer}>
+        
         <DropDownPicker
+          //zIndex={100}
           open={open}
           value={value}
           items={units} //List of items is the list of units
@@ -213,10 +212,11 @@ const styles = StyleSheet.create({
   // Content inside overlay (background, size etc)
   container: {
     //flex: 0.6,
-    height: height*0.52, //Maybe adjust is a tad manual
+   //height: height*0.52, //Maybe adjust is a tad manual
+    height: 440,
     width: width*0.85,
     backgroundColor: "#101010",
-    padding: 20,
+    paddingHorizontal: 20,
     borderRadius: 15, // Rounded edges
     borderWidth: 1,
     borderColor: 'dimgray',
@@ -225,10 +225,10 @@ const styles = StyleSheet.create({
 
   // Image button user can add
   icon: {
-    marginTop: 10,
+    marginTop: 5,
+    marginBottom: 5,
     width: 150,
     height: 150,
-    marginBottom: 10,
   },
   inputContainer: {
     width: width*0.85*0.8,
@@ -246,8 +246,6 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     textAlign: "center",
     fontSize: 20,
-
-    //paddingLeft: 10,
   },
 
   // Goal and Limit button styles
@@ -310,17 +308,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: 'white',
     fontWeight: 'bold',
-  },
-  dropdownContainer: {
-    width: width*0.8*0.85,
-    marginBottom: 10,
-    borderRadius: 5,
-    borderWidth: 1,
-    borderColor: 'dimgray',
-    zIndex: 1000, // Important for dropdown to appear above other elements
-    alignSelf: 'center',
-    alignContent: 'center',
-    //marginLeft: pixelMlt, //Is off by one pixel
   },
   dropdown: {
     backgroundColor: '#101010',

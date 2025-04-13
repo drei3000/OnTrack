@@ -8,6 +8,7 @@ import { useNavigation } from '@react-navigation/native';
 import { navigate } from "expo-router/build/global-state/routing";
 import { Link } from "expo-router";
 import { Dimensions } from "react-native";
+import { StatusBar } from "expo-status-bar";
 
 
 // Used in square icon styling for dynamic styles - grid same for all phone sizes
@@ -32,12 +33,15 @@ export default function Index() {
         backgroundColor: "#101010",
       }}
     >
+      <StatusBar style="light"/>
       {/* This view is for the top-left pfp */}
       <View
         style={{
-          position: "absolute",
-          top: 50,
-          left: 22,
+          width: screenWidth,
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          paddingHorizontal: 16,
+          paddingTop: 8,
         }}
       >
         <Pressable
@@ -46,27 +50,16 @@ export default function Index() {
         >
           <MaterialCommunityIcons name="account" size={40} color="white" />
         </Pressable>
-      </View>
 
       {/* This view is for the top-right plus icon */}
-      <View
-        style={{
-          position: "absolute",
-          top: 50,
-          right: 10,
-        }}
-      >
         <Pressable
           onPress={() => router.push("/newTrackerView")}
           style={cornerButtonsStyle}
         >
-          <Entypo name="plus" size={30} color="white" />
+          <Entypo name="plus" size={40} color="white" />
         </Pressable>
         
       </View>
-
-      {/* Used as spaces so content does not cover tl and tr icons */}
-      <View style = {{ height: 35}} />  
 
       <ScrollView
       contentContainerStyle={{
@@ -293,5 +286,5 @@ const cornerButtonsStyle = {
   width: 45,
   height: 45,
   justifyContent: "center" as const,
-  alignItems: "flex-start" as const,
+  alignItems: "center" as const,
 };
