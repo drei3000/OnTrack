@@ -6,6 +6,7 @@ import DropDownPicker from "react-native-dropdown-picker";
 import { PixelRatio } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
+
 //check if is a uri
 export const isUri = (value: string): boolean => {
   return (
@@ -22,8 +23,9 @@ export type IconItem = {
 
 export default function newTrackerView() {
   const router = useRouter(); 
-  const { image } = useLocalSearchParams(); // receives param from child
+  const { image, color } = useLocalSearchParams(); // receives param from child
 
+  
   //states
   const timePeriods = ['Daily','Weekly','Monthly','Yearly']
   const [currentTPIndex, setCurrentTPIndex] = useState(0); //TimePeriod button
@@ -32,13 +34,20 @@ export default function newTrackerView() {
   const [limit, setLimit] = useState('');
   const [selectedImage, setSelectedImage] = useState("");
   const [iconSize, setIconSize] = useState(0);
+  const [selectedColor, setSelectedColor] = useState('#ffffff')
 
    // When return from child, update state if image param is present
    useEffect(() => {
     if (image && typeof image === 'string') {
       setSelectedImage(image);
+    }else{
+      setSelectedImage('');
     }
-  }, [image]);
+    
+    if(color && typeof color === 'string'){
+      setSelectedColor(color);
+    }
+  }, [image, color] );
 
   
   
@@ -90,6 +99,7 @@ export default function newTrackerView() {
       pathname: './selectImage',
       params: {
         selectedImage: selectedImage, //pass current image
+        selectedColor: selectedColor, //pass selected Color
     },
   });
   }
@@ -140,7 +150,7 @@ export default function newTrackerView() {
         ) : selectedImage && iconSize > 0 && ( //otherwise if valid use icon
           <FontAwesome5 
               name={selectedImage as any}
-              color="white" 
+              color = {selectedColor} 
               size = {iconSize}
               alignSelf = 'center'
               justifySelf = 'center'

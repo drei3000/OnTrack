@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import {Image, TouchableOpacity, Text, StyleSheet, Pressable, View, Button, SafeAreaView, Dimensions, FlatList} from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import {LayoutRectangle, UIManager, findNodeHandle, Modal, Image, TouchableOpacity, Text, StyleSheet, Pressable, View, Button, SafeAreaView, Dimensions, FlatList} from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { FontAwesome5 } from "@expo/vector-icons";
 import { PixelRatio } from 'react-native';
@@ -7,7 +7,23 @@ import { iconsToChoose } from '@/assets/images/iconsToChoose';
 import { imageBoxStyles, IconItem, isUri } from './newTrackerView';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import ColorPicker, { Panel1, Swatches, Preview, OpacitySlider, HueSlider } from 'reanimated-color-picker';
+import { runOnJS } from 'react-native-reanimated';
 
+//Color selection functions
+type ColorFormatsObject = { //describes format of colors
+  hex: string;
+  rgb: { r: number; g: number; b: number };
+  hsv: { h: number; s: number; v: number };
+  opacity: number;
+};
+
+
+
+//If hex color
+export const isHexColor = (color: string): boolean => {
+  return /^#([0-9A-Fa-f]{3}){1,2}$/.test(color);
+};
 
 //Visuals/function of each item
 type ItemProps = { 
@@ -16,6 +32,8 @@ type ItemProps = {
   backgroundColor: string;
   iconColor: string;
 };
+
+
 
 //the item to be rendered (selectable icons)
 const Item = ({ item, onPress, backgroundColor, iconColor }: ItemProps) => (
@@ -39,7 +57,44 @@ const Item = ({ item, onPress, backgroundColor, iconColor }: ItemProps) => (
 export default function selectImage() {
   const [selectedName, setSelectedName] = useState<string>('');
   const [selectedImageUri, setSelectedImageUri] = useState<string>('');
+  const [prevColorFlag, setPrevColorFlag] = useState<boolean>(false)
+  const [prevColor, setPrevColor] = useState<string>('#ffffff')
+  const [selectedColor, setSelectedColor] = useState<string>('#ffffff');
   const router = useRouter(); 
+
+  const iconRef = useRef<View>(null);
+
+  const [iconPosition, setIconPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+
+  //Handle selected color
+  const onSelectColor = (color: ColorFormatsObject) => {
+    if (!prevColorFlag){
+      setPrevColor(selectedColor);
+      setPrevColorFlag(true)
+    }
+    setSelectedColor(color.hex);
+    console.log('Selected HEX:', color.hex);
+  };
+
+  //Initial handling
+  const onSelectColorWorklet = (color: unknown) => {
+    'worklet';
+    runOnJS(onSelectColor)(color as ColorFormatsObject);
+  };
+    const measureIcon = () => {
+    if (iconRef.current) {
+      const handle = findNodeHandle(iconRef.current);
+      if (handle) {
+        UIManager.measure(handle, (_x, _y, _width, _height, pageX, pageY) => {
+          setIconPosition({ x: pageX, y: pageY });
+        });
+      }
+    }
+  };
+
+  interface ColorSelection {
+    hex: string;
+  }
 
   //if typematch (should be always) then use inputted image
   const params = useLocalSearchParams();
@@ -52,10 +107,16 @@ export default function selectImage() {
     }
   }, [originalImage]);
 
+  //if selectedColor is hexcode then set originalColor
+  const originalColor = typeof params.selectedColor == 'string' ? (isHexColor(params.selectedColor) ? params.selectedColor : '#ffffff') : '#ffffff';
+  useEffect(() => {
+    setSelectedColor(originalColor);
+  }, [originalColor]);
+  
   //rendering each icon
   const renderItem = ({ item }: { item: IconItem }) => {
-    const backgroundColor = item.name === selectedName ? 'white' : 'black'; // render white with black background if unselected, inverse if selected
-    const iconColor = item.name === selectedName ? 'black' : 'white';
+    const backgroundColor = item.name === selectedName ? 'white' : '#101010'; // render white with black background if unselected, inverse if selecte
+    const iconColor = selectedColor === '#ffffff' ? (item.name === selectedName ? 'black' : 'white') : selectedColor; //if color white inverse to background otherwise show selected color
     return (
       <Item
         item={item}
@@ -69,6 +130,7 @@ export default function selectImage() {
     );
   };
 
+  const [showModal, setShowModal] = useState(false);
   const [iconSize, setIconSize] = useState(0); //icon size state (used to calculate necessary size)
   const [imageSize, setImageSize] = useState(0); //icon size state (used to calculate necessary size)
     return(
@@ -95,6 +157,12 @@ export default function selectImage() {
 
                 {/* icon display */}
                 <Pressable 
+                  ref={iconRef}
+                  onPress={() => {
+                    measureIcon();
+                    setShowModal(true);
+                    setPrevColorFlag(false)
+                  }}
                   style = {imageBoxStyles.icon}
                   onLayout={(event) => { {/* get size according to box size on layout*/}
                     const { height, } = event.nativeEvent.layout;
@@ -114,7 +182,7 @@ export default function selectImage() {
                   selectedName && iconSize > 0 && ( // if selectedName and iconSize valid then render icon
                     <FontAwesome5 
                       name={selectedName as string}
-                      color="white" 
+                      color={selectedColor}
                       size = {iconSize}
                       alignSelf = 'center'
                     />
@@ -130,7 +198,8 @@ export default function selectImage() {
                   style={imageBoxStyles.tickButton}
                   onPress = {() => {
                     router.back();
-                    //return either image uri or icon name
+                    //return either image uri or icon name, as well as color
+                    router.setParams({color: selectedColor});
                     selectedImageUri ? router.setParams({ image: selectedImageUri }) : router.setParams({ image: selectedName });
                   }}
                   >
@@ -138,6 +207,82 @@ export default function selectImage() {
                   </Pressable>
                 )}
               </View>
+
+              <Modal visible={showModal} animationType="fade" transparent>
+                <View style={{ flex: 1 }}>
+                  {/* Background layer */}
+                  <Pressable
+                    style={{ flex: 1 }}
+                    onPress={() => {
+                      setShowModal(false)
+                      setSelectedColor(prevColor)
+                      }
+                    }
+                  />
+
+                  {/* Foreground: Actual picker popup */}
+                  <View
+                    style={{
+                      position: 'absolute',
+                      top: iconPosition.y + 100 + 5,
+                      left: iconPosition.x + 50 - 100 - 10,
+                      backgroundColor: 'black',
+                      padding: 10,
+                      borderRadius: 8,
+                      elevation: 5,
+                    }}
+                    // Make sure it blocks touches
+                    pointerEvents="auto"
+                  >
+                    <ColorPicker
+                      style={{ width: 200, height: 200 }}
+                      value={selectedColor}
+                      onComplete={onSelectColorWorklet}
+                    >
+                      <Preview 
+                      hideInitialColor = {true}
+                      />
+                      <Panel1 />
+                      <HueSlider />
+                    </ColorPicker>
+                    <Pressable
+                      onPress={() => setSelectedColor('#ffffff')}
+                      style={[
+                        styles.colorPickerButtons,
+                        { 
+                          backgroundColor: 'white',
+                          marginTop: 55 //for some reason need margin, height of hue slider = 50 + leighweight
+                        }
+                      ]}
+                    >
+                      <Text
+                      style = {{
+                        color: 'black',
+                        fontWeight: 'bold',
+
+                      }}>
+                        Default
+                      </Text>
+                    </Pressable>
+
+                    <Pressable
+                      onPress={() => setShowModal(false)}
+                      style={[
+                        styles.colorPickerButtons,
+                        { backgroundColor: 'green' }
+                      ]}
+                    >
+                      <Text
+                      style = {{
+                        color: 'black',
+                        fontWeight: 'bold',
+                      }}>
+                        Confirm
+                      </Text>
+                    </Pressable>
+                  </View>
+                </View>
+              </Modal>
 
               {/* Icon selection, render selectable icons*/}
               <SafeAreaView style = {styles.iconContainer}>
@@ -317,6 +462,18 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
   },
+
+  //ColorPicker Buttons
+  colorPickerButtons: {
+    width: 200,
+    height: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
+
+    borderColor: 'black',
+    borderRadius: 5,
+    borderWidth: 2,
+  }
   
 
 });
