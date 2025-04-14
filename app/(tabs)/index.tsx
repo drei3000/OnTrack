@@ -22,6 +22,7 @@ const itemSize = (screenWidth - totalSpacing - (sidesPadding * 2)) / itemsPerRow
 
 export default function Index() {
   const router = useRouter();
+  //const navigation = useNavigation();
 
   return (
     <SafeAreaView
@@ -44,7 +45,7 @@ export default function Index() {
         }}
       >
         <Pressable
-          onPress={() => Alert.alert("Pfp icon pressed")}
+          onPress={() => router.push("/Profile")}
           style={cornerButtonsStyle}
         >
           <MaterialCommunityIcons name="account" size={40} color="white" />

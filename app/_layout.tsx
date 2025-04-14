@@ -25,7 +25,7 @@ export default function Layout() {
     <Stack screenOptions={{ headerShown: false }}> {/*Can be true, adds back button and title*/}
       {/*Will always be one of tabs present*/}
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      
+      <Stack.Screen name ="Profile" options={{ presentation: "transparentModal", title: 'Profile'}} />
       {/* Makes transparent screen for tracker creation*/}
       <Stack.Screen name="newTrackerView" options={{ presentation: "transparentModal", title: "New Tracker" }} />
       {/* Makes transparent screen for image selection*/}
