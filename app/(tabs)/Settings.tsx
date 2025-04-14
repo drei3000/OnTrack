@@ -1,4 +1,4 @@
-import { Text, View, Pressable, StyleSheet, ScrollView } from "react-native";
+import { Text, View, Pressable, StyleSheet, ScrollView, SafeAreaView } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTheme } from "../ThemeContext";
 import { useRouter } from "expo-router";
@@ -26,6 +26,7 @@ export default function Index() {
     },
     settingsList: {
       width: "100%",
+      flexGrow: 1, // Added to allow ScrollView to expand properly
     },
     settingsItem: {
       flexDirection: "row",
@@ -99,45 +100,51 @@ export default function Index() {
   ];
 
   return (
-    <View style={[styles.container, { backgroundColor: currentTheme.backgroundColor }]}>
-      <Pressable style={styles.themeToggle} onPress={toggleTheme}>
-        <MaterialCommunityIcons
-          name={isDarkMode ? "weather-night" : "white-balance-sunny"}
-          size={24}
-          color={currentTheme.textColor}
-        />
-        <Text style={[styles.themeText, { color: currentTheme.textColor }]}>
-          {isDarkMode ? "Dark Mode" : "Light Mode"}
-        </Text>
-      </Pressable>
+    <SafeAreaView style={{ flex: 1, backgroundColor: currentTheme.backgroundColor }}>
+      <View style={[styles.container]}>
+        <Pressable style={styles.themeToggle} onPress={toggleTheme}>
+          <MaterialCommunityIcons
+            name={isDarkMode ? "weather-night" : "white-balance-sunny"}
+            size={24}
+            color={currentTheme.textColor}
+          />
+          <Text style={[styles.themeText, { color: currentTheme.textColor }]}>
+            {isDarkMode ? "Dark Mode" : "Light Mode"}
+          </Text>
+        </Pressable>
 
-      <ScrollView contentContainerStyle={styles.settingsList}>
-        {settingsItems.map((item, index) => (
-          <Pressable
-            key={index}
-            style={[styles.settingsItem, { backgroundColor: currentTheme.cardBackgroundColor }]}
-            onPress={item.onPress}
-          >
-            <MaterialCommunityIcons
-              name={item.icon as keyof typeof MaterialCommunityIcons.glyphMap}
-              size={24}
-              color={currentTheme.textColor}
-            />
-            <View style={styles.settingsTextContainer}>
-              <Text style={[styles.settingsTitle, { color: currentTheme.textColor }]}>{item.title}</Text>
-              <Text style={[styles.settingsDescription, { color: currentTheme.secondaryTextColor }]}>
-                {item.description}
-              </Text>
-            </View>
-          </Pressable>
-        ))}
-      </ScrollView>
+        <ScrollView
+          horizontal={false} 
+          style={{ width: "100%" }} 
+          contentContainerStyle={styles.settingsList} 
+        >
+          {settingsItems.map((item, index) => (
+            <Pressable
+              key={index}
+              style={[styles.settingsItem, { backgroundColor: currentTheme.cardBackgroundColor }]}
+              onPress={item.onPress}
+            >
+              <MaterialCommunityIcons
+                name={item.icon as keyof typeof MaterialCommunityIcons.glyphMap}
+                size={24}
+                color={currentTheme.textColor}
+              />
+              <View style={styles.settingsTextContainer}>
+                <Text style={[styles.settingsTitle, { color: currentTheme.textColor }]}>{item.title}</Text>
+                <Text style={[styles.settingsDescription, { color: currentTheme.secondaryTextColor }]}>
+                  {item.description}
+                </Text>
+              </View>
+            </Pressable>
+          ))}
+        </ScrollView>
 
-      <View style={styles.footer}>
-        <Text style={[styles.footerText, { color: currentTheme.secondaryTextColor }]}>
-          © 2025 OnTrack. All rights reserved.
-        </Text>
+        <View style={styles.footer}>
+          <Text style={[styles.footerText, { color: currentTheme.secondaryTextColor }]}>
+            © 2025 OnTrack. All rights reserved.
+          </Text>
+        </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
