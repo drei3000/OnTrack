@@ -66,7 +66,6 @@ export default function selectImage() {
   //Handle selected color
   const onSelectColor = (color: ColorFormatsObject) => {
     setSelectedColor(color.hex);
-    console.log('Selected HEX:', color.hex);
   };
 
   //Initial handling, onComplete called in UI thread, need to run JS function
