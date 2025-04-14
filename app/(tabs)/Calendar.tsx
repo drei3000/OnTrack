@@ -169,5 +169,7 @@ const pressableTextStyle = {
     fontSize: 16,
     marginLeft: 12,
     fontWeight: "bold" as const,
-    alignItems: "center" as const,
-};
+  };
+
+
+
