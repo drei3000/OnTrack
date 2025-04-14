@@ -1,18 +1,45 @@
-import React, { useState } from 'react';
-import { Text, StyleSheet, Pressable, View, Button, SafeAreaView, Image, TextInput, Dimensions} from 'react-native';
-import { useRouter } from 'expo-router';
-import { Ionicons } from "@expo/vector-icons";
+import React, { useEffect, useState, useCallback } from 'react';
+import { Keyboard, Text, StyleSheet, Pressable, View, Button, SafeAreaView, Image, TextInput, Dimensions} from 'react-native';
+import { useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { FontAwesome5, Ionicons } from "@expo/vector-icons";
 import DropDownPicker from "react-native-dropdown-picker";
 import { PixelRatio } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+
+
+//check if string is a uri (image)
+export const isUri = (value: string): boolean => {
+  return (
+    typeof value === 'string' &&
+    (value.startsWith('http') || value.startsWith('file://') || value.startsWith('data:image/'))
+  );
+};
+
+//iconsToChoose data type
+export type IconItem = { 
+  name: string;
+  type: string; //what icon is a part of (fa5 as of right now, no further implementation yet)
+};
+
 export default function newTrackerView() {
   const router = useRouter(); 
+  const { image, color } = useLocalSearchParams(); // receives updated params from selectImage
 
-  //states
+
+  /*states*/
+  //input states
+  const timePeriods = ['Daily','Weekly','Monthly','Yearly']
+  const [currentTPIndex, setCurrentTPIndex] = useState(0); //TimePeriod button
   const [isGoal, setIsGoal] = useState(true); 
   const [title, setTitle] = useState(''); 
   const [limit, setLimit] = useState('');
-  
-  // Dropdown state
+
+  //image adjustment states
+  const [selectedImage, setSelectedImage] = useState("");
+  const [selectedColor, setSelectedColor] = useState('#ffffff')
+  const [iconSize, setIconSize] = useState(0);
+
+  // Dropdown states
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState(null);
     const [units, setUnits] = useState([
@@ -46,62 +73,131 @@ export default function newTrackerView() {
       { label: "Kilojoules", value: "kj" },
       { label: "Heart Rate (BPM)", value: "bpm" },
     ]);
-  
 
-  // Confirm action when icon is pressed
+    /*Functions*/
+   // When return from child, update state if image param is present
+   useEffect(() => {
+    if (image && typeof image === 'string') {//set selected image unless blank
+      setSelectedImage(image);
+    }else{
+      setSelectedImage(''); 
+    }
+
+    if(color && typeof color === 'string'){
+      setSelectedColor(color);
+    }
+  }, [image, color] );
+
+  // Confirm action when tick is pressed
   //TO DO: Create tracker and exit in this function given state variables
   const handleConfirm = () => {
     console.log('Confirmed');
 
   };
 
-  const toggleButtonState = () => {
-    // Toggle between "Goal" and "Limit" on press
+  //When icon is pressed (for selection)
+  const handleImagePressed = () => {
+    router.push({
+      pathname: './selectImage',
+      params: {
+        selectedImage: selectedImage, //pass current image
+        selectedColor: selectedColor, //pass selected Color
+    },
+  });
+  }
+
+  // Toggle between "Goal" and "Limit" on press
+  const toggleGoalButton = () => {
     setIsGoal(prevState => !prevState);
   };
-
-  var dropdownPresent = false;
+  
+  //View itself
   return (
     <View style={styles.overlay}>
-      
+
       {/* Text Above Popup */}
       <Text style={styles.overlayText}>Create Tracker</Text>
       
       <SafeAreaView style={styles.container}>
+        <View style = {imageBoxStyles.imageButtonsContainer}>
+
+        {/* Left cross button (render if image)*/}
+        {selectedImage != "" && (
+        <Pressable
+          style={imageBoxStyles.crossButton}
+          onPress={() => setSelectedImage("")}
+        >
+          <Ionicons name="close" size={24} color="white" />
+        </Pressable>
+        )}
 
         {/* Tracker Icon Option */}
-        <Pressable onPress={() => router.push('./selectImage')}
-          style={styles.iconPressable}
-          >
+        <Pressable 
+          style = {imageBoxStyles.icon}
+          onLayout={(event) => {
+            const { height, } = event.nativeEvent.layout;
+            setIconSize(height * 0.7);
+          }}
 
+          onPress={() => handleImagePressed()}
+        > 
+        {isUri(selectedImage) ? ( //use image if imageUri
           <Image
-            source={require("../assets/images/addImage.png")}
-            style={styles.icon}
-          />
+          source={{ uri: selectedImage }}
+          style={{
+            width: 98,
+            aspectRatio: 1,
+          }}
+          resizeMode="cover"
+        />
+        ) : selectedImage && iconSize > 0 && ( //otherwise if valid use icon
+          <FontAwesome5 
+              name={selectedImage as any}
+              color = {selectedColor} 
+              size = {iconSize}
+              alignSelf = 'center'
+              justifySelf = 'center'
+            />
+        )}
         </Pressable>
+
+        {/* Right tick button, render if title > 2 (can be changed) */}
+        {title.length > 2 && (
+        <Pressable style={imageBoxStyles.tickButton}>
+          <Ionicons name="checkmark" size={24} color="white" />
+        </Pressable>
+        )}
+        </View>
+
 
         {/* Tracker Title */}
         <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Title"
-          placeholderTextColor="#aaa"
-          value = {title}
-          onChangeText={setTitle}
-        />
-        
+          <TextInput
+            style={styles.input}
+            placeholder="Title(*)"
+            placeholderTextColor="#aaa"
+            maxLength={25} //titles should be brief
+            value = {title}
+            returnKeyType = "done"
+            onChangeText={setTitle}
+            onPressIn={() => setOpen(false)} //close dropdown
+          />
+        </View>
 
-        {/* Limit of Tracker (OPTIONAL) */}
+        {/* Limit/Goal of Tracker (OPTIONAL) */}
+        <View style={styles.inputContainer}>
         <TextInput
-          style={styles.input}
-          placeholder="Goal"
+          style={[styles.input, {color: isGoal ? "#06402B" : "#950606"}]} //if goal text red otherwise green
+          
+          placeholder = {isGoal ? "Goal" : "Limit"}
           placeholderTextColor="#aaa"
-          keyboardType="numeric"  // Shows numeric keyboard
-          returnKeyType = "done" //allows done button
+          maxLength={10}
+          keyboardType="numeric" 
+          returnKeyType = "done" 
+          onPressIn={() => setOpen(false)} //close dropdown
           onChangeText={(text) => {
-            // Only allow numbers and decimal point
+            //only allow numbers and a single decimal point 
             const cleanedText = text.replace(/[^0-9.]/g, '');
-            // Ensure only one decimal point
             const decimalCount = (cleanedText.match(/\./g) || []).length;
             if (decimalCount <= 1) {
               setLimit(cleanedText);
@@ -109,57 +205,67 @@ export default function newTrackerView() {
           }}
           value={limit}
         />
-        
+        </View>
 
-        
+      
+        {/* Unit Dropdown <bugged for android> (OPTIONAL) */}
+        <View style={styles.dropdownContainer}>
+          <DropDownPicker
+            open={open}
+            value={value}
+            items={units} //List of items is the list of units
+            setOpen = {setOpen}
+            onOpen={() => Keyboard.dismiss()}
+            setValue={setValue}
+            setItems={setUnits}
+            autoScroll = {true}
+            placeholder="Set Unit"
+            placeholderStyle={{color: '#aaa'}}
+            style={styles.dropdown}
+            dropDownContainerStyle={styles.dropdownList}
+            textStyle={styles.dropdownText}
+            arrowIconContainerStyle = {styles.arrowContainerStyle}
+            tickIconContainerStyle = {styles.tickContainerStyle}
+            arrowIconStyle = {styles.dropdownArrow}
+            tickIconStyle = {styles.dropdownTick}
+          />
+        </View>
+      {/*View with time period + goal/limit buttons in*/}
+      <View style = {styles.buttonsContainer}>
 
-        {/* Unit Dropdown */}
-        
-        <DropDownPicker
-          //zIndex={100}
-          open={open}
-          value={value}
-          items={units} //List of items is the list of units
-          setOpen={setOpen}
-          setValue={setValue}
-          setItems={setUnits}
-          autoScroll = {true}
-          placeholder="Set Unit"
-          placeholderStyle={{color: '#aaa'}}
-          style={styles.dropdown}
-          dropDownContainerStyle={styles.dropdownList}
-          textStyle={styles.dropdownText}
-          arrowIconContainerStyle = {styles.arrowContainerStyle}
-          tickIconContainerStyle = {styles.tickContainerStyle}
-          arrowIconStyle = {styles.dropdownArrow}
-          tickIconStyle = {styles.dropdownTick}
-        />
-      </View>
+      {/* Time period pressable (cycles through time periods) */}
+        <Pressable
+          style = {styles.timePeriodButton}
+          onPress={() => (setCurrentTPIndex((currentTPIndex + 1) % timePeriods.length))}
+        >
+          <Text style = {{
+            color: '#FFFFFF',
+            fontSize: 20,
+            fontWeight: 'bold',
+          }}>
+            {timePeriods[currentTPIndex]}(*)
+          </Text>
+        </Pressable>
 
         {/* Button to toggle between Goal and Limit */}
         <Pressable
           style={[
-            styles.button,
-            limit.length > 0 ? (isGoal ? styles.goalButton : styles.limitButton) : null,
+            styles.goalLimitButton,
+            limit.length > 0 
+            ? (isGoal ? styles.goalButton : styles.limitButton) //if {goal} then goal style else limit style
+            : null, 
           ]}
-          onPress={toggleButtonState}
+          onPress={
+            toggleGoalButton
+          }
         >
-          <Text style={limit.length > 0 ? styles.goalLimitText : styles.buttonText}>
+          <Text style={limit.length > 0 ? styles.goalLimitText : styles.buttonText}> 
             {isGoal ? 'Goal' : 'Limit'}
           </Text>
         </Pressable>
-
-        {/* Confirm Button (Only shows if title is not empty) */}
-        {title.length > 0 && (
-          <Pressable
-           onPress={handleConfirm} 
-           style={styles.confirmButton}>
-            <Ionicons name="checkbox" size={30} color="#FFFFFF" />
-          </Pressable>
-        )}
+      </View>
       </SafeAreaView>
-
-    
+      
       {/* Exit Button (placed below the content) */}
       <Pressable
        onPress={() => {open ? null : router.back()}}
@@ -174,17 +280,75 @@ export default function newTrackerView() {
 }
 
 const width = Dimensions.get('window').width-1
-const height = Dimensions.get('window').height-1
-
+//const height = Dimensions.get('window').height-1
 const scale = PixelRatio.get(); //For exact pixel adjustments adjust according to scale
 
-const styles = StyleSheet.create({
-  //Fixes weird bug to do with text wrapping in container?
-  iconPressable: {
+//Cross, Icon box and tick (used in select image)
+export const imageBoxStyles = StyleSheet.create({
+  //For image cancellation, image and confirm tracker buttons
+  imageButtonsContainer: {
+    height: 100,
+    width: 220,
+    marginVertical: 30,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignContent: 'center',
+
+    position: 'relative',
+  },
+
+  tickButton: {
+    position: 'absolute',
+    right: 0,
+
+    width: 60,
+    height: '100%',
+    borderRadius: 10,
+    borderTopLeftRadius: 0,
+    borderBottomLeftRadius: 0,
+    borderWidth: 1,
+    borderColor: 'dimgray',
+    borderRightColor: 'transparent',
+    borderTopColor: '#101010',
+    borderBottomColor: '#094F23',
+    borderBottomWidth: 7,
+
+    backgroundColor: '#075F28',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  crossButton: {
+    position: 'absolute',
+    left: 0,
+    width: 60,
+    height: '100%',
+
+    borderRadius: 10,
+    borderTopRightRadius: 0,
+    borderBottomRightRadius: 0,
+    borderWidth: 1,
+    borderColor: 'dimgray',
+    borderTopColor: '#101010',
+    borderBottomColor: '#860B0B', 
+    borderBottomWidth: 7,
+    borderLeftColor: 'transparent',
+
+    backgroundColor: '#a30a0a',
     alignItems: 'center',
     justifyContent: 'center',
   },
+  icon: {
+    width: 100,
+    height: '100%',
+    borderColor: 'dimgray',
+    borderWidth: 1,
+    justifyContent: 'center',
+    alignContent: 'center',
 
+    alignItems: 'center',
+  },
+})
+const styles = StyleSheet.create({
   // Text above popup
   overlayText: {
     fontSize: 18,
@@ -211,9 +375,7 @@ const styles = StyleSheet.create({
 
   // Content inside overlay (background, size etc)
   container: {
-    //flex: 0.6,
-   //height: height*0.52, //Maybe adjust is a tad manual
-    height: 440,
+    height: 410,
     width: width*0.85,
     backgroundColor: "#101010",
     paddingHorizontal: 20,
@@ -223,23 +385,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  // Image button user can add
-  icon: {
-    marginTop: 5,
-    marginBottom: 5,
-    width: 150,
-    height: 150,
-  },
+  // Contains input fields
   inputContainer: {
     width: width*0.85*0.8,
     backgroundColor: "#101010",
     borderColor: "dimgray",
-    marginBottom: 10,
+    marginBottom: 5,
     borderRadius: 5,
     borderWidth: 1,
+    
     alignSelf: 'center',
   },
-
   // All input fields
   input: {
     height: 50,
@@ -248,72 +404,20 @@ const styles = StyleSheet.create({
     fontSize: 20,
   },
 
-  // Goal and Limit button styles
-  goalButton: {
-    backgroundColor: "#06402B",
-  },
-  limitButton: {
-    backgroundColor: "#950606",
-  },
-
-  //Button if neither goal nor limit
-  button: {
-    width: width*0.85*0.5, //button half of the container
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 10,
-    backgroundColor: "dimgray",
-    height: 50,
+  // Dropdown styling
+  dropdownContainer: {
+    width: width*0.8*0.85,
+    marginBottom: 10,
     borderRadius: 5,
     borderWidth: 1,
-    borderColor: "dimgray",
-  },
-  //Text if goal or limit
-  goalLimitText: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#FFFFFF",
-  },
-  buttonText:{
-    fontSize: 20,
-    color: "dimgray" //blend in and be invisible
-  },
-
-  // Exit Button (below the modal)
-  exitButton: {
-    marginTop: 20, // Adds some space above the button
-    backgroundColor: '#101010',
-    paddingVertical: 12,
-    paddingHorizontal: 30,
-    borderRadius: 25,
-    borderWidth: 1,
     borderColor: 'dimgray',
-  },
-  // Exit Button (below the modal)
-  exitButtonInvisible: {
-    marginTop: 20, // Adds some space above the button
-    backgroundColor: '#transparent',
-    paddingVertical: 12,
-    paddingHorizontal: 30,
-    borderRadius: 25,
-    borderWidth: 1,
-    borderColor: 'transparent',
-  },
-  exitButtonTextInvisible:{
-    fontSize: 18,
-    color: 'transparent',
-    fontWeight: 'bold',
-  },
-  exitButtonText: {
-    fontSize: 18,
-    color: 'white',
-    fontWeight: 'bold',
+    zIndex: 1000, 
+    alignSelf: 'center',
+    alignContent: 'center',
   },
   dropdown: {
     backgroundColor: '#101010',
     borderColor: 'transparent',
-    //paddingLeft: 12*scale, //padding according to arrow size to center (for some reason 45 if central?)
-    
   },
   dropdownList: {
     backgroundColor: '#101010',
@@ -332,21 +436,100 @@ const styles = StyleSheet.create({
     marginLeft: -15,
   },
   dropdownArrow: {
-    width: 5*scale,
+    width: 5*scale, //should probably adjust as no longer using screen size based rendering
     height: 5*scale,
-    tintColor: 'white', // This might work for some icon types
+    tintColor: 'white', 
   },
   dropdownTick: {
     width: 5*scale,
     height: 5*scale,
-    tintColor: 'white', // This might work for some icon types
+    tintColor: 'white', 
   },
-  // checkbox to confirm
-  confirmButton: {
-    position: 'absolute',
-    top: 20,
-    right: 20,
-    backgroundColor: 'transparent',
-    padding: 10,
+
+  //Contains buttons (important for row display)
+  buttonsContainer: {
+    height: 50,
+    width: width * 0.85 * 0.8,
+    flexDirection: 'row',
   },
+  timePeriodButton: {
+    height: '100%',
+    flex: 1,
+    backgroundColor: 'black',
+    borderRadius: 5,
+    borderWidth: 2,
+    borderColor: "dimgray",
+
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  goalLimitButton: {
+    flex: 1,
+    height: '100%',
+
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "black",
+
+    borderRadius: 5,
+    borderWidth: 2,
+    borderColor: "dimgray",
+
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#FFFFFF",
+  },
+
+  // Color of goalLimit button dependent on {goal or limit}
+  goalButton: {
+    backgroundColor: "#06402B",
+  },
+  limitButton: {
+    backgroundColor: "#950606",
+  },
+
+  //Text if goal or limit {otherwise buttonText}
+  goalLimitText: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#FFFFFF",
+  },
+  buttonText:{
+    fontSize: 20,
+    color: "dimgray" //dull display
+  },
+
+  // Exit Button (below the modal)
+  exitButton: {
+    marginTop: 20, // Adds some space above the button
+    backgroundColor: '#101010',
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 25,
+    borderWidth: 1,
+    borderColor: 'dimgray',
+  },
+  exitButtonText: {
+    fontSize: 18,
+    color: 'white',
+    fontWeight: 'bold',
+  },
+
+  exitButtonInvisible: {
+    marginTop: 20, // Adds some space above the button
+    backgroundColor: '#transparent',
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 25,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  exitButtonTextInvisible:{
+    fontSize: 18,
+    color: 'transparent',
+    fontWeight: 'bold',
+  },
+  
+
+  
 });

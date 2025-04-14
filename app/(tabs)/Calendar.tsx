@@ -29,14 +29,13 @@ export default function Index() {
   const router = useRouter();
 
   return (
-    <SafeAreaView 
-      style={{
+      <SafeAreaView 
+        style={{
         flex: 1,
         justifyContent: "flex-start",
         alignItems: "center",
         backgroundColor: "#101010",
-      }}
-    >
+      }}>
       {/* Header buttons */}
       {/* This view is for the top-left pfp */}
       <View
@@ -60,6 +59,7 @@ export default function Index() {
       <View>
         <Calendar onSelectDate={setSelectedDate} selected={selectedDate || ""} />
       </View>
+  
       {/* SCROLLVIEW - Contains gradient pressable buttons only */}
       <ScrollView>
         <View>
@@ -169,8 +169,7 @@ const pressableTextStyle = {
     fontSize: 16,
     marginLeft: 12,
     fontWeight: "bold" as const,
-    alignItems: "center" as const,
-
   };
 
-  
+
+
