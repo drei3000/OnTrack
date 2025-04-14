@@ -280,7 +280,7 @@ export default function newTrackerView() {
 }
 
 const width = Dimensions.get('window').width-1
-const height = Dimensions.get('window').height-1
+//const height = Dimensions.get('window').height-1
 const scale = PixelRatio.get(); //For exact pixel adjustments adjust according to scale
 
 //Cross, Icon box and tick (used in select image)
@@ -293,12 +293,16 @@ export const imageBoxStyles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignContent: 'center',
+
+    position: 'relative',
   },
 
   tickButton: {
+    position: 'absolute',
+    right: 0,
+
     width: 60,
     height: '100%',
-
     borderRadius: 10,
     borderTopLeftRadius: 0,
     borderBottomLeftRadius: 0,
@@ -314,6 +318,8 @@ export const imageBoxStyles = StyleSheet.create({
     alignItems: 'center',
   },
   crossButton: {
+    position: 'absolute',
+    left: 0,
     width: 60,
     height: '100%',
 
@@ -338,6 +344,8 @@ export const imageBoxStyles = StyleSheet.create({
     borderWidth: 1,
     justifyContent: 'center',
     alignContent: 'center',
+
+    alignItems: 'center',
   },
 })
 const styles = StyleSheet.create({

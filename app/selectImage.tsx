@@ -7,7 +7,7 @@ import { iconsToChoose } from '@/assets/images/iconsToChoose';
 import { imageBoxStyles, IconItem, isUri } from './newTrackerView';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import ColorPicker, { Panel1, Swatches, Preview, OpacitySlider, HueSlider } from 'reanimated-color-picker';
+import ColorPicker, { Panel1, Preview, HueSlider } from 'reanimated-color-picker';
 import { runOnJS } from 'react-native-reanimated';
 
 /*Color selection functions*/
@@ -76,7 +76,7 @@ export default function selectImage() {
 
   //Locate pos of icon
   const measureIcon = () => {
-    iconRef.current?.measure((pageX, pageY) => {
+    iconRef.current?.measure((x, y, width, height, pageX, pageY) => {
       setIconPosition({x: pageX, y: pageY})
     });
   };
