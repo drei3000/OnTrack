@@ -140,7 +140,7 @@ const cornerButtonsStyle = {
   width: 45,
   height: 45,
   justifyContent: "center" as const,
-  alignItems: "flex-start" as const,
+  alignItems: "center" as const,
 };
 
 // Returns a style for the gradient pressable wrappers
