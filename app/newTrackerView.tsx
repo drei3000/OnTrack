@@ -75,7 +75,7 @@ export default function newTrackerView() {
           >
 
           <Image
-            source={require("../assets/images/addImage.png")}
+            source={require("../assets/images/addImage.png")} 
             style={styles.icon}
           />
         </Pressable>
