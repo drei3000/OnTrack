@@ -29,8 +29,6 @@ export default function Index() {
   const router = useRouter();
 
   return (
-
-      {/* HEADER - Fixed at the top */}
     <SafeAreaView 
       style={{
         flex: 1,
@@ -171,7 +169,8 @@ const pressableTextStyle = {
     fontSize: 16,
     marginLeft: 12,
     fontWeight: "bold" as const,
+    alignItems: "center" as const,
+
   };
-=======
-  alignItems: "center" as const,
-};
+
+  
