@@ -8,6 +8,7 @@ import { useNavigation } from '@react-navigation/native';
 import { navigate } from "expo-router/build/global-state/routing";
 import { Link } from "expo-router";
 import { Dimensions } from "react-native";
+import { StatusBar } from "expo-status-bar";
 
 
 // Used in square icon styling for dynamic styles - grid same for all phone sizes
@@ -31,6 +32,7 @@ export default function Index() {
         backgroundColor: "#101010",
       }}
     >
+      <StatusBar style="light"/>
       {/* This view is for the top-left pfp */}
       <View
         style={{
