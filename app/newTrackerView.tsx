@@ -26,7 +26,7 @@ export default function newTrackerView() {
   const { image, color } = useLocalSearchParams(); // receives updated params from selectImage
 
 
-  //states
+  /*states*/
   //input states
   const timePeriods = ['Daily','Weekly','Monthly','Yearly']
   const [currentTPIndex, setCurrentTPIndex] = useState(0); //TimePeriod button
@@ -74,6 +74,7 @@ export default function newTrackerView() {
       { label: "Heart Rate (BPM)", value: "bpm" },
     ]);
 
+    /*Functions*/
    // When return from child, update state if image param is present
    useEffect(() => {
     if (image && typeof image === 'string') {//set selected image unless blank
@@ -87,12 +88,7 @@ export default function newTrackerView() {
     }
   }, [image, color] );
 
-  
-  
-
-  
-
-  // Confirm action when icon is pressed
+  // Confirm action when tick is pressed
   //TO DO: Create tracker and exit in this function given state variables
   const handleConfirm = () => {
     console.log('Confirmed');

@@ -10,17 +10,17 @@ import * as ImagePicker from 'expo-image-picker';
 import ColorPicker, { Panel1, Swatches, Preview, OpacitySlider, HueSlider } from 'reanimated-color-picker';
 import { runOnJS } from 'react-native-reanimated';
 
-//Color selection functions
-type ColorFormatsObject = { //describes format of colors
+/*Color selection functions*/
+
+//Format of colors (only hex used as of right now, can probably get rid of others)
+type ColorFormatsObject = { 
   hex: string;
   rgb: { r: number; g: number; b: number };
   hsv: { h: number; s: number; v: number };
   opacity: number;
 };
 
-
-
-//If hex color
+//Function to check if hex color
 export const isHexColor = (color: string): boolean => {
   return /^#([0-9A-Fa-f]{3}){1,2}$/.test(color);
 };
@@ -33,11 +33,9 @@ type ItemProps = {
   iconColor: string;
 };
 
-
-
 //the item to be rendered (selectable icons)
 const Item = ({ item, onPress, backgroundColor, iconColor }: ItemProps) => (
-  <TouchableOpacity //not pressable for visual effect
+  <TouchableOpacity //For visual effect
     onPress={onPress} 
     style={[
       styles.item, 
@@ -55,49 +53,40 @@ const Item = ({ item, onPress, backgroundColor, iconColor }: ItemProps) => (
 );
 
 export default function selectImage() {
-  const [selectedName, setSelectedName] = useState<string>('');
-  const [selectedImageUri, setSelectedImageUri] = useState<string>('');
-  const [prevColorFlag, setPrevColorFlag] = useState<boolean>(false)
-  const [prevColor, setPrevColor] = useState<string>('#ffffff')
+  /* states */
+  const [selectedName, setSelectedName] = useState<string>(''); //icon selected
+  const [selectedImageUri, setSelectedImageUri] = useState<string>(''); //custom photo selected
+  const [prevColor, setPrevColor] = useState<string>('#ffffff') //stores color on opening color selector
   const [selectedColor, setSelectedColor] = useState<string>('#ffffff');
-  const router = useRouter(); 
-
-  const iconRef = useRef<View>(null);
-
-  const [iconPosition, setIconPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
-
+  const [iconPosition, setIconPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 }); //icon position (used to set color picker popup)
+  const iconRef = useRef<View>(null); //reference to icon for positioning
+  const [showModal, setShowModal] = useState(false);
+  const [iconSize, setIconSize] = useState(0); //icon size state (used to calculate necessary icon size)
+  /* select color based functions */
   //Handle selected color
   const onSelectColor = (color: ColorFormatsObject) => {
-    if (!prevColorFlag){
-      setPrevColor(selectedColor);
-      setPrevColorFlag(true)
-    }
     setSelectedColor(color.hex);
     console.log('Selected HEX:', color.hex);
   };
 
-  //Initial handling
+  //Initial handling, onComplete called in UI thread, need to run JS function
   const onSelectColorWorklet = (color: unknown) => {
     'worklet';
     runOnJS(onSelectColor)(color as ColorFormatsObject);
   };
-    const measureIcon = () => {
-    if (iconRef.current) {
-      const handle = findNodeHandle(iconRef.current);
-      if (handle) {
-        UIManager.measure(handle, (_x, _y, _width, _height, pageX, pageY) => {
-          setIconPosition({ x: pageX, y: pageY });
-        });
-      }
-    }
+
+  //Locate pos of icon
+  const measureIcon = () => {
+    iconRef.current?.measure((pageX, pageY) => {
+      setIconPosition({x: pageX, y: pageY})
+    });
   };
 
-  interface ColorSelection {
-    hex: string;
-  }
-
-  //if typematch (should be always) then use inputted image
+  /* handling of transitioning between newTrackerView and selectImage */
+  const router = useRouter(); 
   const params = useLocalSearchParams();
+  //if typematch (should be always) then use inputted image
+
   const originalImage = typeof params.selectedImage === 'string' ? params.selectedImage : '';
   useEffect(() => {
     if (isUri(originalImage)) {
@@ -130,9 +119,6 @@ export default function selectImage() {
     );
   };
 
-  const [showModal, setShowModal] = useState(false);
-  const [iconSize, setIconSize] = useState(0); //icon size state (used to calculate necessary size)
-  const [imageSize, setImageSize] = useState(0); //icon size state (used to calculate necessary size)
     return(
 
       //IF YOU ARE READING THIS I KNOW ITS A LOT OF VIEWS BUT THEY ARE GENUINELY ALL IMPORTANT
@@ -155,17 +141,17 @@ export default function selectImage() {
                   </Pressable>
                 )}
 
-                {/* icon display */}
+                {/* Display of icon (pressed reveals colour selection) */}
                 <Pressable 
                   ref={iconRef}
                   onPress={() => {
                     measureIcon();
                     setShowModal(true);
-                    setPrevColorFlag(false)
+                    setPrevColor(selectedColor);
                   }}
                   style = {imageBoxStyles.icon}
                   onLayout={(event) => { {/* get size according to box size on layout*/}
-                    const { height, } = event.nativeEvent.layout;
+                    const { height } = event.nativeEvent.layout;
                     setIconSize(height * 0.7); //size of icon
                   }}
                 > 
@@ -189,7 +175,7 @@ export default function selectImage() {
                   )}
                 </Pressable>
 
-                {/* Tick button, render if selectedimage has changed and route back with image on press*/}
+                {/* Tick button, render if selectedimage not originalImage in any way and route back with image on press*/}
                 {(
                   (originalImage === '' && (selectedImageUri !== '' || selectedName !== '')) || 
                   (originalImage !== '' && selectedImageUri !== originalImage && selectedName !== originalImage) ||
@@ -209,6 +195,7 @@ export default function selectImage() {
                 )}
               </View>
 
+              {/* Modal for picker popup */}
               <Modal visible={showModal} animationType="fade" transparent>
                 <View style={{ flex: 1 }}>
                   {/* Background layer */}
@@ -221,19 +208,17 @@ export default function selectImage() {
                     }
                   />
 
-                  {/* Foreground: Actual picker popup */}
+                  {/*Actual picker popup */}
                   <View
                     style={{
                       position: 'absolute',
-                      top: iconPosition.y + 100 + 5,
-                      left: iconPosition.x + 50 - 100 - 10,
+                      top: iconPosition.y + 100 + 5, // + {icon size} + {5} offset
+                      left: iconPosition.x + 50 - 100 - 10, // + {half icon size} - {picker size} - {padding} (might be off center?)
                       backgroundColor: 'black',
                       padding: 10,
                       borderRadius: 8,
-                      elevation: 5,
                     }}
-                    // Make sure it blocks touches
-                    pointerEvents="auto"
+                    pointerEvents="auto" //blocks touch (dont exit on colour press)
                   >
                     <ColorPicker
                       style={{ width: 200, height: 200 }}
@@ -243,9 +228,10 @@ export default function selectImage() {
                       <Preview 
                       hideInitialColor = {true}
                       />
-                      <Panel1 />
+                      <Panel1 /> 
                       <HueSlider />
                     </ColorPicker>
+                    {/* 'Set Default Colour' button (only white as of current for dark theme) */}
                     <Pressable
                       onPress={() => setSelectedColor('#ffffff')}
                       style={[
@@ -260,12 +246,11 @@ export default function selectImage() {
                       style = {{
                         color: 'black',
                         fontWeight: 'bold',
-
                       }}>
                         Default
                       </Text>
                     </Pressable>
-
+                    {/* Confirm button */}
                     <Pressable
                       onPress={() => setShowModal(false)}
                       style={[
@@ -285,7 +270,7 @@ export default function selectImage() {
                 </View>
               </Modal>
 
-              {/* Icon selection, render selectable icons*/}
+              {/* Icon selection list, render selectable icons*/}
               <SafeAreaView style = {styles.iconContainer}>
                 <FlatList
                   data = {iconsToChoose}
@@ -297,7 +282,7 @@ export default function selectImage() {
                 />
               </SafeAreaView>
 
-              {/*personal image selection (someone can fix styling can't be bothered right now) */}
+              {/*personal image selection (someone can fix styling if they don't like it) */}
               <View style = {styles.SelectImageContainer}>
                 <TouchableOpacity 
                 style = {styles.selectImageButton}
@@ -308,17 +293,15 @@ export default function selectImage() {
                     alert('Permissions were declined');
                     return;
                   }
-              
                   const result = await ImagePicker.launchImageLibraryAsync({
-                    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                    mediaTypes: 'images' as const,
                     allowsEditing: true,
                     quality: 1,
                   });
-              
                   if (!result.canceled) { //If result successful
                     const selectedUri = result.assets[0].uri;
                     setSelectedImageUri(selectedUri); //save Uri
-                    setSelectedName('');
+                    setSelectedName(''); //blank selected icon
                   }
                 }}
                 >
@@ -360,7 +343,7 @@ export default function selectImage() {
 const width = Dimensions.get('window').width-1
 const height = Dimensions.get('window').height-1
 const paddingContainer = 20
-const scale = PixelRatio.get(); //For exact pixel adjustments adjust according to scale
+
 const iconContainerWidth = (width * 0.85 - paddingContainer * 2) * 0.95 - 10; // Subtract horizontal padding
 const iconSize = iconContainerWidth / 5; // 5 columns (could change for small devices?)
 
@@ -444,8 +427,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'row',
-
-    
   },
 
   // Exit Button (below the modal)
@@ -475,6 +456,4 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     borderWidth: 2,
   }
-  
-
 });
