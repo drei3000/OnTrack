@@ -1,5 +1,5 @@
 // Import required libraries and components
-import { View, Alert, Pressable, Text, StyleSheet, ScrollView } from "react-native";
+import { View, Alert, Pressable, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { MaterialCommunityIcons, Entypo, Ionicons, AntDesign } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
@@ -27,6 +27,46 @@ export default function Index() {
   // Set initial date state using moment
   const [selectedDate, setSelectedDate] = useState<string>(moment().format("YYYY-MM-DD"));
   const router = useRouter();
+  const buttons = ['Daily', 'Weekly', 'Monthly'];
+  const [selected, setSelected] = useState('Daily');
+
+  {/* StyleSheet for Daily/Weekly/Monthly buttons */}
+  const styles = StyleSheet.create({
+    container: {
+      marginTop: 50,
+      flexDirection: 'row',
+      backgroundColor: '#f1f1f3',
+      padding: 4,
+      borderRadius: 12,
+      alignSelf: 'center',
+    },
+    button: {
+      flex:1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderRadius: 10,
+    },
+    activeButton: {
+      flex:1,
+      backgroundColor: 'white',
+    },
+    text: {
+      fontWeight: '500',
+      color: 'white',
+    },
+    activeText: {
+      color: '#000',
+      fontWeight: '600',
+    },
+    separator: {
+      borderLeftWidth: 1,
+      borderLeftColor: '#ccc',
+      marginLeft: 8,
+      paddingLeft: 8,
+    },
+  });
 
   return (
       <SafeAreaView 
@@ -48,8 +88,30 @@ export default function Index() {
         }}
       >
         <Pressable onPress={() => Alert.alert("Pfp icon pressed")} style={cornerButtonsStyle}>
-          <MaterialCommunityIcons name="account" size={40} color="white" />
+        <MaterialCommunityIcons name="account" size={40} color="white" />
         </Pressable>
+
+        {/* This is for the 3 buttons at the top (Daily/Weekly/Monthly */}
+        {buttons.map((btn, idx) => (
+        <TouchableOpacity
+          key={btn}
+          style={[
+            styles.button, // Normal Style
+            selected === btn && styles.activeButton, // Use activeButton Style when selected==current btn
+          ]}
+          onPress={() => setSelected(btn)}
+        >
+          <Text
+            style={[
+              styles.text, // Normal Style
+              selected === btn && styles.activeText // Use activeText Style when selected==current btn
+            ]}
+          >
+            {btn}
+          </Text>
+        </TouchableOpacity>
+      ))}
+      
         <Pressable onPress={() => router.push("/newTrackerView")} style={cornerButtonsStyle}>
           <Entypo name="plus" size={40} color="white" />
         </Pressable>
