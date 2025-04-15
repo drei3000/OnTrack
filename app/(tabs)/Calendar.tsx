@@ -28,7 +28,7 @@ export default function Index() {
   const [selectedDate, setSelectedDate] = useState<string>(moment().format("YYYY-MM-DD"));
   const router = useRouter();
   const buttons = ['Daily', 'Weekly', 'Monthly'];
-  const [selected, setSelected] = useState('Daily');
+  const [selected, setSelected] = useState(0);
 
   {/* StyleSheet for Daily/Weekly/Monthly buttons */}
   const styles = StyleSheet.create({
@@ -43,6 +43,7 @@ export default function Index() {
     button: {
       flex:1,
       alignItems: 'center',
+      backgroundColor: "#1E1E1E",
       justifyContent: 'center',
       paddingHorizontal: 16,
       paddingVertical: 8,
@@ -90,42 +91,24 @@ export default function Index() {
         <Pressable onPress={() => Alert.alert("Pfp icon pressed")} style={cornerButtonsStyle}>
           <MaterialCommunityIcons name="account" size={40} color="white" />
         </Pressable>
-        <Pressable onPress={() => router.push("/newTrackerView")} style={cornerButtonsStyle}>
-          <Entypo name="plus" size={40} color="white" />
-        </Pressable>
-      </View>
-      <View
-        style={{
-          width: 3*screenWidth/4,
-          flexDirection: "row",
-          alignContent: "center",
-          justifyContent: "space-between",
-          paddingHorizontal: 16,
-          paddingTop: 8,
-        }}
-      >
-        {/* This is for the 3 buttons at the top (Daily/Weekly/Monthly */}
-        {buttons.map((btn, idx) => (
         <TouchableOpacity
-          key={btn}
           style={[
             styles.button, // Normal Style
-            selected === btn && styles.activeButton, // Use activeButton Style when selected==current btn
           ]}
-          onPress={() => setSelected(btn)}
+          onPress = {() => setSelected((prevIndex) => (prevIndex + 1) % buttons.length)}
         >
           <Text
             style={[
               styles.text, // Normal Style
-              selected === btn && styles.activeText // Use activeText Style when selected==current btn
             ]}
           >
-            {btn}
+          {buttons[selected]}
           </Text>
         </TouchableOpacity>
-      ))}
 
-      
+        <Pressable onPress={() => router.push("/newTrackerView")} style={cornerButtonsStyle}>
+          <Entypo name="plus" size={40} color="white" />
+        </Pressable>
       </View>
       {/* CALENDAR - Displayed just below header */}
       <View>
