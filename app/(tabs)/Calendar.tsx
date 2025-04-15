@@ -88,9 +88,22 @@ export default function Index() {
         }}
       >
         <Pressable onPress={() => Alert.alert("Pfp icon pressed")} style={cornerButtonsStyle}>
-        <MaterialCommunityIcons name="account" size={40} color="white" />
+          <MaterialCommunityIcons name="account" size={40} color="white" />
         </Pressable>
-
+        <Pressable onPress={() => router.push("/newTrackerView")} style={cornerButtonsStyle}>
+          <Entypo name="plus" size={40} color="white" />
+        </Pressable>
+      </View>
+      <View
+        style={{
+          width: 3*screenWidth/4,
+          flexDirection: "row",
+          alignContent: "center",
+          justifyContent: "space-between",
+          paddingHorizontal: 16,
+          paddingTop: 8,
+        }}
+      >
         {/* This is for the 3 buttons at the top (Daily/Weekly/Monthly */}
         {buttons.map((btn, idx) => (
         <TouchableOpacity
@@ -111,12 +124,9 @@ export default function Index() {
           </Text>
         </TouchableOpacity>
       ))}
-      
-        <Pressable onPress={() => router.push("/newTrackerView")} style={cornerButtonsStyle}>
-          <Entypo name="plus" size={40} color="white" />
-        </Pressable>
-      </View>
 
+      
+      </View>
       {/* CALENDAR - Displayed just below header */}
       <View>
         <Calendar onSelectDate={setSelectedDate} selected={selectedDate || ""} />
