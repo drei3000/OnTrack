@@ -100,15 +100,15 @@ export default function Index() {
   ];
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: currentTheme.backgroundColor }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: currentTheme.black }}>
       <View style={[styles.container]}>
         <Pressable style={styles.themeToggle} onPress={toggleTheme}>
           <MaterialCommunityIcons
             name={isDarkMode ? "weather-night" : "white-balance-sunny"}
             size={24}
-            color={currentTheme.textColor}
+            color={currentTheme.white}
           />
-          <Text style={[styles.themeText, { color: currentTheme.textColor }]}>
+          <Text style={[styles.themeText, { color: currentTheme.white }]}>
             {isDarkMode ? "Dark Mode" : "Light Mode"}
           </Text>
         </Pressable>
@@ -121,17 +121,17 @@ export default function Index() {
           {settingsItems.map((item, index) => (
             <Pressable
               key={index}
-              style={[styles.settingsItem, { backgroundColor: currentTheme.cardBackgroundColor }]}
+              style={[styles.settingsItem, { backgroundColor: currentTheme["1E1E1E"] }]}
               onPress={item.onPress}
             >
               <MaterialCommunityIcons
                 name={item.icon as keyof typeof MaterialCommunityIcons.glyphMap}
                 size={24}
-                color={currentTheme.textColor}
+                color={currentTheme.white}
               />
               <View style={styles.settingsTextContainer}>
-                <Text style={[styles.settingsTitle, { color: currentTheme.textColor }]}>{item.title}</Text>
-                <Text style={[styles.settingsDescription, { color: currentTheme.secondaryTextColor }]}>
+                <Text style={[styles.settingsTitle, { color: currentTheme.white }]}>{item.title}</Text>
+                <Text style={[styles.settingsDescription, { color: currentTheme.gray }]}>
                   {item.description}
                 </Text>
               </View>
@@ -140,7 +140,7 @@ export default function Index() {
         </ScrollView>
 
         <View style={styles.footer}>
-          <Text style={[styles.footerText, { color: currentTheme.secondaryTextColor }]}>
+          <Text style={[styles.footerText, { color: currentTheme.white }]}>
             © 2025 OnTrack. All rights reserved.
           </Text>
         </View>

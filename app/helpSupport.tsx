@@ -5,6 +5,30 @@ import { useTheme } from "./ThemeContext";
 export default function HelpSupport() {
   const { currentTheme } = useTheme();
 
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      padding: 16,
+    },
+    header: {
+      fontSize: 24,
+      fontWeight: "bold",
+      marginBottom: 16,
+    },
+    faqItem: {
+      marginBottom: 20,
+    },
+    question: {
+      fontSize: 18,
+      fontWeight: "bold",
+      marginBottom: 8,
+    },
+    answer: {
+      fontSize: 16,
+      lineHeight: 22,
+    },
+  });
+
   const faqs = [
     {
       question: "What is OnTrack?",
@@ -26,13 +50,11 @@ export default function HelpSupport() {
       answer:
         "OnTrack ensures data security by using encrypted storage and secure API requests. Sensitive data, such as passwords, is encrypted using bcrypt.",
     },
-    
     {
       question: "Can I delete my account and data?",
       answer:
         "Yes, you can delete your account and all associated data permanently from the settings page. This ensures compliance with privacy regulations.",
     },
- 
     {
       question: "What platforms does OnTrack support?",
       answer:
@@ -46,38 +68,30 @@ export default function HelpSupport() {
   ];
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: currentTheme.backgroundColor }]}>
-      <Text style={[styles.header, { color: currentTheme.textColor }]}>FAQs</Text>
+    <ScrollView
+      style={[
+        styles.container,
+        { backgroundColor: currentTheme.black }, // Use theme background color
+      ]}
+    >
+      <Text style={[styles.header, { color: currentTheme["FFFFFF"] }]}>
+        FAQs
+      </Text>
       {faqs.map((faq, index) => (
         <View key={index} style={styles.faqItem}>
-          <Text style={[styles.question, { color: currentTheme.textColor }]}>{faq.question}</Text>
-          <Text style={[styles.answer, { color: currentTheme.secondaryTextColor }]}>{faq.answer}</Text>
+          <Text style={[styles.question, { color: currentTheme["FFFFFF"] }]}>
+            {faq.question}
+          </Text>
+          <Text
+            style={[
+              styles.answer,
+              { color: currentTheme.gray }, // Use secondary text color
+            ]}
+          >
+            {faq.answer}
+          </Text>
         </View>
       ))}
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-  },
-  header: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 16,
-  },
-  faqItem: {
-    marginBottom: 20,
-  },
-  question: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 8,
-  },
-  answer: {
-    fontSize: 16,
-    lineHeight: 22,
-  },
-});

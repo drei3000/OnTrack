@@ -4,7 +4,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 export default function TabLayout() {
   return (
-    <ThemeProvider>
+    
       <Tabs
         screenOptions={{
           headerShown: false,
@@ -41,6 +41,6 @@ export default function TabLayout() {
           }}
         />
       </Tabs>
-    </ThemeProvider>
+    
   );
 }

@@ -3,7 +3,7 @@ import { View, Text, Pressable, StyleSheet, Alert } from "react-native";
 import { useTheme } from "./ThemeContext";
 
 export default function AccountSettings() {
-  const { currentTheme } = useTheme();
+  const { currentTheme: theme } = useTheme();
 
   const handleDeleteAccount = () => {
     Alert.alert(
@@ -27,15 +27,15 @@ export default function AccountSettings() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: currentTheme.backgroundColor }]}>
-      <Text style={[styles.header, { color: currentTheme.textColor }]}>Account Settings</Text>
+    <View style={[styles.container, { backgroundColor: theme["101010"] }]}>
+      <Text style={[styles.header, { color: theme["FFFFFF"] }]}>Account Settings</Text>
 
-      <Pressable style={[styles.button, { backgroundColor: currentTheme.cardBackgroundColor }]} onPress={handleChangeEmail}>
-        <Text style={[styles.buttonText, { color: currentTheme.textColor }]}>Change Email</Text>
+      <Pressable style={[styles.button, { backgroundColor: theme["101010"] }]} onPress={handleChangeEmail}>
+        <Text style={[styles.buttonText, { color: theme["FFFFFF"] }]}>Change Email</Text>
       </Pressable>
 
-      <Pressable style={[styles.button, { backgroundColor: currentTheme.cardBackgroundColor }]} onPress={handleChangePassword}>
-        <Text style={[styles.buttonText, { color: currentTheme.textColor }]}>Change Password</Text>
+      <Pressable style={[styles.button, { backgroundColor: theme["101010"] }]} onPress={handleChangePassword}>
+        <Text style={[styles.buttonText, { color: theme["FFFFFF"] }]}>Change Password</Text>
       </Pressable>
 
       <Pressable style={[styles.button, styles.deleteButton]} onPress={handleDeleteAccount}>

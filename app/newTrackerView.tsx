@@ -5,7 +5,7 @@ import { FontAwesome5, Ionicons } from "@expo/vector-icons";
 import DropDownPicker from "react-native-dropdown-picker";
 import { PixelRatio } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-
+import { useTheme } from './ThemeContext';
 
 //check if string is a uri (image)
 export const isUri = (value: string): boolean => {
@@ -24,7 +24,7 @@ export type IconItem = {
 export default function newTrackerView() {
   const router = useRouter(); 
   const { image, color } = useLocalSearchParams(); // receives updated params from selectImage
-
+  const { currentTheme } = useTheme(); // Get the current theme from context
 
   /*states*/
   //input states
@@ -73,6 +73,192 @@ export default function newTrackerView() {
       { label: "Kilojoules", value: "kj" },
       { label: "Heart Rate (BPM)", value: "bpm" },
     ]);
+
+    const styles = StyleSheet.create({
+      // Text above popup
+      overlayText: {
+        fontSize: 18,
+        color: currentTheme.white,
+        fontWeight: 'bold',
+        textAlign: 'center',
+        paddingBottom: 10,
+      },
+    
+      // Overlay itself
+      overlay: {
+        flex: 1,
+        backgroundColor: currentTheme["rgba(0, 0, 0, 0.8)"], // 0.8 opacity of darkness
+        justifyContent: "center",
+    
+        // Stretch to fill center
+        alignItems: "center",
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+      },
+    
+      // Content inside overlay (background, size etc)
+      container: {
+        height: 410,
+        width: width*0.85,
+        backgroundColor: currentTheme["101010"],
+        paddingHorizontal: 20,
+        borderRadius: 15, // Rounded edges
+        borderWidth: 1,
+        borderColor: currentTheme.dimgray,
+        alignItems: "center",
+      },
+    
+      // Contains input fields
+      inputContainer: {
+        width: width*0.85*0.8,
+        backgroundColor: currentTheme["101010"],
+        borderColor: currentTheme.dimgray,
+        marginBottom: 5,
+        borderRadius: 5,
+        borderWidth: 1,
+        
+        alignSelf: 'center',
+      },
+      // All input fields
+      input: {
+        height: 50,
+        color: currentTheme["FFFFFF"],
+        textAlign: "center",
+        fontSize: 20,
+      },
+    
+      // Dropdown styling
+      dropdownContainer: {
+        width: width*0.8*0.85,
+        marginBottom: 10,
+        borderRadius: 5,
+        borderWidth: 1,
+        borderColor: currentTheme.dimgray,
+        zIndex: 1000, 
+        alignSelf: 'center',
+        alignContent: 'center',
+      },
+      dropdown: {
+        backgroundColor: currentTheme["101010"],
+        borderColor: 'transparent',
+      },
+      dropdownList: {
+        backgroundColor: currentTheme["101010"],
+        borderColor: currentTheme.dimgray,
+      },
+      dropdownText: {
+        color: currentTheme.white,
+        textAlign: 'center',
+        fontSize: 20,
+      },
+    
+      tickContainerStyle: {
+        marginLeft: -15,
+      },
+      arrowContainerStyle: {
+        marginLeft: -15,
+      },
+      dropdownArrow: {
+        width: 5*scale, //should probably adjust as no longer using screen size based rendering
+        height: 5*scale,
+        tintColor: currentTheme.white, //white arrow
+      },
+      dropdownTick: {
+        width: 5*scale,
+        height: 5*scale,
+        tintColor: currentTheme.white, //white tick
+      },
+    
+      //Contains buttons (important for row display)
+      buttonsContainer: {
+        height: 50,
+        width: width * 0.85 * 0.8,
+        flexDirection: 'row',
+      },
+      timePeriodButton: {
+        height: '100%',
+        flex: 1,
+        backgroundColor: currentTheme.black,
+        borderRadius: 5,
+        borderWidth: 2,
+        borderColor: currentTheme.dimgray,
+    
+        alignItems: 'center',
+        justifyContent: 'center',
+      },
+      goalLimitButton: {
+        flex: 1,
+        height: '100%',
+    
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: currentTheme.black,
+    
+        borderRadius: 5,
+        borderWidth: 2,
+        borderColor: currentTheme.dimgray,
+    
+        fontSize: 20,
+        fontWeight: "bold",
+        color: currentTheme["FFFFFF"],
+      },
+    
+      // Color of goalLimit button dependent on {goal or limit}
+      goalButton: {
+        backgroundColor: "#06402B",
+      },
+      limitButton: {
+        backgroundColor: "#950606",
+      },
+    
+      //Text if goal or limit {otherwise buttonText}
+      goalLimitText: {
+        fontSize: 20,
+        fontWeight: "bold",
+        color: currentTheme["FFFFFF"],
+      },
+      buttonText:{
+        fontSize: 20,
+        color: "dimgray" //dull display
+      },
+    
+      // Exit Button (below the modal)
+      exitButton: {
+        marginTop: 20, // Adds some space above the button
+        backgroundColor: currentTheme["101010"],
+        paddingVertical: 12,
+        paddingHorizontal: 30,
+        borderRadius: 25,
+        borderWidth: 1,
+        borderColor: currentTheme.dimgray,
+      },
+      exitButtonText: {
+        fontSize: 18,
+        color: currentTheme.white,
+        fontWeight: 'bold',
+      },
+    
+      exitButtonInvisible: {
+        marginTop: 20, // Adds some space above the button
+        backgroundColor: '#transparent',
+        paddingVertical: 12,
+        paddingHorizontal: 30,
+        borderRadius: 25,
+        borderWidth: 1,
+        borderColor: 'transparent',
+      },
+      exitButtonTextInvisible:{
+        fontSize: 18,
+        color: 'transparent',
+        fontWeight: 'bold',
+      },
+      
+    
+      
+    });
 
     /*Functions*/
    // When return from child, update state if image param is present
@@ -239,7 +425,7 @@ export default function newTrackerView() {
           onPress={() => (setCurrentTPIndex((currentTPIndex + 1) % timePeriods.length))}
         >
           <Text style = {{
-            color: '#FFFFFF',
+            color: currentTheme["FFFFFF"],
             fontSize: 20,
             fontWeight: 'bold',
           }}>
@@ -282,7 +468,7 @@ export default function newTrackerView() {
 const width = Dimensions.get('window').width-1
 //const height = Dimensions.get('window').height-1
 const scale = PixelRatio.get(); //For exact pixel adjustments adjust according to scale
-
+ 
 //Cross, Icon box and tick (used in select image)
 export const imageBoxStyles = StyleSheet.create({
   //For image cancellation, image and confirm tracker buttons
@@ -293,7 +479,7 @@ export const imageBoxStyles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignContent: 'center',
-
+    borderColor: 'white',
     position: 'relative',
   },
 
@@ -348,188 +534,3 @@ export const imageBoxStyles = StyleSheet.create({
     alignItems: 'center',
   },
 })
-const styles = StyleSheet.create({
-  // Text above popup
-  overlayText: {
-    fontSize: 18,
-    color: 'white',
-    fontWeight: 'bold',
-    textAlign: 'center',
-    paddingBottom: 10,
-  },
-
-  // Overlay itself
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.8)", // 0.8 opacity of darkness
-    justifyContent: "center",
-
-    // Stretch to fill center
-    alignItems: "center",
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-
-  // Content inside overlay (background, size etc)
-  container: {
-    height: 410,
-    width: width*0.85,
-    backgroundColor: "#101010",
-    paddingHorizontal: 20,
-    borderRadius: 15, // Rounded edges
-    borderWidth: 1,
-    borderColor: 'dimgray',
-    alignItems: "center",
-  },
-
-  // Contains input fields
-  inputContainer: {
-    width: width*0.85*0.8,
-    backgroundColor: "#101010",
-    borderColor: "dimgray",
-    marginBottom: 5,
-    borderRadius: 5,
-    borderWidth: 1,
-    
-    alignSelf: 'center',
-  },
-  // All input fields
-  input: {
-    height: 50,
-    color: "#FFFFFF",
-    textAlign: "center",
-    fontSize: 20,
-  },
-
-  // Dropdown styling
-  dropdownContainer: {
-    width: width*0.8*0.85,
-    marginBottom: 10,
-    borderRadius: 5,
-    borderWidth: 1,
-    borderColor: 'dimgray',
-    zIndex: 1000, 
-    alignSelf: 'center',
-    alignContent: 'center',
-  },
-  dropdown: {
-    backgroundColor: '#101010',
-    borderColor: 'transparent',
-  },
-  dropdownList: {
-    backgroundColor: '#101010',
-    borderColor: 'dimgray',
-  },
-  dropdownText: {
-    color: 'white',
-    textAlign: 'center',
-    fontSize: 20,
-  },
-
-  tickContainerStyle: {
-    marginLeft: -15,
-  },
-  arrowContainerStyle: {
-    marginLeft: -15,
-  },
-  dropdownArrow: {
-    width: 5*scale, //should probably adjust as no longer using screen size based rendering
-    height: 5*scale,
-    tintColor: 'white', 
-  },
-  dropdownTick: {
-    width: 5*scale,
-    height: 5*scale,
-    tintColor: 'white', 
-  },
-
-  //Contains buttons (important for row display)
-  buttonsContainer: {
-    height: 50,
-    width: width * 0.85 * 0.8,
-    flexDirection: 'row',
-  },
-  timePeriodButton: {
-    height: '100%',
-    flex: 1,
-    backgroundColor: 'black',
-    borderRadius: 5,
-    borderWidth: 2,
-    borderColor: "dimgray",
-
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  goalLimitButton: {
-    flex: 1,
-    height: '100%',
-
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "black",
-
-    borderRadius: 5,
-    borderWidth: 2,
-    borderColor: "dimgray",
-
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#FFFFFF",
-  },
-
-  // Color of goalLimit button dependent on {goal or limit}
-  goalButton: {
-    backgroundColor: "#06402B",
-  },
-  limitButton: {
-    backgroundColor: "#950606",
-  },
-
-  //Text if goal or limit {otherwise buttonText}
-  goalLimitText: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#FFFFFF",
-  },
-  buttonText:{
-    fontSize: 20,
-    color: "dimgray" //dull display
-  },
-
-  // Exit Button (below the modal)
-  exitButton: {
-    marginTop: 20, // Adds some space above the button
-    backgroundColor: '#101010',
-    paddingVertical: 12,
-    paddingHorizontal: 30,
-    borderRadius: 25,
-    borderWidth: 1,
-    borderColor: 'dimgray',
-  },
-  exitButtonText: {
-    fontSize: 18,
-    color: 'white',
-    fontWeight: 'bold',
-  },
-
-  exitButtonInvisible: {
-    marginTop: 20, // Adds some space above the button
-    backgroundColor: '#transparent',
-    paddingVertical: 12,
-    paddingHorizontal: 30,
-    borderRadius: 25,
-    borderWidth: 1,
-    borderColor: 'transparent',
-  },
-  exitButtonTextInvisible:{
-    fontSize: 18,
-    color: 'transparent',
-    fontWeight: 'bold',
-  },
-  
-
-  
-});
