@@ -260,6 +260,74 @@ export default function newTrackerView() {
       
     });
 
+
+    //Cross, Icon box and tick (used in select image)
+   const imageBoxStyles = StyleSheet.create({
+  //For image cancellation, image and confirm tracker buttons
+  imageButtonsContainer: {
+    height: 100,
+    width: 220,
+    marginVertical: 30,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignContent: 'center',
+    borderColor: currentTheme.white,
+    position: 'relative',
+  },
+
+  tickButton: {
+    position: 'absolute',
+    right: 0,
+
+    width: 60,
+    height: '100%',
+    borderRadius: 10,
+    borderTopLeftRadius: 0,
+    borderBottomLeftRadius: 0,
+    borderWidth: 1,
+    borderColor: currentTheme.dimgray,
+    borderRightColor: 'transparent',
+    borderTopColor: '#101010',
+    borderBottomColor: '#094F23',
+    borderBottomWidth: 7,
+
+    backgroundColor: '#075F28',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  crossButton: {
+    position: 'absolute',
+    left: 0,
+    width: 60,
+    height: '100%',
+
+    borderRadius: 10,
+    borderTopRightRadius: 0,
+    borderBottomRightRadius: 0,
+    borderWidth: 1,
+    borderColor: currentTheme.dimgray,
+    borderTopColor: '#101010',
+    borderBottomColor: '#860B0B', 
+    borderBottomWidth: 7,
+    borderLeftColor: 'transparent',
+
+    backgroundColor: '#a30a0a',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  icon: {
+    width: 100,
+    height: '100%',
+    borderColor: currentTheme.dimgray,
+    borderWidth: 1,
+    justifyContent: 'center',
+    alignContent: 'center',
+
+    alignItems: 'center',
+  },
+})
+
+
     /*Functions*/
    // When return from child, update state if image param is present
    useEffect(() => {
@@ -469,68 +537,3 @@ const width = Dimensions.get('window').width-1
 //const height = Dimensions.get('window').height-1
 const scale = PixelRatio.get(); //For exact pixel adjustments adjust according to scale
  
-//Cross, Icon box and tick (used in select image)
-export const imageBoxStyles = StyleSheet.create({
-  //For image cancellation, image and confirm tracker buttons
-  imageButtonsContainer: {
-    height: 100,
-    width: 220,
-    marginVertical: 30,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignContent: 'center',
-    borderColor: 'white',
-    position: 'relative',
-  },
-
-  tickButton: {
-    position: 'absolute',
-    right: 0,
-
-    width: 60,
-    height: '100%',
-    borderRadius: 10,
-    borderTopLeftRadius: 0,
-    borderBottomLeftRadius: 0,
-    borderWidth: 1,
-    borderColor: 'dimgray',
-    borderRightColor: 'transparent',
-    borderTopColor: '#101010',
-    borderBottomColor: '#094F23',
-    borderBottomWidth: 7,
-
-    backgroundColor: '#075F28',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  crossButton: {
-    position: 'absolute',
-    left: 0,
-    width: 60,
-    height: '100%',
-
-    borderRadius: 10,
-    borderTopRightRadius: 0,
-    borderBottomRightRadius: 0,
-    borderWidth: 1,
-    borderColor: 'dimgray',
-    borderTopColor: '#101010',
-    borderBottomColor: '#860B0B', 
-    borderBottomWidth: 7,
-    borderLeftColor: 'transparent',
-
-    backgroundColor: '#a30a0a',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  icon: {
-    width: 100,
-    height: '100%',
-    borderColor: 'dimgray',
-    borderWidth: 1,
-    justifyContent: 'center',
-    alignContent: 'center',
-
-    alignItems: 'center',
-  },
-})
