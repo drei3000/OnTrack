@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import moment from 'moment';
 import React from 'react';
+import { useTheme } from '../app/ThemeContext'; // Import useTheme
 
 // Define the prop types for the Date component
 interface DateComponentProps {
@@ -11,6 +12,8 @@ interface DateComponentProps {
 
 // Date component: displays a formatted day and day number
 const Date: React.FC<DateComponentProps> = ({ date, onSelectDate, selected }) => {
+  const { currentTheme } = useTheme(); // Access currentTheme
+
   // Format the provided date
   const formattedDate = moment(date).format('YYYY-MM-DD');
   const today = moment().format('YYYY-MM-DD');
@@ -23,10 +26,20 @@ const Date: React.FC<DateComponentProps> = ({ date, onSelectDate, selected }) =>
     <TouchableOpacity
       onPress={() => onSelectDate(formattedDate)}
       // Apply default card style and change background if this card is selected
-      style={[styles.card, selected === formattedDate && { backgroundColor: '#FFFFFF' }]}
+      style={[
+        styles.card,
+        { backgroundColor: currentTheme["101010"] }, // Use theme background color
+        selected === formattedDate && { backgroundColor: currentTheme["FFFFFF"] }, // Selected background
+      ]}
     >
       {/* Display the day label */}
-      <Text style={[styles.big, selected === formattedDate && { color: '#000' }]}>
+      <Text
+        style={[
+          styles.big,
+          { color: currentTheme.gray }, // Use theme text color
+          selected === formattedDate && { color: currentTheme["101010"] }, // Selected text color
+        ]}
+      >
         {day}
       </Text>
       {/* Spacer between day label and day number */}
@@ -35,7 +48,12 @@ const Date: React.FC<DateComponentProps> = ({ date, onSelectDate, selected }) =>
       <Text
         style={[
           styles.medium,
-          selected === formattedDate && { color: '#000', fontWeight: 'bold', fontSize: 24 },
+          { color: currentTheme.gray }, // Use theme text color
+          selected === formattedDate && {
+            color: currentTheme["101010"], // Selected text color
+            fontWeight: 'bold',
+            fontSize: 24,
+          },
         ]}
       >
         {dayNumber}
@@ -50,7 +68,6 @@ export default Date;
 const styles = StyleSheet.create({
   // Style for the date card container
   card: {
-    backgroundColor: '#101010',
     borderRadius: 10,
     borderColor: '#ddd',
     padding: 10,
@@ -64,11 +81,9 @@ const styles = StyleSheet.create({
   big: {
     fontWeight: 'bold',
     fontSize: 15,
-    color: 'dimgray'
   },
   // Base style for the day number text
   medium: {
-    color: 'dimgray',
     fontSize: 17,
   },
 });

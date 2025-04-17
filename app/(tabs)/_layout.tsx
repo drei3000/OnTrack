@@ -1,17 +1,19 @@
 import { Tabs } from "expo-router";
 import { ThemeProvider } from "../ThemeContext";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useTheme } from "../ThemeContext"; // Import the ThemeContext
 
 export default function TabLayout() {
+  const { currentTheme } = useTheme(); // Access current theme
   return (
-    <ThemeProvider>
+    
       <Tabs
         screenOptions={{
           headerShown: false,
-          tabBarActiveTintColor: "#FFFFFF",
+          tabBarActiveTintColor: currentTheme["FFFFFF"],
           tabBarShowLabel: false,
           tabBarStyle: {
-            backgroundColor: "#101010",
+            backgroundColor: currentTheme["101010"],
             borderTopWidth: 0,
           },
           tabBarItemStyle: {
@@ -41,6 +43,6 @@ export default function TabLayout() {
           }}
         />
       </Tabs>
-    </ThemeProvider>
+    
   );
 }

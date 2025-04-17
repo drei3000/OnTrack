@@ -4,11 +4,12 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { FontAwesome5 } from "@expo/vector-icons";
 import { PixelRatio } from 'react-native';
 import { iconsToChoose } from '@/assets/images/iconsToChoose';
-import { imageBoxStyles, IconItem, isUri } from './newTrackerView';
+import { IconItem, isUri } from './newTrackerView';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import ColorPicker, { Panel1, Preview, HueSlider } from 'reanimated-color-picker';
 import { runOnJS } from 'react-native-reanimated';
+import { useTheme } from './ThemeContext';
 
 /*Color selection functions*/
 
@@ -38,7 +39,7 @@ const Item = ({ item, onPress, backgroundColor, iconColor }: ItemProps) => (
   <TouchableOpacity //For visual effect
     onPress={onPress} 
     style={[
-      styles.item, 
+      itemStyle.item, 
       { 
         backgroundColor,
         width: iconSize,
@@ -54,14 +55,17 @@ const Item = ({ item, onPress, backgroundColor, iconColor }: ItemProps) => (
 
 export default function selectImage() {
   /* states */
+  const { currentTheme } = useTheme(); //get current theme (dark/light) from context
   const [selectedName, setSelectedName] = useState<string>(''); //icon selected
   const [selectedImageUri, setSelectedImageUri] = useState<string>(''); //custom photo selected
-  const [prevColor, setPrevColor] = useState<string>('#ffffff') //stores color on opening color selector
-  const [selectedColor, setSelectedColor] = useState<string>('#ffffff');
+  const [prevColor, setPrevColor] = useState<string>(currentTheme["FFFFFF"]) //stores color on opening color selector
+  const [selectedColor, setSelectedColor] = useState<string>(currentTheme["FFFFFF"]); //color selected (default white)
   const [iconPosition, setIconPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 }); //icon position (used to set color picker popup)
   const iconRef = useRef<View>(null); //reference to icon for positioning
   const [showModal, setShowModal] = useState(false);
   const [iconSize, setIconSize] = useState(0); //icon size state (used to calculate necessary icon size)
+  
+  
   /* select color based functions */
   //Handle selected color
   const onSelectColor = (color: ColorFormatsObject) => {
@@ -96,27 +100,217 @@ export default function selectImage() {
   }, [originalImage]);
 
   //if selectedColor is hexcode then set originalColor
-  const originalColor = typeof params.selectedColor == 'string' ? (isHexColor(params.selectedColor) ? params.selectedColor : '#ffffff') : '#ffffff';
+  const originalColor = typeof params.selectedColor === 'string' && isHexColor(params.selectedColor)
+  ? params.selectedColor
+  : currentTheme["101010"]; // Use the theme's background color as fallback
   useEffect(() => {
-    setSelectedColor(originalColor);
+    if (!selectedColor) {
+      setSelectedColor(originalColor);
+    }
   }, [originalColor]);
   
   //rendering each icon
   const renderItem = ({ item }: { item: IconItem }) => {
-    const backgroundColor = item.name === selectedName ? 'white' : '#101010'; // render white with black background if unselected, inverse if selecte
-    const iconColor = selectedColor === '#ffffff' ? (item.name === selectedName ? 'black' : 'white') : selectedColor; //if color white inverse to background otherwise show selected color
+    const isSelected = item.name === selectedName;
+    const backgroundColor = isSelected ? currentTheme.white : currentTheme["101010"]; // Ensure proper contrast
+    const iconColor = isSelected ? currentTheme["101010"] : currentTheme.white; // Ensure proper contrast
+  
     return (
       <Item
         item={item}
         onPress={() => {
-          setSelectedName(item.name)
-          setSelectedImageUri('')
+          setSelectedName(item.name);
+          setSelectedImageUri('');
         }}
         backgroundColor={backgroundColor}
         iconColor={iconColor}
       />
     );
   };
+
+//Cross, Icon box and tick (used in select image)
+ const imageBoxStyles = StyleSheet.create({
+  //For image cancellation, image and confirm tracker buttons
+  imageButtonsContainer: {
+    height: 100,
+    width: 220,
+    marginVertical: 30,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignContent: 'center',
+    borderColor: currentTheme.white,
+    position: 'relative',
+  },
+
+  tickButton: {
+    position: 'absolute',
+    right: 0,
+
+    width: 60,
+    height: '100%',
+    borderRadius: 10,
+    borderTopLeftRadius: 0,
+    borderBottomLeftRadius: 0,
+    borderWidth: 1,
+    borderColor: currentTheme.dimgray,
+    borderRightColor: 'transparent',
+    borderTopColor: currentTheme["101010"],
+    borderBottomColor: currentTheme["094F23"],
+    borderBottomWidth: 7,
+
+    backgroundColor: currentTheme["075F28"],
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  crossButton: {
+    position: 'absolute',
+    left: 0,
+    width: 60,
+    height: '100%',
+
+    borderRadius: 10,
+    borderTopRightRadius: 0,
+    borderBottomRightRadius: 0,
+    borderWidth: 1,
+    borderColor: currentTheme.dimgray,
+    borderTopColor: currentTheme["101010"],
+    borderBottomColor: currentTheme["860B0B"], 
+    borderBottomWidth: 7,
+    borderLeftColor: 'transparent',
+
+    backgroundColor: currentTheme["a30a0a"],
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  icon: {
+    width: 100,
+    height: '100%',
+    borderColor: currentTheme.dimgray,
+    borderWidth: 1,
+    justifyContent: 'center',
+    alignContent: 'center',
+    alignItems: 'center',
+  },
+})
+
+const styles = StyleSheet.create({
+  //Modal overlay itself
+  overlay: {
+    flex: 1,
+    backgroundColor: currentTheme["rgba(0, 0, 0, 0.8)"], // 0.8 opacity of darkness
+    justifyContent: "center",
+
+    // Stretch to fill center
+    alignItems: "center",
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+
+  //Entire container
+  container: {
+    height: height*0.8,
+    width: width*0.85,
+    backgroundColor: currentTheme["101010"],
+    paddingHorizontal: paddingContainer, // Keep horizontal padding
+    borderRadius: 15, // Rounded edges
+    borderWidth: 1,
+    borderColor: currentTheme.dimgray,
+    alignItems: "center",
+    justifyContent: 'center'
+  },
+  //Selected icon square
+  icon: {
+    aspectRatio: 1,
+    height: '90%',
+    borderColor: currentTheme["FFFFFF"],
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: currentTheme.white,
+  },
+
+  //Container for scrollable icon list
+  iconContainer: {
+    flex: 1,
+    width: '95%',
+    paddingHorizontal: 5,
+    paddingVertical: 5,
+    marginVertical: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: currentTheme.dimgray,
+    
+  },
+  //individual items in scrollable list
+  item: {
+    borderRadius: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  //container for personal image selection
+  SelectImageContainer: { 
+    height: 70,
+    width: '100%',
+    borderWidth: 1,
+    borderRadius: 0,
+    borderColor: 'transparent',
+    borderTopColor: currentTheme.dimgray,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  selectImageButton: {
+    height: '85%',
+    width: '95%',
+
+    borderWidth: 2,
+    borderRadius: 10,
+    borderColor: currentTheme.dimgray,
+    backgroundColor: 'transparent',
+
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'row',
+  },
+
+  // Exit Button (below the modal)
+  exitButton: {
+    marginTop: 20, // Adds some space above the button
+    backgroundColor: currentTheme["101010"],
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 25,
+    borderWidth: 1,
+    borderColor: currentTheme.dimgray,
+  },
+  exitButtonText: {
+    fontSize: 18,
+    color: currentTheme.white,
+    fontWeight: 'bold',
+  },
+
+  //ColorPicker Buttons
+  colorPickerButtons: {
+    width: 200,
+    height: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
+
+    borderColor: 'black',
+    borderRadius: 5,
+    borderWidth: 2,
+  }
+
+  
+});
+
+
+
+
 
     return(
 
@@ -136,7 +330,7 @@ export default function selectImage() {
                       setSelectedImageUri('')
                     }}
                   >
-                    <Ionicons name="close" size={24} color="white" /> 
+                    <Ionicons name="close" size={24} color={currentTheme.white} /> 
                   </Pressable>
                 )}
 
@@ -189,7 +383,7 @@ export default function selectImage() {
                     selectedImageUri ? router.setParams({ image: selectedImageUri }) : router.setParams({ image: selectedName });
                   }}
                   >
-                    <Ionicons name="checkmark" size={24} color="white" />
+                    <Ionicons name="checkmark" size={24} color={currentTheme.white} />
                   </Pressable>
                 )}
               </View>
@@ -213,7 +407,7 @@ export default function selectImage() {
                       position: 'absolute',
                       top: iconPosition.y + 100 + 5, // + {icon size} + {5} offset
                       left: iconPosition.x + 50 - 100 - 10, // + {half icon size} - {picker size} - {padding} (might be off center?)
-                      backgroundColor: 'black',
+                      backgroundColor: currentTheme.white,
                       padding: 10,
                       borderRadius: 8,
                     }}
@@ -232,18 +426,18 @@ export default function selectImage() {
                     </ColorPicker>
                     {/* 'Set Default Colour' button (only white as of current for dark theme) */}
                     <Pressable
-                      onPress={() => setSelectedColor('#ffffff')}
+                      onPress={() => setSelectedColor(currentTheme["FFFFFF"])}
                       style={[
                         styles.colorPickerButtons,
                         { 
-                          backgroundColor: 'white',
+                          backgroundColor: currentTheme.white,
                           marginTop: 55 //for some reason need margin, height of hue slider = 50 + leighweight
                         }
                       ]}
                     >
                       <Text
                       style = {{
-                        color: 'black',
+                        color: currentTheme.black,
                         fontWeight: 'bold',
                       }}>
                         Default
@@ -259,7 +453,7 @@ export default function selectImage() {
                     >
                       <Text
                       style = {{
-                        color: 'black',
+                        color: currentTheme.black,
                         fontWeight: 'bold',
                       }}>
                         Confirm
@@ -306,7 +500,7 @@ export default function selectImage() {
                 >
                   <MaterialCommunityIcons
                     name = 'file-image-plus-outline'
-                    color = 'dimgray'
+                    color = {currentTheme.dimgray}
                     size = {30}
                     style ={{
                       marginRight: 5
@@ -314,7 +508,7 @@ export default function selectImage() {
                   />
                   <Text
                     style = {{
-                      color: 'dimgray',
+                      color: currentTheme.dimgray,
                       fontSize: 24,
                       fontStyle: 'italic',
                       fontWeight: '400',
@@ -346,56 +540,8 @@ const paddingContainer = 20
 const iconContainerWidth = (width * 0.85 - paddingContainer * 2) * 0.95 - 10; // Subtract horizontal padding
 const iconSize = iconContainerWidth / 5; // 5 columns (could change for small devices?)
 
-const styles = StyleSheet.create({
-  //Modal overlay itself
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.8)", // 0.8 opacity of darkness
-    justifyContent: "center",
-
-    // Stretch to fill center
-    alignItems: "center",
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-
-  //Entire container
-  container: {
-    height: height*0.8,
-    width: width*0.85,
-    backgroundColor: "#101010",
-    paddingHorizontal: paddingContainer, // Keep horizontal padding
-    borderRadius: 15, // Rounded edges
-    borderWidth: 1,
-    borderColor: 'dimgray',
-    alignItems: "center",
-    justifyContent: 'center'
-  },
-  //Selected icon square
-  icon: {
-    aspectRatio: 1,
-    height: '90%',
-    borderColor: '#FFFFFF',
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  //Container for scrollable icon list
-  iconContainer: {
-    flex: 1,
-    width: '95%',
-    paddingHorizontal: 5,
-    paddingVertical: 5,
-    marginVertical: 5,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: 'dimgray',
-  },
+const itemStyle = StyleSheet.create({
+ 
   //individual items in scrollable list
   item: {
     borderRadius: 0,
@@ -403,56 +549,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 
-  //container for personal image selection
-  SelectImageContainer: { 
-    height: 70,
-    width: '100%',
-    borderWidth: 1,
-    borderRadius: 0,
-    borderColor: 'transparent',
-    borderTopColor: 'dimgray',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  selectImageButton: {
-    height: '85%',
-    width: '95%',
-
-    borderWidth: 2,
-    borderRadius: 10,
-    borderColor: 'dimgray',
-    backgroundColor: 'transparent',
-
-    justifyContent: 'center',
-    alignItems: 'center',
-    flexDirection: 'row',
-  },
-
-  // Exit Button (below the modal)
-  exitButton: {
-    marginTop: 20, // Adds some space above the button
-    backgroundColor: '#101010',
-    paddingVertical: 12,
-    paddingHorizontal: 30,
-    borderRadius: 25,
-    borderWidth: 1,
-    borderColor: 'dimgray',
-  },
-  exitButtonText: {
-    fontSize: 18,
-    color: 'white',
-    fontWeight: 'bold',
-  },
-
-  //ColorPicker Buttons
-  colorPickerButtons: {
-    width: 200,
-    height: 50,
-    alignItems: 'center',
-    justifyContent: 'center',
-
-    borderColor: 'black',
-    borderRadius: 5,
-    borderWidth: 2,
-  }
+  
 });
