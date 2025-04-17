@@ -52,7 +52,7 @@ const themes = {
     "FFDCD1": "#FFE6E6", // Gradient end (light red)
     "0041C2": "#99CCFF", // Gradient start (blue)
     "E0B0FF": "#F5E6FF", // Gradient end (light purple)
-    lightblue: "#0000FF", // Toggle text color
+    lightblue: 'darkblue', // Toggle text color
     transparent: "transparent", // Transparent background
     green: "#00FF00", // Confirm button background
     white: 'black',

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, SafeAreaView, Pressable, Dimensions, PixelRatio, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-
+import { useTheme } from './ThemeContext'; // Import the ThemeContext
 
 export default function Profile() {
   const router = useRouter();
@@ -10,6 +10,8 @@ export default function Profile() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isCreating, setIsCreating] = useState(false);    //toggle between login and create account
+  const { currentTheme } = useTheme(); // Get the current theme from context
+
 
   const handleSubmit = () => {
     if (isCreating) {
@@ -29,6 +31,81 @@ export default function Profile() {
     }
   };
 
+const styles = StyleSheet.create({
+    overlay: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: currentTheme["rgba(0, 0, 0, 0.8)"], // Use theme background color
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+    },
+
+    container: {
+      //height: 370,
+      width: width*0.85,
+      backgroundColor: currentTheme["101010"], // Use theme background color
+      paddingHorizontal: 20,
+      paddingVertical: 10,
+      borderRadius: 15, 
+      borderWidth: 1,
+      borderColor: currentTheme.dimgray,
+      alignItems: "center",
+      justifyContent: "flex-start",
+    },
+  
+    header: {
+      fontSize: 18,
+      color: currentTheme.white,
+      fontWeight: 'bold',
+      textAlign: 'center',
+      marginBottom: 10, 
+    },
+  
+    input: {
+      width: '82%',
+      padding: 12,
+      marginTop: 14,
+      borderWidth: 1,
+      borderRadius: 5,
+      borderColor: currentTheme.dimgray,
+      color: currentTheme.white,
+    },
+  
+    toggleText: {
+      color: currentTheme.lightblue,
+      marginTop: 5,
+      marginBottom: 5,
+    },
+  
+    exitButton: {
+      marginTop: 20,
+      backgroundColor: currentTheme["101010"],
+      paddingVertical: 12,
+      paddingHorizontal: 30,
+      borderRadius: 25,
+      borderWidth: 1,
+      borderColor: currentTheme.dimgray,
+    },
+  
+    exitButtonText: {
+      fontSize: 18,
+      color: currentTheme.white,
+      fontWeight: 'bold',
+    },
+
+    profileIcon: {
+      width: 100,
+      height: 100,
+      borderRadius: 50, 
+      marginBottom: 10,
+      marginTop: 10,
+    },
+});
+
   return (
      <View style={styles.overlay}>
        
@@ -38,12 +115,12 @@ export default function Profile() {
          {/* Modal box */}
          <SafeAreaView style={styles.container}>
 
-           <MaterialCommunityIcons name="account" size={80} color="white" />
+           <MaterialCommunityIcons name="account" size={80} color={currentTheme.white} />
 
            <TextInput
              style={styles.input}
              placeholder="Username"
-             placeholderTextColor={"gray"}
+             placeholderTextColor={currentTheme.gray}
              value={username}
              onChangeText={setUsername}
            />
@@ -52,7 +129,7 @@ export default function Profile() {
              <TextInput
                style={styles.input}
                placeholder="Email"
-               placeholderTextColor="gray"
+               placeholderTextColor={currentTheme.gray}
                value={email}
                onChangeText={setEmail}
                keyboardType="email-address"
@@ -63,7 +140,7 @@ export default function Profile() {
            <TextInput
              style={styles.input}
              placeholder="Password"
-             placeholderTextColor={"gray"}
+             placeholderTextColor={currentTheme.gray}
              value={password}
              secureTextEntry
              onChangeText={setPassword}
@@ -91,82 +168,14 @@ export default function Profile() {
             <Text style={styles.exitButtonText}>Exit</Text>
          </Pressable>
      </View>
-  );
+  
+
+
+
+);
 }
 
 const width = Dimensions.get('window').width-1
 
-const styles = StyleSheet.create({
-    overlay: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: "rgba(0, 0, 0, 0.8)",
-      position: "absolute",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-    },
 
-    container: {
-      //height: 370,
-      width: width*0.85,
-      backgroundColor: "#101010",
-      paddingHorizontal: 20,
-      paddingVertical: 10,
-      borderRadius: 15, 
-      borderWidth: 1,
-      borderColor: 'dimgray',
-      alignItems: "center",
-      justifyContent: "flex-start",
-    },
-  
-    header: {
-      fontSize: 18,
-      color: 'white',
-      fontWeight: 'bold',
-      textAlign: 'center',
-      marginBottom: 10, 
-    },
-  
-    input: {
-      width: '82%',
-      padding: 12,
-      marginTop: 14,
-      borderWidth: 1,
-      borderRadius: 5,
-      borderColor: '#ddd',
-      color: 'white',
-    },
-  
-    toggleText: {
-      color: 'lightblue',
-      marginTop: 16,
-    },
-  
-    exitButton: {
-      marginTop: 20,
-      backgroundColor: '#101010',
-      paddingVertical: 12,
-      paddingHorizontal: 30,
-      borderRadius: 25,
-      borderWidth: 1,
-      borderColor: 'dimgray',
-    },
-  
-    exitButtonText: {
-      fontSize: 18,
-      color: 'white',
-      fontWeight: 'bold',
-    },
-
-    profileIcon: {
-      width: 100,
-      height: 100,
-      borderRadius: 50, 
-      marginBottom: 10,
-      marginTop: 10,
-    },
-});
   
