@@ -1,15 +1,11 @@
-import { View, Alert, Pressable, Text, ScrollView } from "react-native";
+import { View, Alert, Pressable, Text, ScrollView, StyleSheet } from "react-native";
 import { Ionicons, MaterialCommunityIcons, AntDesign, Entypo } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import newTrackerView from "../newTrackerView";
-import * as Progress from "react-native-progress"; 
-import { useNavigation } from '@react-navigation/native';
-import { navigate } from "expo-router/build/global-state/routing";
-import { Link } from "expo-router";
+import * as Progress from "react-native-progress";
 import { Dimensions } from "react-native";
 import { StatusBar } from "expo-status-bar";
-
+import { useTheme } from "../ThemeContext"; // Import the ThemeContext
 
 // Used in square icon styling for dynamic styles - grid same for all phone sizes
 const screenWidth = Dimensions.get("window").width;
@@ -17,274 +13,188 @@ const itemsPerRow = 4;
 const spacing = 12;
 const totalSpacing = spacing * (itemsPerRow + 1);
 const sidesPadding = 16; // for grid mostly
-const itemSize = (screenWidth - totalSpacing - (sidesPadding * 2)) / itemsPerRow;
-
+const itemSize = (screenWidth - totalSpacing - sidesPadding * 2) / itemsPerRow;
 
 export default function Index() {
   const router = useRouter();
-  //const navigation = useNavigation();
+  const { currentTheme } = useTheme(); // Get the current theme from context
+
+  // Dynamic styles for square icon buttons
+  const squareIconButtonStyle = (size: number) => ({
+    ...styles.squareIconButton,
+    backgroundColor: currentTheme["101010"],
+    borderColor: currentTheme.dimgray,
+    width: size,
+    height: size,
+  });
 
   return (
-    <SafeAreaView
-      style={{
-        flex: 1,
-        justifyContent: "flex-start",
-        alignItems: "center",
-        backgroundColor: "#101010",
-      }}
-    >
-      <StatusBar style="light"/>
-      {/* This view is for the top-left pfp */}
-      <View
-        style={{
-          width: screenWidth,
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          paddingHorizontal: 16,
-          paddingTop: 8,
-        }}
-      >
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: currentTheme["101010"] }]}>
+      <StatusBar style="light" />
+      {/* This view is for the top-left and top-right icons */}
+      <View style={styles.topRow}>
         <Pressable
           onPress={() => router.push("/Profile")}
-          style={cornerButtonsStyle}
+          style={[styles.cornerButton, { backgroundColor: currentTheme["101010"] }]}
         >
-          <MaterialCommunityIcons name="account" size={40} color="white" />
+          <MaterialCommunityIcons name="account" size={40} color={currentTheme.white} />
         </Pressable>
 
-      {/* This view is for the top-right plus icon */}
         <Pressable
           onPress={() => router.push("/newTrackerView")}
-          style={cornerButtonsStyle}
+          style={[styles.cornerButton, { backgroundColor: currentTheme["101010"] }]}
         >
-          <Entypo name="plus" size={40} color="white" />
+          <Entypo name="plus" size={40} color={currentTheme.white} />
         </Pressable>
-        
       </View>
 
-      <ScrollView
-      contentContainerStyle={{
-        alignItems: "center",
-        paddingBottom: 50, // gives breathing room for bottom of the content , adjust as we like
-      }}>
-        <View style={progressStyles.progressContainer}>
+      <ScrollView contentContainerStyle={styles.scrollView}>
+        <View style={styles.progressContainer}>
           <Progress.Circle
             size={100} // Size of the circle
             progress={0.76} // 76% progress
             thickness={10} // Border thickness
             showsText={false} // We add text separately
-            color="lightgreen" // Progress color
-            unfilledColor="#333" // Background color
+            color={currentTheme.lightgreen} // Progress color
+            unfilledColor={currentTheme.dimgray} // Background color
             borderWidth={0} // No border
           />
-          <Text style={progressStyles.progressText}>76%</Text>
+          <Text style={[styles.progressText, { color: currentTheme.white }]}>76%</Text>
         </View>
 
-
         {/* Title text */}
-        <Text
-          style={{
-            color: "white",
-            fontSize: 24,
-            fontWeight: "bold",
-            marginBottom: 20,
-            marginTop: 50,
-          }}
-        >
-          Goals
-        </Text>
+        <Text style={[styles.title, { color: currentTheme.white }]}>Goals</Text>
 
         {/* Row of action buttons */}
-        <View
-          style={{
-            flexDirection: "row",
-            flexWrap: "wrap",
-            justifyContent: "center",
-            // marginHorizontal: spacing / 2,
-            paddingHorizontal: sidesPadding,
-          }}
-        >
+        <View style={styles.iconRow}>
           <Pressable
             onPress={() => Alert.alert("Sleep button pressed")}
             style={squareIconButtonStyle(itemSize)}
           >
-            <MaterialCommunityIcons name="power-sleep" size={40} color="white" />
+            <MaterialCommunityIcons name="power-sleep" size={40} color={currentTheme.white} />
           </Pressable>
 
           <Pressable
             onPress={() => Alert.alert("Food button pressed")}
             style={squareIconButtonStyle(itemSize)}
           >
-            <Ionicons name="fast-food-outline" size={40} color="white" />
+            <Ionicons name="fast-food-outline" size={40} color={currentTheme.white} />
           </Pressable>
 
           <Pressable
             onPress={() => Alert.alert("Calorie button pressed")}
             style={squareIconButtonStyle(itemSize)}
           >
-            <Ionicons name="flame-outline" size={40} color="white" />
+            <Ionicons name="flame-outline" size={40} color={currentTheme.white} />
           </Pressable>
 
           <Pressable
             onPress={() => Alert.alert("Code button pressed")}
             style={squareIconButtonStyle(itemSize)}
           >
-            <AntDesign name="codesquareo" size={30} color="white" />
-          </Pressable>
-    
-          <Pressable
-            onPress={() => Alert.alert("Plus button pressed")}
-            style={squareIconButtonStyle(itemSize)}
-          >
-            <AntDesign name="plus" size={30} color="white" />
+            <AntDesign name="codesquareo" size={30} color={currentTheme.white} />
           </Pressable>
 
           <Pressable
             onPress={() => Alert.alert("Plus button pressed")}
             style={squareIconButtonStyle(itemSize)}
           >
-            <AntDesign name="plus" size={30} color="white" />
+            <AntDesign name="plus" size={30} color={currentTheme.white} />
           </Pressable>
-
-          <Pressable
-            onPress={() => Alert.alert("Plus button pressed")}
-            style={squareIconButtonStyle(itemSize)}
-          >
-            <AntDesign name="plus" size={30} color="white" />
-          </Pressable>
-
-          
-          
         </View>
 
-
         {/* Title text */}
-        <Text
-          style={{
-            color: "white",
-            fontSize: 24,
-            fontWeight: "bold",
-            marginTop: 50,
-          }}
-        >
-          Limits
-        </Text>
+        <Text style={[styles.title, { color: currentTheme.white }]}>Limits</Text>
 
-        <View
-        style = {{
-          flexDirection: "row",
-          flexWrap: "wrap",
-          justifyContent: "center",
-          // marginHorizontal: spacing / 2,
-          paddingHorizontal: sidesPadding,
-          marginTop: 20,
-        }}
-        >
+        <View style={styles.iconRow}>
           <Pressable
             onPress={() => Alert.alert("Limit button alert")}
             style={squareIconButtonStyle(itemSize)}
           >
-            <Ionicons name="cash-outline" size={40} color="white"/> 
-          </Pressable> 
-
-          <Pressable
-            onPress={() => Alert.alert("Button pressed")}
-            style={squareIconButtonStyle(itemSize)}
-          >
-            <MaterialCommunityIcons name="spoon-sugar" size={40} color="white" />
+            <Ionicons name="cash-outline" size={40} color={currentTheme.white} />
           </Pressable>
 
           <Pressable
             onPress={() => Alert.alert("Button pressed")}
             style={squareIconButtonStyle(itemSize)}
           >
-            <AntDesign name="dashboard" size={30} color="white" />
+            <MaterialCommunityIcons name="spoon-sugar" size={40} color={currentTheme.white} />
+          </Pressable>
+
+          <Pressable
+            onPress={() => Alert.alert("Button pressed")}
+            style={squareIconButtonStyle(itemSize)}
+          >
+            <AntDesign name="dashboard" size={30} color={currentTheme.white} />
           </Pressable>
 
           <Pressable
             onPress={() => Alert.alert("Limit button alert")}
             style={squareIconButtonStyle(itemSize)}
           >
-            <AntDesign name="instagram" size={40} color="white"/> 
-          </Pressable> 
-
-          <Pressable
-            onPress={() => Alert.alert("Button pressed")}
-            style={squareIconButtonStyle(itemSize)}
-          >
-            <Entypo name="area-graph" size={40} color="white" />
+            <AntDesign name="instagram" size={40} color={currentTheme.white} />
           </Pressable>
-
-          <Pressable
-            onPress={() => Alert.alert("Button pressed")}
-            style={squareIconButtonStyle(itemSize)}
-          >
-            <Entypo name="bowl" size={30} color="white" />
-          </Pressable>
-
-          <Pressable
-            onPress={() => Alert.alert("Limit button alert")}
-            style={squareIconButtonStyle(itemSize)}
-          >
-            <Entypo name="credit" size={40} color="white"/> 
-          </Pressable> 
-
-          <Pressable
-            onPress={() => Alert.alert("Button pressed")}
-            style={squareIconButtonStyle(itemSize)}
-          >
-            <Entypo name="game-controller" size={40} color="white" />
-          </Pressable>
-
-          <Pressable
-            onPress={() => Alert.alert("Button pressed")}
-            style={squareIconButtonStyle(itemSize)}
-          >
-            <AntDesign name="plus" size={30} color="white" />
-          </Pressable>
-
         </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-const progressStyles = {
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    justifyContent: "flex-start",
+    alignItems: "center",
+  },
+  topRow: {
+    width: "100%",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingTop: 8,
+  },
+  cornerButton: {
+    width: 45,
+    height: 45,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  scrollView: {
+    alignItems: "center",
+    paddingBottom: 50,
+  },
   progressContainer: {
-    alignItems: "center" as const,  // Center align
-    justifyContent: "center" as const,
-    position: "relative" as const,
-    marginTop: 25,                  // Push it down slightly
-    marginBottom: 20,                // Space before next section
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+    marginTop: 25,
+    marginBottom: 20,
   },
   progressText: {
-    position: "absolute" as const,   // Overlay on top of circle
+    position: "absolute",
     top: 38,
     left: 29,
-    fontSize: 20,                    // Readable size
-    fontWeight: "bold" as const,      // Bold text
-    color: "white",                   // White text color
+    fontSize: 20,
+    fontWeight: "bold",
   },
-};
-
-// Styling for square icon buttons
-const squareIconButtonStyle = (size: number) => ({
-  backgroundColor: "#101010",
-  borderColor: "dimgray",
-  padding: 12,
-  borderRadius: 5,
-  borderWidth: 1,
-  width: size,
-  height: size,
-  justifyContent: "center" as const,
-  alignItems: "center" as const,
-  margin: spacing / 2,
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 20,
+    marginTop: 50,
+  },
+  iconRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    paddingHorizontal: 16,
+  },
+  squareIconButton: {
+    padding: 12,
+    borderRadius: 5,
+    borderWidth: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    margin: spacing / 2,
+  },
 });
-
-// Styling for corner buttons
-const cornerButtonsStyle = {
-  backgroundColor: "#101010",
-  width: 45,
-  height: 45,
-  justifyContent: "center" as const,
-  alignItems: "center" as const,
-};

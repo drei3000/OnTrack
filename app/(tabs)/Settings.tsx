@@ -67,12 +67,7 @@ export default function Index() {
       icon: "account",
       onPress: () => router.push("/accountSettings"),
     },
-    {
-      title: "Language",
-      description: "Select App Language",
-      icon: "translate",
-      onPress: () => console.log("Open Language Selection Modal"),
-    },
+    
     {
       title: "Notifications",
       description: "Push Notification | Sound Preferences",
@@ -100,7 +95,7 @@ export default function Index() {
   ];
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: currentTheme.black }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: currentTheme["101010"] }}>
       <View style={[styles.container]}>
         <Pressable style={styles.themeToggle} onPress={toggleTheme}>
           <MaterialCommunityIcons
