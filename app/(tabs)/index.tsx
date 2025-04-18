@@ -6,6 +6,10 @@ import * as Progress from "react-native-progress";
 import { Dimensions } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useTheme } from "../ThemeContext"; // Import the ThemeContext
+import { openDatabase } from "@/storage/sqlite";
+import { useEffect } from "react";
+import { Tracker } from "@/types/Tracker";
+import { Section } from "@/types/Section";
 
 // Used in square icon styling for dynamic styles - grid same for all phone sizes
 const screenWidth = Dimensions.get("window").width;
@@ -16,6 +20,18 @@ const sidesPadding = 16; // for grid mostly
 const itemSize = (screenWidth - totalSpacing - sidesPadding * 2) / itemsPerRow;
 
 export default function Index() {
+  //trackers
+  const trackersDaily: Tracker[] = new Array<Tracker>();
+  const trackersWeekly: Tracker[] = new Array<Tracker>();
+  const trackersMonthly: Tracker[] = new Array<Tracker>();
+
+  //sections
+  const sectionsDaily: Section[] = new Array<Section>();
+  const sectionsWeekly: Section[] = new Array<Section>();
+  const sectionsMonthly: Section[] = new Array<Section>();
+
+  
+
   const router = useRouter();
   const { currentTheme } = useTheme(); // Get the current theme from context
 
@@ -134,7 +150,17 @@ export default function Index() {
           >
             <AntDesign name="instagram" size={40} color={currentTheme.white} />
           </Pressable>
+
         </View>
+        <Pressable //SECTION CREATION PRESSABLE Can change style it looks ugly
+            //onPress={() => create section}
+            style = {[
+              styles.sectionCreateButton,
+              {borderColor: currentTheme.dimgray},
+            ]}
+          >
+            <AntDesign name="plus" size = {60} color = {currentTheme.white} />
+          </Pressable>
       </ScrollView>
     </SafeAreaView>
   );
@@ -197,4 +223,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     margin: spacing / 2,
   },
+  sectionCreateButton: {
+    padding: 12,
+    width: '85%', //feel free to change
+    borderRadius: 5,
+    borderWidth: 1,
+    //borderStyle: 'dashed',
+
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 30,
+  }
 });

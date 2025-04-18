@@ -13,6 +13,10 @@ export default function Layout() {
       try{
         const db = await openDatabase();
         console.log("Database initialized");
+
+        //Querying
+        //ALL trackers
+        const trackersInfo = await db.execAsync("SELECT tracker_name,icon,time_period,unit,bound_amount,current_amount FROM trackers");
       } catch (error) {
         console.error("Database error:",error);
       }
@@ -21,6 +25,7 @@ export default function Layout() {
     NavigationBar.setBackgroundColorAsync("transparent");
     setupDatabase();
   }, []);
+
 
   return (
     <ThemeProvider>
