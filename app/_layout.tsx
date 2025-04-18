@@ -6,9 +6,17 @@ import { StatusBar } from "react-native";
 import { openDatabase } from "@/storage/sqlite";
 import { useEffect } from "react";
 import { ThemeProvider } from "./ThemeContext";
+import { useTrackerStore } from "@/storage/store";
+import { exampleTrackers } from "@/types/Tracker";
 
 export default function Layout() {
+
+  //import methods
+  const setTrackers = useTrackerStore((state) => state.setTrackers);
+  
   useEffect(() => { //runs on launch
+    
+
     const setupDatabase = async () => { //function to copy and open database
       try{
         const db = await openDatabase();
@@ -24,7 +32,10 @@ export default function Layout() {
     NavigationBar.setPositionAsync("absolute");
     NavigationBar.setBackgroundColorAsync("transparent");
     setupDatabase();
-  }, []);
+
+    // //Example trackers
+    setTrackers(exampleTrackers);
+  });
 
 
   return (

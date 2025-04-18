@@ -77,31 +77,31 @@ export default function Index() {
 
       {/* Daily/Weekly/Monthly buttons */}
       <View style={[styles.buttonContainer]}>
-  {buttons.map((btn) => (
-    <TouchableOpacity
-      key={btn}
-      style={{
-        flex: 1,
-        alignItems: "center",
-        justifyContent: "center",
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        borderRadius: 10,
-        backgroundColor: selected === btn ? currentTheme.white : currentTheme["101010"], // Dynamic background color
-      }}
-      onPress={() => setSelected(btn)}
-    >
-      <Text
-        style={{
-          fontWeight: "500",
-          color: selected === btn ? currentTheme["101010"] : currentTheme.white, // Dynamic text color
-        }}
-      >
-        {btn}
-      </Text>
-    </TouchableOpacity>
-  ))}
-</View>
+        {buttons.map((btn) => (
+          <TouchableOpacity
+            key={btn}
+            style={{
+              flex: 1,
+              alignItems: "center",
+              justifyContent: "center",
+              paddingHorizontal: 16,
+              paddingVertical: 8,
+              borderRadius: 10,
+              backgroundColor: selected === btn ? currentTheme.white : currentTheme["101010"], // Dynamic background color
+            }}
+            onPress={() => setSelected(btn)}
+          >
+            <Text
+              style={{
+                fontWeight: "500",
+                color: selected === btn ? currentTheme["101010"] : currentTheme.white, // Dynamic text color
+              }}
+            >
+              {btn}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
 
       {/* Calendar */}
       <View>
