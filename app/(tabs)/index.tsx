@@ -6,6 +6,10 @@ import * as Progress from "react-native-progress";
 import { Dimensions } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useTheme } from "../ThemeContext"; // Import the ThemeContext
+import { openDatabase } from "@/storage/sqlite";
+import { useEffect } from "react";
+import { Tracker } from "@/types/Tracker";
+import { Section } from "@/types/Section";
 
 // Used in square icon styling for dynamic styles - grid same for all phone sizes
 const screenWidth = Dimensions.get("window").width;
@@ -16,6 +20,18 @@ const sidesPadding = 16; // for grid mostly
 const itemSize = (screenWidth - totalSpacing - sidesPadding * 2) / itemsPerRow;
 
 export default function Index() {
+  //trackers
+  const trackersDaily: Tracker[] = new Array<Tracker>();
+  const trackersWeekly: Tracker[] = new Array<Tracker>();
+  const trackersMonthly: Tracker[] = new Array<Tracker>();
+
+  //sections
+  const sectionsDaily: Section[] = new Array<Section>();
+  const sectionsWeekly: Section[] = new Array<Section>();
+  const sectionsMonthly: Section[] = new Array<Section>();
+
+  
+
   const router = useRouter();
   const { currentTheme } = useTheme(); // Get the current theme from context
 
