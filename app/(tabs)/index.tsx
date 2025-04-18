@@ -150,7 +150,17 @@ export default function Index() {
           >
             <AntDesign name="instagram" size={40} color={currentTheme.white} />
           </Pressable>
+
         </View>
+        <Pressable //SECTION CREATION PRESSABLE Can change style it looks ugly
+            //onPress={() => create section}
+            style = {[
+              styles.sectionCreateButton,
+              {borderColor: currentTheme.dimgray},
+            ]}
+          >
+            <AntDesign name="plus" size = {60} color = {currentTheme.white} />
+          </Pressable>
       </ScrollView>
     </SafeAreaView>
   );
@@ -213,4 +223,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     margin: spacing / 2,
   },
+  sectionCreateButton: {
+    padding: 12,
+    width: '85%', //feel free to change
+    borderRadius: 5,
+    borderWidth: 1,
+    //borderStyle: 'dashed',
+
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 30,
+  }
 });
