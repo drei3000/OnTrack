@@ -1,3 +1,4 @@
+import { getCurrentUnixMilliseconds } from "./Misc";
 export class Tracker { //export so referencable
     trackerName: string;
     icon: string; // Assuming it's a URL

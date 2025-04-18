@@ -3,16 +3,16 @@ import { Pressable, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "./ThemeContext";
 import { useTrackerStore } from "@/storage/store";
-import { Tracker } from "@/types/Tracker";
+import { Tracker, exampleTrackers } from "@/types/Tracker";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { Text } from "react-native";
 import { useState } from "react";
 import { TouchableOpacity } from "react-native";
-
-
+import { getIconInfo } from "@/types/Misc";
 
 const getImage = (inputTracker: Tracker): {icon: JSX.Element} => {
     const {type, name, color} = getIconInfo(inputTracker.icon);
+    console.log(color);
     if (type == "fa5"){ //if fa5 icon
         return{
             icon: <FontAwesome5 name = {name} size = {40} color ={color}/>
@@ -31,26 +31,32 @@ const getImage = (inputTracker: Tracker): {icon: JSX.Element} => {
 const renderTracker = ({ tracker }: { tracker: Tracker }) => {
     const {currentTheme} = useTheme();
     return (
-        <Pressable
-        style = {[
-            styles.trackerButton,
-            {
-            borderTopColor: currentTheme['dimgray'],
-            borderBottomColor: currentTheme['dimgray'],
-            backgroundColor: currentTheme['transparent'],
-            }
-        ]}
-        >
-            {getImage(tracker).icon}
-            <Text style={styles.trackerText}>
-                {tracker.trackerName}
-            </Text>
-        </Pressable>
+        
+            <TouchableOpacity
+            style = {[
+                styles.trackerButton,
+                {
+                borderBottomColor: currentTheme['dimgray'],
+                backgroundColor: currentTheme['transparent'],
+                }
+            ]}
+            >
+            <View style = {[styles.iconContainer]}>
+                {getImage(tracker).icon}
+            </View>
+                
+                <Text style={styles.trackerText}>
+                    {tracker.trackerName}
+                </Text>
+            </TouchableOpacity>
     );
 };
 export default function trackerList(){
     const { currentTheme } = useTheme();
     const trackers = useTrackerStore((state) => state.trackers);
+    const trackersDaily = trackers.filter((tracker) => tracker.timePeriod === 'DAILY');
+    const trackersWeekly = trackers.filter((tracker) => tracker.timePeriod === 'WEEKLY');
+    const trackersMonthly = trackers.filter((tracker) => tracker.timePeriod === 'MONTHLY');
     const buttons = ["Daily", "Weekly", "Monthly"]; //Time Period button states
     const [selected, setSelected] = useState("Daily");
 
@@ -94,7 +100,10 @@ export default function trackerList(){
                 style = {[
                     styles.scrollView,
                 ]}>
-                    {trackers.map((tracker) => renderTracker({ tracker }))} 
+                    {(selected === 'Daily') ? trackersDaily.map((tracker) => renderTracker({ tracker })) 
+                    :((selected === 'Weekly') ? trackersWeekly.map((tracker) => renderTracker({ tracker }))
+                        : trackersMonthly.map((tracker) => renderTracker({tracker}))
+                    )} 
             </ScrollView>
         </SafeAreaView>
     );
@@ -102,22 +111,29 @@ export default function trackerList(){
 
 const styles = StyleSheet.create({
     safeArea: {
+        width: '100%',
         flex: 1,
         justifyContent: "flex-start",
         alignItems: "center",
     },
     scrollView: {
+        width: '100%',
         flex: 1,
         flexDirection: 'column'
     },
     
     trackerButton: {
         width: '100%',
+        height: 80,
         borderWidth: 1,
-        justifyContent: 'center'
+        alignItems: 'center',
+        flexDirection: 'row',
     },
     trackerText: {
-        marginLeft: 10,
+        marginLeft: 5,
+        color: 'white',
+        fontWeight: '600',
+        fontSize: 20,
     },
     buttonContainer: {
         width: '100%',
@@ -127,4 +143,11 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingTop: 8,
       },
+    iconContainer: {
+        height: '100%',
+        aspectRatio: 1,
+
+        alignItems: 'center',
+        justifyContent: 'center',
+    }
 })
