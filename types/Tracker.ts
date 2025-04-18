@@ -49,3 +49,87 @@ export class Tracker { //export so referencable
 }
 
 export type TimePeriod = 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY'; 
+
+export const exampleTrackers: Tracker[] = [
+    new Tracker(
+      "Water Intake",
+      "fa5|tint|#4FC3F7",
+      "DAILY",
+      Date.now(),
+      "ml",
+      "2000"
+    ),
+    new Tracker(
+      "Steps",
+      "fa5|shoe-prints|#81C784",
+      "DAILY",
+      Date.now(),
+      "steps",
+      "10000"
+    ),
+    new Tracker(
+      "Reading",
+      "fa5|book|#FFD54F",
+      "DAILY",
+      Date.now(),
+      "minutes",
+      "30"
+    ),
+    new Tracker(
+      "Workout",
+      "fa5|dumbbell|#FF8A65",
+      "WEEKLY",
+      Date.now(),
+      "sessions",
+      "3"
+    ),
+    new Tracker(
+      "Sleep",
+      "fa5|bed|#BA68C8",
+      "DAILY",
+      Date.now(),
+      "hours",
+      "8"
+    ),
+    new Tracker(
+      "Calories",
+      "fa5|fire|#EF5350",
+      "DAILY",
+      Date.now(),
+      "kcal",
+      "2500"
+    ),
+    new Tracker(
+      "Meditation",
+      "fa5|spa|#64B5F6",
+      "DAILY",
+      Date.now(),
+      "minutes",
+      "15"
+    ),
+    new Tracker(
+      "Budget",
+      "fa5|wallet|#90A4AE",
+      "MONTHLY",
+      Date.now(),
+      "GBP",
+      "-500"
+    ),
+    new Tracker(
+      "Coding Hours",
+      "fa5|laptop-code|#4DD0E1",
+      "WEEKLY",
+      Date.now(),
+      "hours",
+      "10"
+    ),
+    new Tracker(
+      "Sugar Limit",
+      "fa5|cookie-bite|#F06292",
+      "DAILY",
+      Date.now(),
+      "g",
+      "-30"
+    )
+  ];
+  
