@@ -44,7 +44,10 @@ const renderTracker = ({ tracker }: { tracker: Tracker }) => {
                 {getImage(tracker).icon}
             </View>
                 
-            <Text style={styles.trackerText}>
+            <Text style={[
+                styles.trackerText,
+                {color: currentTheme['white']}
+            ]}>
                 {tracker.trackerName}
             </Text>
             {/* arrow */}
