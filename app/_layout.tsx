@@ -24,7 +24,7 @@ export default function Layout() {
 
         //Querying
         //ALL trackers
-        const trackersInfo = await db.execAsync("SELECT tracker_name,icon,time_period,unit,bound_amount,current_amount FROM trackers");
+        const trackersInfo = await db.runAsync("SELECT tracker_name,icon,time_period,unit,bound_amount,current_amount FROM trackers");
       } catch (error) {
         console.error("Database error:",error);
       }

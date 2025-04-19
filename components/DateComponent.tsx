@@ -17,12 +17,12 @@ const Date: React.FC<DateComponentProps> = ({ date, onSelectDate, selected, mode
 
   // Format the provided date
   const formattedDate = moment(date).format('YYYY-MM-DD');
-  const formattedMonth = moment(date).format('YYYY-MM');
+
   const m = moment(date);
   let day = '';
   let dayNumber = '';
-
   const today = moment().format('YYYY-MM-DD');
+
   if (mode == "Daily"){
     // Display "Today" if the date is equal to current date, otherwise show abbreviated weekday name
     day = formattedDate === today ? 'Today' : moment(date).format('ddd');
@@ -38,8 +38,6 @@ const Date: React.FC<DateComponentProps> = ({ date, onSelectDate, selected, mode
     day = moment(date).format('MMM');
     dayNumber = moment(date).format('MM');
   }
-
-  
 
   return (
     // TouchableOpacity makes the date card pressable
@@ -74,6 +72,11 @@ const Date: React.FC<DateComponentProps> = ({ date, onSelectDate, selected, mode
             fontWeight: 'bold',
             fontSize: 24,
           },
+          selected === formattedDate && mode == 'Weekly' && {
+            color: currentTheme["101010"], // Selected text color
+            fontWeight: 'bold',
+            fontSize: 18,
+          }
         ]}
       >
         {dayNumber}
