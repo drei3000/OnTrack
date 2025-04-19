@@ -87,6 +87,7 @@ const Calendar: React.FC<CalendarProps> = ({ onSelectDate, selected, mode }) => 
                   date={date.toDate()}
                   onSelectDate={onSelectDate}
                   selected={selected}
+                  mode = {mode}
                 />
               ))}
             </ScrollView>
@@ -106,7 +107,7 @@ const Calendar: React.FC<CalendarProps> = ({ onSelectDate, selected, mode }) => 
       </>
     );
   }
-  
+
   if (mode == "Monthly"){
     return (
       <>
@@ -117,7 +118,15 @@ const Calendar: React.FC<CalendarProps> = ({ onSelectDate, selected, mode }) => 
                 horizontal
                 showsHorizontalScrollIndicator={false}
               >
-              <Text> Monthly View </Text>
+              {dates.map((date, index) => (
+                <Date
+                  key={index}
+                  date={date.toDate()}
+                  onSelectDate={onSelectDate}
+                  selected={selected}
+                  mode = {mode}
+                />
+              ))}
             </ScrollView>
           </View>
         </View>

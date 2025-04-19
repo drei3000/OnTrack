@@ -8,18 +8,31 @@ interface DateComponentProps {
   date: Date;
   onSelectDate: (date: string) => void;
   selected: string;
+  mode: "Daily" | "Weekly" | "Monthly";
 }
 
 // Date component: displays a formatted day and day number
-const Date: React.FC<DateComponentProps> = ({ date, onSelectDate, selected }) => {
+const Date: React.FC<DateComponentProps> = ({ date, onSelectDate, selected, mode }) => {
   const { currentTheme } = useTheme(); // Access currentTheme
 
   // Format the provided date
   const formattedDate = moment(date).format('YYYY-MM-DD');
+  const formattedMonth = moment(date).format('YYYY-MM');
+  let day = '';
+  let dayNumber = '';
+
   const today = moment().format('YYYY-MM-DD');
-  // Display "Today" if the date is equal to current date, otherwise show abbreviated weekday name
-  const day = formattedDate === today ? 'Today' : moment(date).format('ddd');
-  const dayNumber = moment(date).format('D');
+  if (mode == "Daily"){
+    // Display "Today" if the date is equal to current date, otherwise show abbreviated weekday name
+    day = formattedDate === today ? 'Today' : moment(date).format('ddd');
+    dayNumber = moment(date).format('D');
+  }
+  else if (mode == "Monthly"){
+    day = moment(date).format('MMM');
+    dayNumber = moment(date).format('MM');
+  }
+
+  
 
   return (
     // TouchableOpacity makes the date card pressable
