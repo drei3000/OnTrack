@@ -356,12 +356,12 @@ export default function newTrackerView() {
     if (title.trim().length < 3) return; // basic validation
 
     const iconString = isUri(selectedImage)
-      ? selectedImage
+      ? `image|${selectedImage}`
       : `fa5|${selectedImage}|${selectedColor}`;
 
     const timePeriod: TimePeriod = ['Daily','Weekly','Monthly','Yearly'][currentTPIndex] as TimePeriod;
 
-    const boundNumber = limit.trim() === '' ? null : parseFloat(limit) * (isGoal ? 1 : -1);
+    const boundNumber : number = limit.trim() === '' ? 0 : parseFloat(limit) * (isGoal ? 1 : -1);
 
     try {
       // write to SQLite
@@ -377,8 +377,9 @@ export default function newTrackerView() {
         iconString,
         timePeriod,
         Date.now(),
-        value ?? 0,
-        boundNumber?.toString()
+        boundNumber,
+        value ?? '',
+        
       );
       addTracker(newTracker);
 

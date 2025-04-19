@@ -20,7 +20,10 @@ export const getImage = (inputTracker: Tracker, size: number): {icon: JSX.Elemen
         }
     }else if(type == "image"){ // if image
         return{ //NOT COMPLETED/IMPLEMENTED PROPERLY
-            icon:  <Image source={{ uri: name, 
+            icon:  <Image style = {[
+                {aspectRatio: 1, height: 60, width: 60, marginLeft: 1, marginTop:1}
+            ]}
+            source={{ uri: name, 
             }}/>
         }
     }

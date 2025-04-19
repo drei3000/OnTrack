@@ -15,6 +15,8 @@ import { FontAwesome5 } from "@expo/vector-icons";
 import { Keyboard } from "react-native";
 import { useTrackerStore } from "@/storage/store";
 import { getIconInfo } from "@/types/Misc";
+import { openDatabase } from "@/storage/sqlite";
+import { TimePeriod, Tracker } from "@/types/Tracker";
 
 const height = Dimensions.get('window').height-1;
 const width = Dimensions.get('window').width-1
@@ -97,13 +99,6 @@ export default function editTracker(){
         setSelectedColor(color);
         }
     }, [image, color] );
-
-    // Confirm action when tick is pressed
-    //TO DO: Create tracker and exit in this function given state variables
-    const handleConfirm = () => {
-        console.log('Confirmed');
-
-    };
 
     //When icon is pressed (for selection)
     const handleImagePressed = () => {
