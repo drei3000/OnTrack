@@ -68,7 +68,7 @@ const Calendar: React.FC<CalendarProps> = ({ onSelectDate, selected, mode }) => 
   // Once dates are loaded, scroll the ScrollView so that "today" is centered
   useEffect(() => {
     if (dates.length > 0 && todayIndex !== -1 && scrollViewRef.current) {
-      const itemWidth = 80; // Assumed width for each date card
+      const itemWidth = 85; // Assumed width for each date card
       const xOffset = todayIndex * itemWidth - screenWidth / 2 + itemWidth / 2;
 
       // Delay the scroll to ensure layout is complete before scrolling
