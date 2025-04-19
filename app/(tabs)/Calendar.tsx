@@ -5,6 +5,7 @@ import { StatusBar } from "expo-status-bar";
 import { useState } from "react";
 import { useRouter } from "expo-router";
 import Calendar from "../../components/CalendarComponent";
+import {CalendarProps} from "../../components/CalendarComponent";
 import { Dimensions } from "react-native";
 import moment from "moment";
 import { LinearGradient } from "expo-linear-gradient";
@@ -17,8 +18,9 @@ export default function Index() {
   const { currentTheme } = useTheme(); // Access current theme
   const [selectedDate, setSelectedDate] = useState<string>(moment().format("YYYY-MM-DD"));
   const router = useRouter();
-  const buttons = ["Daily", "Weekly", "Monthly"];
-  const [selected, setSelected] = useState("Daily");
+  type CalendarMode = CalendarProps["mode"];
+  const buttons: CalendarMode[] = ["Daily", "Weekly", "Monthly"];
+  const [selected, setSelected] = useState<CalendarMode>("Daily");
 
   // Dynamic styles for gradient wrappers
   const gradientWrapperStyle = (height: number) => ({
@@ -105,7 +107,7 @@ export default function Index() {
 
       {/* Calendar */}
       <View>
-        <Calendar onSelectDate={setSelectedDate} selected={selectedDate || ""} />
+        <Calendar onSelectDate={setSelectedDate} selected={selectedDate || ""} mode = {selected} />
       </View>
 
       {/* ScrollView with gradient buttons */}

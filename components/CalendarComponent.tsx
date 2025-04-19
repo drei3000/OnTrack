@@ -5,13 +5,14 @@ import Date from './DateComponent';
 import { useTheme } from '../app/ThemeContext'; // Import useTheme
 
 // Prop types for the Calendar component
-interface CalendarProps {
+export interface CalendarProps {
   onSelectDate: (date: string) => void;
   selected: string;
+  mode: "Daily" | "Weekly" | "Monthly";
 }
 
 // The Calendar component displays a horizontal list of date cards
-const Calendar: React.FC<CalendarProps> = ({ onSelectDate, selected }) => {
+const Calendar: React.FC<CalendarProps> = ({ onSelectDate, selected, mode }) => {
   // State to store generated dates (Moment objects)
   const [dates, setDates] = useState<Moment[]>([]);
   // Reference to the horizontal ScrollView for programmatic scrolling
@@ -32,10 +33,23 @@ const Calendar: React.FC<CalendarProps> = ({ onSelectDate, selected }) => {
     setDates(_dates);
   };
 
+  const getMonths = () => {
+    const _months: Moment[] = [];
+    for (let i = -6; i <= 6; i++) {
+      _months.push(moment().add(i, 'months').startOf('month')); // Use start of the month for consistency
+    }
+    setDates(_months);
+  };
+
   // Generate dates when the component mounts
   useEffect(() => {
+  if (mode === "Daily") {
     getDates();
-  }, []);
+  } 
+  else if (mode === "Monthly") {
+    getMonths();
+  }
+  }, [mode]);
 
   // Determine the index of today's date in the generated array
   const todayIndex = dates.findIndex((d) => d.isSame(moment(), 'day'));
@@ -57,28 +71,59 @@ const Calendar: React.FC<CalendarProps> = ({ onSelectDate, selected }) => {
   }, [dates, todayIndex, screenWidth]);
 
   // Render the list of date cards inside a horizontal ScrollView
-  return (
-    <>
-      <View style={styles.dateSection}>
-        <View style={styles.scroll}>
-          <ScrollView
-            ref={scrollViewRef} // Reference for programmatically scrolling
-            horizontal
-            showsHorizontalScrollIndicator={false}
-          >
-            {dates.map((date, index) => (
-              <Date
-                key={index}
-                date={date.toDate()}
-                onSelectDate={onSelectDate}
-                selected={selected}
-              />
-            ))}
-          </ScrollView>
+  if (mode == "Daily"){
+    return (
+      <>
+        <View style={styles.dateSection}>
+          <View style={styles.scroll}>
+            <ScrollView
+              ref={scrollViewRef} // Reference for programmatically scrolling
+              horizontal
+              showsHorizontalScrollIndicator={false}
+            >
+              {dates.map((date, index) => (
+                <Date
+                  key={index}
+                  date={date.toDate()}
+                  onSelectDate={onSelectDate}
+                  selected={selected}
+                />
+              ))}
+            </ScrollView>
+          </View>
         </View>
-      </View>
-    </>
-  );
+      </>
+    );
+  }
+  if (mode == "Weekly"){
+    return (
+      <>
+        <View style={styles.dateSection}>
+          <View style={styles.scroll}>
+            <Text> Weekly View </Text>
+          </View>
+        </View>
+      </>
+    );
+  }
+  
+  if (mode == "Monthly"){
+    return (
+      <>
+        <View style={styles.dateSection}>
+          <View style={styles.scroll}>
+            <ScrollView
+                ref={scrollViewRef} // Reference for programmatically scrolling
+                horizontal
+                showsHorizontalScrollIndicator={false}
+              >
+              <Text> Monthly View </Text>
+            </ScrollView>
+          </View>
+        </View>
+      </>
+    );
+  }
 };
 
 export default Calendar;
