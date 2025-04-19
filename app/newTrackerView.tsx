@@ -7,6 +7,11 @@ import { PixelRatio } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from './ThemeContext';
 
+import { openDatabase } from '@/storage/sqlite';
+import { useTrackerStore } from '@/storage/store';
+import { Tracker, TimePeriod } from '@/types/Tracker';
+
+
 //check if string is a uri (image)
 export const isUri = (value: string): boolean => {
   return (
@@ -25,6 +30,8 @@ export default function newTrackerView() {
   const router = useRouter(); 
   const { image, color } = useLocalSearchParams(); // receives updated params from selectImage
   const { currentTheme } = useTheme(); // Get the current theme from context
+
+  const addTracker = useTrackerStore((s) => s.addTracker);
 
   /*states*/
   //input states
@@ -343,10 +350,44 @@ export default function newTrackerView() {
   }, [image, color] );
 
   // Confirm action when tick is pressed
-  //TO DO: Create tracker and exit in this function given state variables
-  const handleConfirm = () => {
-    console.log('Confirmed');
+  // Now saves to both SQLite and Zustand
+  // IMPORTANT, keep order the same to avoid async between local and db
+  const handleConfirm = async () => {
+    if (title.trim().length < 3) return; // basic validation
 
+    const iconString = isUri(selectedImage)
+      ? selectedImage
+      : `fa5|${selectedImage}|${selectedColor}`;
+
+    const timePeriod: TimePeriod = ['DAILY','WEEKLY','MONTHLY','YEARLY'][currentTPIndex] as TimePeriod;
+
+    const boundNumber = limit.trim() === '' ? null : parseFloat(limit) * (isGoal ? 1 : -1);
+
+    try {
+      // write to SQLite
+      const db = await openDatabase();
+      await db.runAsync(
+        `INSERT INTO trackers (tracker_name, icon, time_period, unit, bound_amount, current_amount, last_modified) VALUES (?,?,?,?,?,?,?)`,
+        [title.trim(), iconString, timePeriod, value ?? null, boundNumber, 0, Date.now()]
+      );
+
+      // write to Zustand
+      const newTracker = new Tracker(
+        title.trim(),
+        iconString,
+        timePeriod,
+        Date.now(),
+        value ?? undefined,
+        boundNumber?.toString()
+      );
+      addTracker(newTracker);
+
+      // close modal
+      router.back();
+    } catch (err) {
+      console.error('Tracker coudl not save', err);
+      // Alert user to catch
+    }
   };
 
   //When icon is pressed (for selection)
@@ -415,12 +456,12 @@ export default function newTrackerView() {
         )}
         </Pressable>
 
-        {/* Right tick button, render if title > 2 (can be changed) */}
+        {/* Right tick button */}
         {title.length > 2 && (
-        <Pressable style={imageBoxStyles.tickButton}>
-          <Ionicons name="checkmark" size={24} color="white" />
-        </Pressable>
-        )}
+            <Pressable style={imageBoxStyles.tickButton} onPress={handleConfirm}>
+              <Ionicons name="checkmark" size={24} color="white" />
+            </Pressable>
+          )}
         </View>
 
 
