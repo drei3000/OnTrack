@@ -32,10 +32,18 @@ const Calendar: React.FC<CalendarProps> = ({ onSelectDate, selected, mode }) => 
     }
     setDates(_dates);
   };
-
+  const getWeeks = () => {
+    const _weeks: Moment[] = [];
+    for (let i = -5; i <= 5; i++) {
+      // Start of the week (Sunday by default, can be Monday if you configure moment locale)
+      const startOfWeek = moment().add(i, 'weeks').startOf('week');
+      _weeks.push(startOfWeek);
+    }
+    setDates(_weeks);
+  };
   const getMonths = () => {
     const _months: Moment[] = [];
-    for (let i = -6; i <= 6; i++) {
+    for (let i = -5; i <= 5; i++) {
       _months.push(moment().add(i, 'months').startOf('month')); // Use start of the month for consistency
     }
     setDates(_months);
@@ -45,7 +53,10 @@ const Calendar: React.FC<CalendarProps> = ({ onSelectDate, selected, mode }) => 
   useEffect(() => {
   if (mode === "Daily") {
     getDates();
-  } 
+  }
+  else if(mode === "Weekly"){
+    getWeeks();
+  }
   else if (mode === "Monthly") {
     getMonths();
   }
@@ -101,7 +112,21 @@ const Calendar: React.FC<CalendarProps> = ({ onSelectDate, selected, mode }) => 
       <>
         <View style={styles.dateSection}>
           <View style={styles.scroll}>
-            <Text> Weekly View </Text>
+          <ScrollView
+                ref={scrollViewRef} // Reference for programmatically scrolling
+                horizontal
+                showsHorizontalScrollIndicator={false}
+              >
+              {dates.map((date, index) => (
+                <Date
+                  key={index}
+                  date={date.toDate()}
+                  onSelectDate={onSelectDate}
+                  selected={selected}
+                  mode = {mode}
+                />
+              ))}
+            </ScrollView>
           </View>
         </View>
       </>

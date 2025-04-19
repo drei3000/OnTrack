@@ -18,6 +18,7 @@ const Date: React.FC<DateComponentProps> = ({ date, onSelectDate, selected, mode
   // Format the provided date
   const formattedDate = moment(date).format('YYYY-MM-DD');
   const formattedMonth = moment(date).format('YYYY-MM');
+  const m = moment(date);
   let day = '';
   let dayNumber = '';
 
@@ -26,6 +27,12 @@ const Date: React.FC<DateComponentProps> = ({ date, onSelectDate, selected, mode
     // Display "Today" if the date is equal to current date, otherwise show abbreviated weekday name
     day = formattedDate === today ? 'Today' : moment(date).format('ddd');
     dayNumber = moment(date).format('D');
+  }
+  else if (mode == "Weekly"){
+      const start = m.clone().startOf('week').format('D');
+      const end = m.clone().endOf('week').format('D');
+      day = moment(date).format('MMM');
+      dayNumber = `${start}-${end}`;
   }
   else if (mode == "Monthly"){
     day = moment(date).format('MMM');
