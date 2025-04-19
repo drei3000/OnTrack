@@ -9,41 +9,42 @@ import { Text } from "react-native";
 import { useState } from "react";
 import { TouchableOpacity } from "react-native";
 import { getIconInfo } from "@/types/Misc";
+import { useRouter, useLocalSearchParams } from "expo-router";
 
-const getImage = (inputTracker: Tracker): {icon: JSX.Element} => {
+/*function to get image from input tracker*/
+export const getImage = (inputTracker: Tracker, size: number): {icon: JSX.Element} => {
     const {type, name, color} = getIconInfo(inputTracker.icon);
-    console.log(color);
     if (type == "fa5"){ //if fa5 icon
         return{
-            icon: <FontAwesome5 name = {name} size = {40} color ={color}/>
+            icon: <FontAwesome5 name = {name} size = {size} color ={color}/>
         }
     }else if(type == "image"){ // if image
-        return{
+        return{ //NOT COMPLETED/IMPLEMENTED PROPERLY
             icon:  <Image source={{ uri: name, 
-            
             }}/>
         }
     }
     return { // in theory unnecessary
-        icon: <FontAwesome5 name = {""} size = {24} color ={color}/>
+        icon: <FontAwesome5 name = {""} size = {size} color ={color}/>
     }
 }
-const renderTracker = ({ tracker }: { tracker: Tracker }) => {
-    const {currentTheme} = useTheme();
+
+/* function to render a pressable for an input tracker */
+const renderTracker = ({ tracker, router, currentTheme }: { tracker: Tracker; router: ReturnType<typeof useRouter>; currentTheme: any;}) => {
     return (
         <TouchableOpacity
+        onPress={() => router.push({ pathname: "./editTracker", params: { trackerN: tracker.trackerName, timeP: tracker.timePeriod, color: getIconInfo(tracker.icon).color, image: getIconInfo(tracker.icon).name} })}
         key = {tracker.trackerName}
         style = {[
             styles.trackerButton,
-            {
-            borderBottomColor: currentTheme['dimgray'],
-            }
-            ]}
-            >
+            {borderBottomColor: currentTheme['dimgray']}
+        ]}>
+            {/*icon*/}
             <View style = {[styles.iconContainer]}>
-                {getImage(tracker).icon}
+                {getImage(tracker,40).icon}
             </View>
-                
+            
+            {/*text {trackername}*/}
             <Text style={[
                 styles.trackerText,
                 {color: currentTheme['white']}
@@ -63,12 +64,19 @@ const renderTracker = ({ tracker }: { tracker: Tracker }) => {
             </TouchableOpacity>
     );
 };
+
 export default function trackerList(){
     const { currentTheme } = useTheme();
+    const router = useRouter();
+    const params = useLocalSearchParams();
+    
+
+    /*trackers*/
     const trackers = useTrackerStore((state) => state.trackers);
-    const trackersDaily = trackers.filter((tracker) => tracker.timePeriod === 'DAILY');
-    const trackersWeekly = trackers.filter((tracker) => tracker.timePeriod === 'WEEKLY');
-    const trackersMonthly = trackers.filter((tracker) => tracker.timePeriod === 'MONTHLY');
+    const trackersDaily = trackers.filter((tracker) => tracker.timePeriod === 'Daily');
+    const trackersWeekly = trackers.filter((tracker) => tracker.timePeriod === 'Weekly');
+    const trackersMonthly = trackers.filter((tracker) => tracker.timePeriod === 'Monthly');
+
     const buttons = ["Daily", "Weekly", "Monthly"]; //Time Period button states
     const [selected, setSelected] = useState("Daily");
 
@@ -112,9 +120,9 @@ export default function trackerList(){
                 style = {[
                     styles.scrollView,
                 ]}>
-                    {(selected === 'Daily') ? trackersDaily.map((tracker) => renderTracker({ tracker })) 
-                    :((selected === 'Weekly') ? trackersWeekly.map((tracker) => renderTracker({ tracker }))
-                        : trackersMonthly.map((tracker) => renderTracker({tracker}))
+                    {(selected === 'Daily') ? trackersDaily.map((tracker) => renderTracker({ tracker, router, currentTheme })) 
+                    :((selected === 'Weekly') ? trackersWeekly.map((tracker) => renderTracker({ tracker, router, currentTheme }))
+                        : trackersMonthly.map((tracker) => renderTracker({tracker, router, currentTheme}))
                     )} 
             </ScrollView>
         </SafeAreaView>

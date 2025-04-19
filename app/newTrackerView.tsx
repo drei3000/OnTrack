@@ -22,7 +22,7 @@ export type IconItem = {
 };
 
 export default function newTrackerView() {
-  const router = useRouter(); 
+  const router = useRouter();
   const { image, color } = useLocalSearchParams(); // receives updated params from selectImage
   const { currentTheme } = useTheme(); // Get the current theme from context
 
