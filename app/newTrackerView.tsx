@@ -415,7 +415,7 @@ export default function newTrackerView() {
         )}
         </Pressable>
 
-        {/* Right tick button, render if title > 2 (can be changed) */}
+        {/* Right tick button, render if title > 2 (can be changed) */} 
         {title.length > 2 && (
         <Pressable style={imageBoxStyles.tickButton}>
           <Ionicons name="checkmark" size={24} color="white" />

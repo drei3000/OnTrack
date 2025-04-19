@@ -31,23 +31,32 @@ const getImage = (inputTracker: Tracker): {icon: JSX.Element} => {
 const renderTracker = ({ tracker }: { tracker: Tracker }) => {
     const {currentTheme} = useTheme();
     return (
-        
-            <TouchableOpacity
-            style = {[
-                styles.trackerButton,
-                {
-                borderBottomColor: currentTheme['dimgray'],
-                backgroundColor: currentTheme['transparent'],
-                }
+        <TouchableOpacity
+        key = {tracker.trackerName}
+        style = {[
+            styles.trackerButton,
+            {
+            borderBottomColor: currentTheme['dimgray'],
+            }
             ]}
             >
             <View style = {[styles.iconContainer]}>
                 {getImage(tracker).icon}
             </View>
                 
-                <Text style={styles.trackerText}>
-                    {tracker.trackerName}
-                </Text>
+            <Text style={styles.trackerText}>
+                {tracker.trackerName}
+            </Text>
+            {/* arrow */}
+            <View style = {[
+                styles.iconContainer,
+                {
+                    marginLeft: 'auto', 
+                }
+            ]}>
+                <FontAwesome5 name = {'caret-right'} size = {24} color = {currentTheme['dimgray']}/>
+            </View>
+            
             </TouchableOpacity>
     );
 };
