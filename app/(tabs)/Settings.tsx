@@ -65,14 +65,14 @@ export default function Index() {
       title: "Account",
       description: "Profile | Email | Password | Login",
       icon: "account",
-      onPress: () => router.push("./accountSettings"),
+      onPress: () => router.push("../accountSettings"),
     },
     
     {
       title: "Notifications",
       description: "Push Notification | Sound Preferences",
       icon: "bell",
-      onPress: () => router.push("./notificationSettings"),
+      onPress: () => router.push("../notificationSettings"),
     },
     {
       title: "Backup & Restore",
@@ -84,7 +84,7 @@ export default function Index() {
       title: "Privacy & Security",
       description: "App Permissions | Data Encryption | Biometrics",
       icon: "shield-lock",
-      onPress: () => router.push("./privacySettings"),
+      onPress: () => router.push("../privacySettings"),
     },
     {
       title: "Tracker List",
@@ -96,7 +96,7 @@ export default function Index() {
       title: "Help & Support",
       description: "FAQs | Contact Support | Report Issue",
       icon: "help-circle",
-      onPress: () => router.push("./helpSupport"),
+      onPress: () => router.push("../helpSupport"),
     },
   ];
 

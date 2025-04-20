@@ -27,7 +27,7 @@ export type IconItem = {
 };
 
 export default function newTrackerView() {
-  const router = useRouter(); 
+  const router = useRouter();
   const { image, color } = useLocalSearchParams(); // receives updated params from selectImage
   const { currentTheme } = useTheme(); // Get the current theme from context
 
@@ -356,12 +356,12 @@ export default function newTrackerView() {
     if (title.trim().length < 3) return; // basic validation
 
     const iconString = isUri(selectedImage)
-      ? selectedImage
+      ? `image|${selectedImage}`
       : `fa5|${selectedImage}|${selectedColor}`;
 
-    const timePeriod: TimePeriod = ['DAILY','WEEKLY','MONTHLY','YEARLY'][currentTPIndex] as TimePeriod;
+    const timePeriod: TimePeriod = ['Daily','Weekly','Monthly','Yearly'][currentTPIndex] as TimePeriod;
 
-    const boundNumber = limit.trim() === '' ? null : parseFloat(limit) * (isGoal ? 1 : -1);
+    const boundNumber : number = limit.trim() === '' ? 0 : parseFloat(limit) * (isGoal ? 1 : -1);
 
     try {
       // write to SQLite
@@ -377,8 +377,9 @@ export default function newTrackerView() {
         iconString,
         timePeriod,
         Date.now(),
-        value ?? undefined,
-        boundNumber?.toString()
+        boundNumber,
+        value ?? '',
+        
       );
       addTracker(newTracker);
 
