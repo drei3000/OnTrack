@@ -74,7 +74,6 @@ const Date: React.FC<DateComponentProps> = ({ date, onSelectDate, selected, mode
           },
           selected === formattedDate && mode == 'Weekly' && {
             color: currentTheme["101010"], // Selected text color
-            fontWeight: 'bold',
             fontSize: 17,
           }
         ]}
