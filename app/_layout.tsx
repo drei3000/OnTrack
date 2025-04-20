@@ -85,6 +85,7 @@ export default function Layout() {
           return section;
         });
 
+        //Adding trackers to sections
         sections.sort((a,b) => a.position - b.position); //sort sections by position ascending
         sections.forEach((section) =>{
           const trackersInSection = sectionTrackersInfo.filter(sectionTracker => sectionTracker.section_id === section.section_id)
@@ -102,9 +103,6 @@ export default function Layout() {
     NavigationBar.setPositionAsync("absolute");
     NavigationBar.setBackgroundColorAsync("transparent");
     setupDatabase();
-
-    // //Example trackers
-    setTrackers(exampleTrackers);
   });
 
 
