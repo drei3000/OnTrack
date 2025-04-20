@@ -9,8 +9,8 @@ import { ThemeProvider } from "./ThemeContext";
 import { useSectionStore, useTrackerStore } from "@/storage/store";
 import { exampleTrackers, TimePeriod, Tracker } from "@/types/Tracker";
 import { Section } from "@/types/Section";
-export default function Layout() {
 
+export default function Layout() {
   //import methods
   const setTrackers = useTrackerStore((s) => s.setTrackers);
   const addTracker = useTrackerStore((s) => s.addTracker);
@@ -18,7 +18,6 @@ export default function Layout() {
   const setSectionsH= useSectionStore((s) => s.setSectionsH);
   const addSectionH = useSectionStore((s) => s.addSectionH);
   const initialAddTrackerToSection = useSectionStore((s) => s.initialAddTrackerToSection);
-
   //types
   type SectionRow = {
     section_id: number;
