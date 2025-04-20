@@ -1,4 +1,4 @@
-import { View, Alert, Pressable, Text, ScrollView, StyleSheet } from "react-native";
+import { View, Alert, Pressable, Text, ScrollView, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons, MaterialCommunityIcons, AntDesign, Entypo } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -7,9 +7,10 @@ import { Dimensions } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useTheme } from "../ThemeContext"; // Import the ThemeContext
 import { openDatabase } from "@/storage/sqlite";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Tracker } from "@/types/Tracker";
 import { Section } from "@/types/Section";
+import {CalendarProps} from "../../components/CalendarComponent";
 
 // Used in square icon styling for dynamic styles - grid same for all phone sizes
 const screenWidth = Dimensions.get("window").width;
@@ -44,6 +45,10 @@ export default function Index() {
     height: size,
   });
 
+  type CalendarMode = CalendarProps["mode"];
+  const buttons: CalendarMode[] = ["Daily", "Weekly", "Monthly"];
+  const [selected, setSelected] = useState<CalendarMode>("Daily");
+
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: currentTheme["101010"] }]}>
       <StatusBar style="light" />
@@ -55,7 +60,30 @@ export default function Index() {
         >
           <MaterialCommunityIcons name="account" size={40} color={currentTheme.white} />
         </Pressable>
-
+        {buttons.map((btn) => (
+          <TouchableOpacity
+            key={btn}
+            style={{
+              flex: 1,
+              alignItems: "center",
+              justifyContent: "center",
+              paddingHorizontal: 16,
+              paddingVertical: 8,
+              borderRadius: 10,
+              backgroundColor: selected === btn ? currentTheme.white : currentTheme["101010"], // Dynamic background color
+            }}
+            onPress={() => setSelected(btn)}
+          >
+            <Text
+              style={{
+                fontWeight: "500",
+                color: selected === btn ? currentTheme["101010"] : currentTheme.white, // Dynamic text color
+              }}
+            >
+              {btn}
+            </Text>
+          </TouchableOpacity>
+        ))}
         <Pressable
           onPress={() => router.push("/newTrackerView")}
           style={[styles.cornerButton, { backgroundColor: currentTheme["101010"] }]}
