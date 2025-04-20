@@ -80,13 +80,6 @@ export default function Index() {
         <Pressable onPress={() => Alert.alert("Pfp icon pressed")} style={cornerButtonsStyle}>
           <MaterialCommunityIcons name="account" size={40} color={currentTheme.white} />
         </Pressable>
-        <Pressable onPress={() => router.push("/newTrackerView")} style={cornerButtonsStyle}>
-          <Entypo name="plus" size={40} color={currentTheme.white} />
-        </Pressable>
-      </View>
-
-      {/* Daily/Weekly/Monthly buttons */}
-      <View style={[styles.buttonContainer]}>
         {buttons.map((btn) => (
           <TouchableOpacity
             key={btn}
@@ -111,7 +104,13 @@ export default function Index() {
             </Text>
           </TouchableOpacity>
         ))}
+        <Pressable onPress={() => router.push("/newTrackerView")} style={cornerButtonsStyle}>
+          <Entypo name="plus" size={40} color={currentTheme.white} />
+        </Pressable>
       </View>
+
+      {/* Daily/Weekly/Monthly buttons */}
+
 
       {/* Calendar */}
       <View>
