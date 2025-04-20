@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
     },
     trackerText: {
         marginLeft: 5,
-        color: 'white',
+      
         fontWeight: '600',
         fontSize: 20,
     },

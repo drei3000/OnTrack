@@ -248,7 +248,7 @@ export default function Index() {
                   <View style={styles.iconContainer}>
                     {getImage(tracker,40).icon}
                   </View>
-                  <Text style={styles.trackerText}>{tracker.trackerName}</Text>
+                  <Text style={[styles.trackerText, { color: currentTheme.white }]}>{tracker.trackerName}</Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
@@ -357,7 +357,7 @@ const styles = StyleSheet.create({
   },
 
   trackerButton: {
-    width: "30%", // Adjust to fit 3 items per row
+    width: "26%", // Adjust to fit 3 items per row
     aspectRatio: 1, // Make it square
     margin: 10, // Add spacing between buttons
     justifyContent: "center",
@@ -374,7 +374,7 @@ const styles = StyleSheet.create({
   trackerText: {
     fontSize: 14, // Smaller font size for labels
     fontWeight: "500",
-    color: "white",
+
     textAlign: "center", // Center-align text
   },
 });
