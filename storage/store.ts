@@ -7,16 +7,33 @@ import { openDatabase } from '@/storage/sqlite'
 type TrackersStore = {
   trackers: Tracker[]
   setTrackers: (newTrackers: Tracker[]) => void
-  addTracker: (tracker: Tracker) => void
+  addTracker: (tracker: Tracker) => Promise<void>
   getTracker: (name: string, timePeriod: string) => Tracker | undefined
 }
 
 export const useTrackerStore = create<TrackersStore>((set, get) => ({
   trackers: [],
   setTrackers: (newTrackers) => set({ trackers: newTrackers }),
-  addTracker: (tracker) => set((state) => ({
-    trackers: [...state.trackers, tracker]
-  })),
+  addTracker: async (tracker) => {
+    set((state) => ({
+      trackers: [...state.trackers, tracker]
+    }));
+
+    const db = await openDatabase();
+    await db.runAsync(
+      `INSERT INTO trackers (tracker_name, icon, time_period, unit, bound_amount, current_amount, last_modified)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [
+        tracker.trackerName,
+        tracker.icon,
+        tracker.timePeriod,
+        tracker.unit ?? null,
+        tracker.bound,
+        tracker.currentAmount,
+        tracker.last_modified
+      ]
+    );
+  },
   getTracker: (name, timePeriod) => {
     const tracker = get().trackers.filter((t) => t.timePeriod === timePeriod && t.trackerName === name);
     return tracker[0] ? tracker[0] : undefined;

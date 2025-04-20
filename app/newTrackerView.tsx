@@ -11,6 +11,8 @@ import { openDatabase } from '@/storage/sqlite';
 import { useTrackerStore } from '@/storage/store';
 import { Tracker, TimePeriod } from '@/types/Tracker';
 
+import { Alert } from 'react-native';
+
 
 //check if string is a uri (image)
 export const isUri = (value: string): boolean => {
@@ -349,61 +351,48 @@ export default function newTrackerView() {
     }
   }, [image, color] );
 
-  // Confirm action when tick is pressed
-  // Now saves to both SQLite and Zustand
-  // IMPORTANT, keep order the same to avoid async between local and db
-  const handleConfirm = async () => {
-    if (title.trim().length < 3) return; // basic validation
+    // Handles press on tracker icon box
+    const handleImagePressed = () => {
+        router.push({
+        pathname: './selectImage',
+        params: {
+            selectedImage,
+            selectedColor,
+        },
+        });
+    };
 
+    // Toggle between Goal and Limit states
+    const toggleGoalButton = () => {
+        setIsGoal(prevState => !prevState);
+      };
+  
+  const handleConfirm = async () => {
+    if (title.trim().length < 3) return;
+  
     const iconString = isUri(selectedImage)
       ? `image|${selectedImage}`
       : `fa5|${selectedImage}|${selectedColor}`;
-
+  
     const timePeriod: TimePeriod = ['Daily','Weekly','Monthly','Yearly'][currentTPIndex] as TimePeriod;
-
-    const boundNumber : number = limit.trim() === '' ? 0 : parseFloat(limit) * (isGoal ? 1 : -1);
-
+    const boundNumber: number = limit.trim() === '' ? 0 : parseFloat(limit) * (isGoal ? 1 : -1);
+  
+    const newTracker = new Tracker(
+      title.trim(),
+      iconString,
+      timePeriod,
+      Date.now(),
+      boundNumber,
+      value ?? ''
+    );
+  
     try {
-      // write to SQLite
-      const db = await openDatabase();
-      await db.runAsync(
-        `INSERT INTO trackers (tracker_name, icon, time_period, unit, bound_amount, current_amount, last_modified) VALUES (?,?,?,?,?,?,?)`,
-        [title.trim(), iconString, timePeriod, value ?? null, boundNumber, 0, Date.now()]
-      );
-
-      // write to Zustand
-      const newTracker = new Tracker(
-        title.trim(),
-        iconString,
-        timePeriod,
-        Date.now(),
-        boundNumber,
-        value ?? '',
-      );
-      addTracker(newTracker);
-
-      // close modal
-      router.back();
+      await addTracker(newTracker); // Zustand + SQLite combined
+      router.back(); // Close modal/view
     } catch (err) {
-      console.error('Tracker coudl not save', err);
-      // Alert user to catch
+      console.error('Tracker could not save:', err);
+      Alert.alert("Error", "Tracker could not be saved.");
     }
-  };
-
-  //When icon is pressed (for selection)
-  const handleImagePressed = () => {
-    router.push({
-      pathname: './selectImage',
-      params: {
-        selectedImage: selectedImage, //pass current image
-        selectedColor: selectedColor, //pass selected Color
-    },
-  });
-  }
-
-  // Toggle between "Goal" and "Limit" on press
-  const toggleGoalButton = () => {
-    setIsGoal(prevState => !prevState);
   };
   
   //View itself
