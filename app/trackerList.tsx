@@ -10,7 +10,8 @@ import { useState } from "react";
 import { TouchableOpacity } from "react-native";
 import { getIconInfo } from "@/types/Misc";
 
-const getImage = (inputTracker: Tracker): {icon: JSX.Element} => {
+
+export const getImage = (inputTracker: Tracker): {icon: JSX.Element} => {
     const {type, name, color} = getIconInfo(inputTracker.icon);
     console.log(color);
     if (type == "fa5"){ //if fa5 icon
