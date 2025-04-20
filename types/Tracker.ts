@@ -6,15 +6,15 @@ export class Tracker { //export so referencable
     currentAmount: number = 0;
     last_modified: number;
     unit?: string; // Optional field
-    bound?: number; //- if limit, +if goal, null if neither
+    bound: number; //- if limit, +if goal, 0 if neither
     
-    constructor(trackerName: string, icon: string, timePeriod: TimePeriod, last_modified: number, unit?: string, bound?: string) {
+    constructor(trackerName: string, icon: string, timePeriod: TimePeriod, last_modified: number, bound: number, unit?: string) {
         this.trackerName = trackerName;
         this.icon = icon;
         this.timePeriod = timePeriod;
         this.last_modified = last_modified;
         this.unit = unit;
-        this.bound = this.bound;
+        this.bound = bound;
 
         //INSERT INTO A SECTION
         //INSERT INTO DATABASE
@@ -49,88 +49,91 @@ export class Tracker { //export so referencable
 
 }
 
-export type TimePeriod = 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY'; 
+export type TimePeriod = 'Daily' | 'Weekly' | 'Monthly' | 'Yearly'; 
 
 export const exampleTrackers: Tracker[] = [
     new Tracker(
       "Water Intake",
       "fa5|tint|#4FC3F7",
-      "DAILY",
+      "Daily",
       Date.now(),
+      2000,
       "ml",
-      "2000"
     ),
     new Tracker(
       "Steps",
       "fa5|shoe-prints|#81C784",
-      "DAILY",
+      "Daily",
       Date.now(),
+      10000,
       "steps",
-      "10000"
     ),
     new Tracker(
       "Reading",
       "fa5|book|#FFD54F",
-      "DAILY",
+      "Daily",
       Date.now(),
-      "minutes",
-      "30"
+      30,
+      "minutes"
+      
     ),
     new Tracker(
       "Workout",
       "fa5|dumbbell|#FF8A65",
-      "WEEKLY",
+      "Weekly",
       Date.now(),
-      "sessions",
-      "3"
+      3,
+      "sessions"
     ),
     new Tracker(
       "Sleep",
       "fa5|bed|#BA68C8",
-      "DAILY",
+      "Daily",
       Date.now(),
+      8,
       "hours",
-      "8"
     ),
     new Tracker(
       "Calories",
       "fa5|fire|#EF5350",
-      "DAILY",
+      "Daily",
       Date.now(),
+      8000,
       "kcal",
-      "2500"
+      
     ),
     new Tracker(
       "Meditation",
       "fa5|spa|#64B5F6",
-      "DAILY",
+      "Daily",
       Date.now(),
+      15,
       "minutes",
-      "15"
     ),
     new Tracker(
       "Budget",
       "fa5|wallet|#90A4AE",
-      "MONTHLY",
+      "Monthly",
       Date.now(),
-      "GBP",
-      "-500"
+      -500,
+      "GBP"
     ),
     new Tracker(
       "Coding Hours",
       "fa5|laptop-code|#4DD0E1",
-      "WEEKLY",
+      "Weekly",
       Date.now(),
+      10,
       "hours",
-      "10"
+      
     ),
     new Tracker(
       "Sugar Limit",
       "fa5|cookie-bite|#F06292",
-      "DAILY",
+      "Daily",
       Date.now(),
+      -30,
       "g",
-      "-30"
     )
   ];
   

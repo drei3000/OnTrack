@@ -2,7 +2,7 @@ import { View, Alert, Pressable, Text, StyleSheet, ScrollView, TouchableOpacity 
 import { MaterialCommunityIcons, Entypo, Ionicons, AntDesign } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "expo-router";
 import Calendar from "../../components/CalendarComponent";
 import {CalendarProps} from "../../components/CalendarComponent";
@@ -58,7 +58,15 @@ export default function Index() {
     marginLeft: 12,
     fontWeight: "bold" as const,
   };
-
+  useEffect(() => {
+    if (selected === "Daily") {
+      setSelectedDate(moment().format('YYYY-MM-DD'));
+    } else if (selected === "Weekly") {
+      setSelectedDate(moment().startOf('week').format('YYYY-MM-DD'));
+    } else if (selected === "Monthly") {
+      setSelectedDate(moment().startOf('month').format('YYYY-MM-DD'));
+    }
+  }, [selected]);
   return (
     <SafeAreaView
       style={[
