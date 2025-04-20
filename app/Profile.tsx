@@ -3,6 +3,17 @@ import { View, Text, TextInput, Button, StyleSheet, SafeAreaView, Pressable, Dim
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTheme } from './ThemeContext'; // Import the ThemeContext
+import Index from './(tabs)';
+
+const width = Dimensions.get('window').width-1
+
+type User = {
+  username: string;
+  email: string;
+  password: string;
+}
+
+const mockDatabase: User[] = []; //Array to act as database to test
 
 export default function Profile() {
   const router = useRouter();
@@ -11,22 +22,51 @@ export default function Profile() {
   const [password, setPassword] = useState('');
   const [isCreating, setIsCreating] = useState(false);    //toggle between login and create account
   const { currentTheme } = useTheme(); // Get the current theme from context
+  const [message, setMessage] = useState(''); //to send error or success messages  
 
 
   const handleSubmit = () => {
+    setMessage(''); //reset message
+
     if (isCreating) {
-      // Account creation logic goes here
       if (!email || !username || !password) {
-        alert('Please fill in all fields.');
-      } else {
-        alert('Account Created!');
+        setMessage('Please fill in all fields.');
+        return;
       }
+
+      const userExists = mockDatabase.some(    // .some() returns true or false depending whether user object satisfies provided conditions
+        (user) => user.username === username || user.email === email //=== (stict equality - types must match aswell as content), == (loose equality)
+      );
+
+      if (userExists) {
+        setMessage('An account with this username or email already exists.');
+        return;
+      }
+
+      mockDatabase.push({ username, email, password }); //adds new user object to end of array
+      setMessage('Account created successfully!');
+      setIsCreating(false);
+      setUsername('');
+      setEmail('');
+      setPassword('');
+
     } else {
-      // Login logic goes here
+      //login
       if (!username || !password) {
-        alert('Please fill in all fields.');
-      } else {
-        alert('Logged In!');
+        setMessage('Please fill in all fields.');
+        return;
+      }
+
+      const user = mockDatabase.find(    //returns first user object it finds that matches the conditions
+        (user) => user.username === username && user.password === password
+      );
+
+      if (user) {
+        setMessage('Logged in successfully!');
+        router.push('/(tabs)');
+
+      } else {   //.find() will return undefined if it cannot find user    
+        setMessage('Incorrect username or password.');
       }
     }
   };
@@ -146,6 +186,12 @@ const styles = StyleSheet.create({
              onChangeText={setPassword}
            />
 
+           {message !== '' && (
+              <Text style={{ color: currentTheme.lightblue }}>
+                {message}
+              </Text>
+           )}
+
            <Pressable onPress={handleSubmit} style={styles.exitButton}>
              <Text style={styles.exitButtonText}>
                {isCreating ? 'Create Account' : 'Log In'}
@@ -168,14 +214,10 @@ const styles = StyleSheet.create({
             <Text style={styles.exitButtonText}>Exit</Text>
          </Pressable>
      </View>
-  
-
-
-
-);
+  );
 }
 
-const width = Dimensions.get('window').width-1
+
 
 
   
