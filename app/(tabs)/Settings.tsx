@@ -65,14 +65,14 @@ export default function Index() {
       title: "Account",
       description: "Profile | Email | Password | Login",
       icon: "account",
-      onPress: () => router.push("./accountSettings"),
+      onPress: () => router.push("../accountSettings"),
     },
     
     {
       title: "Notifications",
       description: "Push Notification | Sound Preferences",
       icon: "bell",
-      onPress: () => router.push("./notificationSettings"),
+      onPress: () => router.push("../notificationSettings"),
     },
     {
       title: "Backup & Restore",

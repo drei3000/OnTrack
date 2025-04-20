@@ -218,7 +218,7 @@ export default function Index() {
                   ]}
                 >
                   <View style={styles.iconContainer}>
-                    {getImage(tracker).icon}
+                    {getImage(tracker,40).icon}
                   </View>
                   <Text style={styles.trackerText}>{tracker.trackerName}</Text>
                 </TouchableOpacity>
