@@ -63,7 +63,7 @@ export default function Profile() {
 
       if (user) {
         setMessage('Logged in successfully!');
-        router.push('/(tabs)');
+        router.back();
 
       } else {   //.find() will return undefined if it cannot find user    
         setMessage('Incorrect username or password.');
@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
            />
 
            {message !== '' && (
-              <Text style={{ color: currentTheme.lightblue }}>
+              <Text style={{ color: currentTheme.lightblue, marginTop: 5 }}>
                 {message}
               </Text>
            )}
