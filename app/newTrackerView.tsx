@@ -379,7 +379,6 @@ export default function newTrackerView() {
         Date.now(),
         boundNumber,
         value ?? '',
-        
       );
       addTracker(newTracker);
 
