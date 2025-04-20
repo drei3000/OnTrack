@@ -90,17 +90,18 @@ export default function Index() {
               paddingHorizontal: 16,
               paddingVertical: 8,
               borderRadius: 10,
-              backgroundColor: selected === btn ? currentTheme.white : currentTheme["101010"], // Dynamic background color
+              backgroundColor: "transparent"
             }}
             onPress={() => setSelected(btn)}
           >
             <Text
-              style={{
-                fontWeight: "500",
-                color: selected === btn ? currentTheme["101010"] : currentTheme.white, // Dynamic text color
-              }}
+            style={{
+                color: selected === btn ? currentTheme.white : currentTheme.gray,
+                fontWeight: selected === btn ? "bold" : "500",
+                fontSize: selected === btn ? 17 : 15,
+            }}
             >
-              {btn}
+            {btn}
             </Text>
           </TouchableOpacity>
         ))}
