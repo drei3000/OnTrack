@@ -75,27 +75,28 @@ export default function Index() {
         </Pressable>
         {buttons.map((btn) => (
           <TouchableOpacity
-            key={btn}
+          key={btn}
+          style={{
+            flex: 1,
+            alignItems: "center",
+            justifyContent: "center",
+            paddingHorizontal: 16,
+            paddingVertical: 8,
+            borderRadius: 10,
+            backgroundColor: "transparent", // Always transparent
+          }}
+          onPress={() => setSelected(btn)}
+        >
+          <Text
             style={{
-              flex: 1,
-              alignItems: "center",
-              justifyContent: "center",
-              paddingHorizontal: 16,
-              paddingVertical: 8,
-              borderRadius: 10,
-              backgroundColor: selected === btn ? currentTheme.white : currentTheme["101010"], // Dynamic background color
+              color: selected === btn ? currentTheme.white : currentTheme.gray,
+              fontWeight: selected === btn ? "bold" : "500",
+              fontSize: selected === btn ? 17 : 15,
             }}
-            onPress={() => setSelected(btn)}
           >
-            <Text
-              style={{
-                fontWeight: "500",
-                color: selected === btn ? currentTheme["101010"] : currentTheme.white, // Dynamic text color
-              }}
-            >
-              {btn}
-            </Text>
-          </TouchableOpacity>
+            {btn}
+          </Text>
+        </TouchableOpacity>
         ))}
         <Pressable
           onPress={() => router.push("/newTrackerView")}
