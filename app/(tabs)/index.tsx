@@ -16,6 +16,8 @@ import { getImage } from "../trackerList"; // Import the getImage function
 import { CalendarProps } from "../../components/CalendarComponent";
 import NewSectionModal from "@/components/SectionModal";
 
+import { getIconInfo } from "@/types/Misc";
+
 import { useSectionStore } from "@/storage/store";
 import type { TimePeriod } from "@/types/Tracker";
 
@@ -143,6 +145,8 @@ export default function Index() {
                         params: {
                           trackerN: tracker.trackerName,
                           timeP: tracker.timePeriod,
+                          color: getIconInfo(tracker.icon).color, 
+                          image: getIconInfo(tracker.icon).name
                         },
                       })
                     }

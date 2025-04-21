@@ -27,7 +27,7 @@ export default function editTracker(){
     const router = useRouter(); 
     const {trackerN,timeP, image, color} = useLocalSearchParams();
     const timePeriod = typeof(timeP) === "string" ? timeP : "Daily";
-    let trackerName = typeof(trackerN) === "string" ? trackerN : "no_name";
+    const trackerName = typeof(trackerN) === "string" ? trackerN : "no_name";
     const {currentTheme} = useTheme();
 
     /*find tracker*/
