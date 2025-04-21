@@ -35,7 +35,7 @@ export default function editTracker(){
       state.getTracker(trackerName, timePeriod)
     );
     const deleteTracker = useTrackerStore((s) => s.deleteTracker);
-    const addTracker = useTrackerStore((s) => s.addTracker);
+    const addTracker = useTrackerStore((s) => s.addTracker2);
     const updateTracker = useTrackerStore((s) => s.updateTracker);
     /*states*/
     //input states
@@ -341,7 +341,8 @@ export default function editTracker(){
           `UPDATE trackers SET tracker_name = ?, icon = ?, time_period = ?, unit = ?, bound_amount = ?, last_modified = ? WHERE tracker_name = ? AND time_period = ?`,
           [title.trim(), iconString, timePeriod, value ?? null, boundNumber, Date.now(), trackerName, timePeriod]
         );
-
+        
+    
         const updatedTracker = new Tracker(title.trim(), iconString, timePeriod, Date.now(), boundNumber, value ?? '');
         if (trackerName === title.trim()){
           updateTracker(updatedTracker);
