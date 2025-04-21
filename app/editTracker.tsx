@@ -337,8 +337,8 @@ export default function editTracker(){
         const db = await openDatabase();
         
         await db.runAsync(
-          `UPDATE trackers SET tracker_name = ?, icon = ?, time_period = ?, unit = ?, bound_amount = ?, last_modified = ? WHERE tracker_name = ? AND time_period = ?`,
-          [title.trim(), iconString, timePeriod, value ?? null, boundNumber, Date.now(), trackerName, timePeriod]
+          `UPDATE trackers SET tracker_name = ?, icon = ?, time_period = ?, unit = ?, bound_amount = ?, last_modified = ?, current_amount = ? WHERE tracker_name = ? AND time_period = ?`,
+          [title.trim(), iconString, timePeriod, value ?? null, boundNumber, Date.now(), currentAmount, trackerName, timePeriod]
         );
         
         setupDatabase();
