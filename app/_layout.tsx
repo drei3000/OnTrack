@@ -9,6 +9,7 @@ import { ThemeProvider } from "./ThemeContext";
 import { useSectionStore, useTrackerStore } from "@/storage/store";
 import { exampleTrackers, TimePeriod, Tracker } from "@/types/Tracker";
 import { Section } from "@/types/Section";
+import { setupDatabase } from "@/components/ZustandRefresh";
 
 export default function Layout() {
   //import methods
@@ -45,61 +46,6 @@ export default function Layout() {
   }
   
   useEffect(() => { //runs on launch
-    const setupDatabase = async () => { //function to copy and open database
-      try{
-        const db = await openDatabase();1
-        console.log("Database initialized");
-
-        //Querying
-        //ALL trackers
-        const trackersInfo: TrackerRow[] = await db.getAllAsync<TrackerRow>("SELECT tracker_id,tracker_name,icon,time_period,unit,bound_amount,current_amount,last_modified FROM trackers");
-        const sectionsInfo: SectionRow[] = await db.getAllAsync<SectionRow>("SELECT section_id,section_title,time_period,position,last_modified FROM sections");
-        const sectionTrackersInfo: SectionTrackerRelation[] = await db.getAllAsync<SectionTrackerRelation>("SELECT section_id,tracker_id,tracker_position FROM section_trackers");
-        setTrackers([])
-        setSectionsH([])
-        //initializing all trackers first
-        // write to Zustand
-        const trackers : TrackerRow[] = trackersInfo.map(tracker => { //const mapped for referencing later
-          const newTracker = new Tracker(
-            tracker.tracker_name,
-            tracker.icon,
-            tracker.time_period,
-            tracker.last_modified,
-            tracker.bound_amount,
-            tracker.unit,
-            tracker.current_amount ? tracker.current_amount : 0 //shouldnt be undefined
-          );
-          addTracker(newTracker);
-          return tracker;
-        });
-
-        //initializing all sections next
-        const sections : SectionRow[] = sectionsInfo.map(section => { //const mapped for referencing later
-          const newSection = new Section(
-            section.section_title,
-            section.time_period,
-            section.position,
-            section.last_modified
-          );
-          addSectionH(newSection);
-          return section;
-        });
-
-        //Adding trackers to sections
-        sections.sort((a,b) => a.position - b.position); //sort sections by position ascending
-        sections.forEach((section) =>{
-          const trackersInSection = sectionTrackersInfo.filter(sectionTracker => sectionTracker.section_id === section.section_id)
-          trackersInSection.sort((a,b) => a.tracker_position - b.tracker_position); //sort by positioin in section
-          trackersInSection.forEach(trackerInS => {
-            const trackerRow = (trackers.filter(tracker => tracker.tracker_id === trackerInS.tracker_id)[0])//reference the tracker
-            initialAddTrackerToSection(section.section_title,section.time_period,getTracker(trackerRow.tracker_name,trackerRow.time_period)!); // force unwrap, add tracker to section
-          });
-        });
-
-      } catch (error) {
-        console.error("Database error:",error);
-      }
-    };
     NavigationBar.setPositionAsync("absolute");
     NavigationBar.setBackgroundColorAsync("transparent");
     setupDatabase();
