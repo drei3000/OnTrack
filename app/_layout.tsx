@@ -6,35 +6,49 @@ import { StatusBar } from "react-native";
 import { openDatabase } from "@/storage/sqlite";
 import { useEffect } from "react";
 import { ThemeProvider } from "./ThemeContext";
-import { useTrackerStore } from "@/storage/store";
-import { exampleTrackers } from "@/types/Tracker";
+import { useSectionStore, useTrackerStore } from "@/storage/store";
+import { exampleTrackers, TimePeriod, Tracker } from "@/types/Tracker";
+import { Section } from "@/types/Section";
+import { setupDatabase } from "@/components/ZustandRefresh";
 
 export default function Layout() {
-
   //import methods
-  const setTrackers = useTrackerStore((state) => state.setTrackers);
+  const setTrackers = useTrackerStore((s) => s.setTrackers);
+  const addTracker = useTrackerStore((s) => s.addTracker2);
+  const getTracker = useTrackerStore((s) => s.getTracker);
+  const setSectionsH= useSectionStore((s) => s.setSectionsH);
+  const addSectionH = useSectionStore((s) => s.addSectionH);
+  const initialAddTrackerToSection = useSectionStore((s) => s.initialAddTrackerToSection);
+  //types
+  type SectionRow = {
+    section_id: number;
+    section_title: string;
+    time_period: TimePeriod;
+    position: number;
+    last_modified: number;
+  };
+
+  type TrackerRow = {
+    tracker_id: number;
+    tracker_name: string;
+    icon: string;
+    time_period: TimePeriod;
+    last_modified: number;
+    bound_amount: number;
+    unit?: string;
+    current_amount?: number;
+  };
+
+  type SectionTrackerRelation = {
+    section_id: number,
+    tracker_id: number,
+    tracker_position: number,
+  }
   
   useEffect(() => { //runs on launch
-    
-
-    const setupDatabase = async () => { //function to copy and open database
-      try{
-        const db = await openDatabase();
-        console.log("Database initialized");
-
-        //Querying
-        //ALL trackers
-        const trackersInfo = await db.runAsync("SELECT tracker_name,icon,time_period,unit,bound_amount,current_amount FROM trackers");
-      } catch (error) {
-        console.error("Database error:",error);
-      }
-    };
     NavigationBar.setPositionAsync("absolute");
     NavigationBar.setBackgroundColorAsync("transparent");
     setupDatabase();
-
-    // //Example trackers
-    setTrackers(exampleTrackers);
   });
 
 

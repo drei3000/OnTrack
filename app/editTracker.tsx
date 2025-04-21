@@ -17,6 +17,7 @@ import { useTrackerStore } from "@/storage/store";
 import { getIconInfo } from "@/types/Misc";
 import { openDatabase } from "@/storage/sqlite";
 import { TimePeriod, Tracker } from "@/types/Tracker";
+import {setupDatabase} from "@/components/ZustandRefresh";
 
 const height = Dimensions.get('window').height-1;
 const width = Dimensions.get('window').width-1
@@ -31,30 +32,44 @@ export default function editTracker(){
     const {currentTheme} = useTheme();
 
     /*find tracker*/
-    const trackers = useTrackerStore((state) => state.trackers);
-    const trackerLookingFor = trackers.filter(
-        (t) => t.timePeriod === timePeriod && t.trackerName === trackerName
-      );
-    const tracker = trackerLookingFor[0];
-
+    let tracker = useTrackerStore((state) =>
+      state.getTracker(trackerName, timePeriod)
+    );
+    const addTracker = useTrackerStore((s) => s.addTracker2);
     /*states*/
     //input states
     const timePeriods = ['Daily','Weekly','Monthly','Yearly']
-
-    const [currentTPIndex, setCurrentTPIndex] = useState(timePeriods.indexOf(timePeriod)); //TimePeriod button
-    const [isGoal, setIsGoal] = (tracker.bound > 0) ? useState(true) : useState(false) ; //whether goal or limit
-    const [title, setTitle] = useState(trackerName); 
-    const [currentAmount, setCurrentAmount] = useState(`${tracker.currentAmount}`); 
-    const [limit, setLimit] = useState(`${tracker.bound * Math.sign(tracker.bound)}`);
-
-    //image adjustment states
-    const [selectedImage, setSelectedImage] = useState(`${image}`);
-    const [selectedColor, setSelectedColor] = useState(`${color}`)
+    const [currentTPIndex, setCurrentTPIndex] = useState(timePeriods.indexOf(timePeriod));
+    const [isGoal, setIsGoal] = useState(true);
+    const [title, setTitle] = useState(trackerName);
+    const [currentAmount, setCurrentAmount] = useState('0');
+    const [limit, setLimit] = useState('0');
+    const [selectedImage, setSelectedImage] = useState(`${image ?? ''}`);
+    const [selectedColor, setSelectedColor] = useState(`${color ?? ''}`);
     const [iconSize, setIconSize] = useState(0);
-
-    // Dropdown states
     const [open, setOpen] = useState(false);
-    const [value, setValue] = tracker.unit ? useState(tracker.unit) : useState(null);
+    const [value, setValue] = useState<string | null>(null); 
+
+    useEffect(() => {
+      if (!tracker) return;
+    
+      setTitle(tracker.trackerName);
+      setCurrentAmount(`${tracker.currentAmount}`);
+      setLimit(`${Math.abs(tracker.bound)}`);
+      setIsGoal(tracker.bound > 0);
+      setValue(tracker.unit || null);
+    
+      const [prefix, icon, color] = tracker.icon.split('|');
+      if (prefix === 'image') {
+        setSelectedImage(icon);
+      } else {
+        setSelectedImage(icon);
+        setSelectedColor(color);
+      }
+    
+      setCurrentTPIndex(timePeriods.indexOf(tracker.timePeriod));
+    }, [tracker]);
+
         const [units, setUnits] = useState([
         { label: "NONE", value: ""},
         { label: "Kilograms", value: "kg" },
@@ -308,6 +323,31 @@ export default function editTracker(){
     },
     })
 
+    const handleConfirmEdit = async () => {
+      if (title.trim().length < 3) return;
+    
+      const iconString = isUri(selectedImage)
+        ? `image|${selectedImage}`
+        : `fa5|${selectedImage}|${selectedColor}`;
+    
+      const timePeriod: TimePeriod = ['Daily','Weekly','Monthly','Yearly'][currentTPIndex] as TimePeriod;
+      const boundNumber: number = limit.trim() === '' ? 0 : parseFloat(limit) * (isGoal ? 1 : -1);
+    
+      try {
+        const db = await openDatabase();
+        
+        await db.runAsync(
+          `UPDATE trackers SET tracker_name = ?, icon = ?, time_period = ?, unit = ?, bound_amount = ?, last_modified = ?, current_amount = ? WHERE tracker_name = ? AND time_period = ?`,
+          [title.trim(), iconString, timePeriod, value ?? null, boundNumber, Date.now(), currentAmount, trackerName, timePeriod]
+        );
+        
+        setupDatabase();
+        router.back();
+      } catch (err) {
+        console.error('Could not update tracker', err);
+      }
+    };
+
     //add margin at top equal to height - height of components
     var marginForTop = (height - ((60/scale)*6 + (20/scale)*6 + (width)*0.45)) / 2
     marginForTop = marginForTop < 0 ? 0 : ((marginForTop/scale)/2); //give up tonight dont pmo
@@ -490,7 +530,7 @@ export default function editTracker(){
 
         {/* Right tick button, render if title > 2 (can be changed) */} 
         {title.length > 2 && (
-        <Pressable style={styles.confirmButton}>
+        <Pressable style={styles.confirmButton} onPress={handleConfirmEdit}>
         <Ionicons name="checkmark-done" size={40} color="white" />
         <Text style = {styles.confirmText}> Confirm </Text>
         </Pressable>
