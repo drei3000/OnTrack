@@ -13,7 +13,7 @@ import { Section } from "@/types/Section";
 export default function Layout() {
   //import methods
   const setTrackers = useTrackerStore((s) => s.setTrackers);
-  const addTracker = useTrackerStore((s) => s.addTracker);
+  const addTracker = useTrackerStore((s) => s.addTracker2);
   const getTracker = useTrackerStore((s) => s.getTracker);
   const setSectionsH= useSectionStore((s) => s.setSectionsH);
   const addSectionH = useSectionStore((s) => s.addSectionH);
@@ -55,7 +55,8 @@ export default function Layout() {
         const trackersInfo: TrackerRow[] = await db.getAllAsync<TrackerRow>("SELECT tracker_id,tracker_name,icon,time_period,unit,bound_amount,current_amount,last_modified FROM trackers");
         const sectionsInfo: SectionRow[] = await db.getAllAsync<SectionRow>("SELECT section_id,section_title,time_period,position,last_modified FROM sections");
         const sectionTrackersInfo: SectionTrackerRelation[] = await db.getAllAsync<SectionTrackerRelation>("SELECT section_id,tracker_id,tracker_position FROM section_trackers");
-
+        setTrackers([])
+        setSectionsH([])
         //initializing all trackers first
         // write to Zustand
         const trackers : TrackerRow[] = trackersInfo.map(tracker => { //const mapped for referencing later
