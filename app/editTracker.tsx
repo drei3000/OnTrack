@@ -17,6 +17,7 @@ import { useTrackerStore } from "@/storage/store";
 import { getIconInfo } from "@/types/Misc";
 import { openDatabase } from "@/storage/sqlite";
 import { TimePeriod, Tracker } from "@/types/Tracker";
+import {setupDatabase} from "@/components/ZustandRefresh";
 
 const height = Dimensions.get('window').height-1;
 const width = Dimensions.get('window').width-1
@@ -352,6 +353,7 @@ export default function editTracker(){
           deleteTracker(trackerName, timePeriod);
         }
         console.log('Tracker updated', title.trim(), updatedTracker);
+        setupDatabase();
         router.back();
       } catch (err) {
         console.error('Could not update tracker', err);
