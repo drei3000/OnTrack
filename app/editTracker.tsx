@@ -35,9 +35,7 @@ export default function editTracker(){
     let tracker = useTrackerStore((state) =>
       state.getTracker(trackerName, timePeriod)
     );
-    const deleteTracker = useTrackerStore((s) => s.deleteTracker);
     const addTracker = useTrackerStore((s) => s.addTracker2);
-    const updateTracker = useTrackerStore((s) => s.updateTracker);
     /*states*/
     //input states
     const timePeriods = ['Daily','Weekly','Monthly','Yearly']
@@ -343,16 +341,6 @@ export default function editTracker(){
           [title.trim(), iconString, timePeriod, value ?? null, boundNumber, Date.now(), trackerName, timePeriod]
         );
         
-    
-        const updatedTracker = new Tracker(title.trim(), iconString, timePeriod, Date.now(), boundNumber, value ?? '');
-        if (trackerName === title.trim()){
-          updateTracker(updatedTracker);
-        }
-        else{
-          addTracker(updatedTracker);
-          deleteTracker(trackerName, timePeriod);
-        }
-        console.log('Tracker updated', title.trim(), updatedTracker);
         setupDatabase();
         router.back();
       } catch (err) {

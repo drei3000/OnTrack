@@ -9,8 +9,6 @@ type TrackersStore = {
     setTrackers: (newTrackers: Tracker[]) => void
     addTracker: (tracker: Tracker) => Promise<void>
     getTracker: (name: string, timePeriod: string) => Tracker | undefined
-    deleteTracker: (name: string, timePeriod: string) => void
-    updateTracker: (updatedTracker: Tracker) => void
     addTracker2: (tracker: Tracker) => void
 }
 
@@ -46,24 +44,6 @@ export const useTrackerStore = create<TrackersStore>((set, get) => ({
         const tracker = get().trackers.filter((t) => t.timePeriod === timePeriod && t.trackerName === name);
         return tracker[0] ? tracker[0] : undefined;
       },
-      deleteTracker: (name: string, timePeriod: string) =>
-          set((state) => ({
-            trackers: state.trackers.filter(
-              (t) => !(t.trackerName === name && t.timePeriod === timePeriod)
-            ),
-          })),
-
-      updateTracker: (updatedTracker) => {
-          console.log('Updating tracker:', updatedTracker); // Add logging here
-          set((state) => ({
-            trackers: state.trackers.map((tracker) =>
-              tracker.trackerName === updatedTracker.trackerName && tracker.timePeriod === updatedTracker.timePeriod
-                ? updatedTracker
-                : tracker
-            ),
-          }));
-            },
-
 }))
 
 // Section Store section
