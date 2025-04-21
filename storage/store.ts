@@ -122,9 +122,9 @@ export const useSectionStore = create<SectionsHomeStore>((set) => ({
     );
 
     await db.runAsync(
-      `INSERT INTO section_trackers (user_id, section_id, tracker_id, tracker_position, last_modified)
-       VALUES (?, ?, ?, ?, ?)`,
-      ["localUser", section_id, tracker_id, newSection.trackers.length - 1, Date.now()]
+      `INSERT INTO section_trackers (section_id, tracker_id, tracker_position, last_modified)
+       VALUES (?, ?, ?, ?)`,
+      [section_id, tracker_id, newSection.trackers.length - 1, Date.now()]
     );
   },
 
