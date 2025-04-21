@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { Tracker } from '@/types/Tracker'
+import { TimePeriod, Tracker } from '@/types/Tracker'
 import { Section } from '@/types/Section'
 
 type TrackersStore = { //ALL trackers
@@ -7,6 +7,8 @@ type TrackersStore = { //ALL trackers
     setTrackers: (newTrackers: Tracker[]) => void //initialize with trackers
     addTracker: (tracker: Tracker) => void //add a tracker to the list
     getTracker: (name: string, timePeriod: string) => Tracker | undefined; //gets tracker given name and time period
+    deleteTracker: (name: string, timePeriod: string) => void
+    updateTracker: (updatedTracker: Tracker) => void
 }
 
 export const useTrackerStore = create<TrackersStore>((set, get) => ({
@@ -18,8 +20,23 @@ export const useTrackerStore = create<TrackersStore>((set, get) => ({
     getTracker: (name, timePeriod) => {
         const tracker = get().trackers.filter((t) => t.timePeriod === timePeriod && t.trackerName === name);
         return tracker[0] ? tracker[0] : undefined;
-    }
-
+    },
+    deleteTracker: (name: string, timePeriod: string) =>
+        set((state) => ({
+          trackers: state.trackers.filter(
+            (t) => !(t.trackerName === name && t.timePeriod === timePeriod)
+          ),
+        })),
+        updateTracker: (updatedTracker) => {
+            console.log('Updating tracker:', updatedTracker); // Add logging here
+            set((state) => ({
+              trackers: state.trackers.map((tracker) =>
+                tracker.trackerName === updatedTracker.trackerName && tracker.timePeriod === updatedTracker.timePeriod
+                  ? updatedTracker
+                  : tracker
+              ),
+            }));
+          },
 }))
 
 type SectionsHomeStore = { //home sections 
