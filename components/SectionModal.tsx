@@ -84,11 +84,30 @@ export default function SectionModal({
       console.log("Title too short");
       return;
     }
+  
     try {
       console.log("Creating section with timePeriod =", timePeriod);
-      await addSectionH(
-        new Section(title.trim(), timePeriod.trim() as TimePeriod, 999, Date.now())
+  
+      // Get existing sections in this time period
+      const existingSections = useSectionStore.getState().sectionsH.filter(
+        (s) => s.timePeriod === timePeriod
       );
+  
+      // Find next available position
+      const maxPosition = existingSections.length > 0
+        ? Math.max(...existingSections.map(s => s.position))
+        : -1;
+      const newPosition = maxPosition + 1;
+  
+      const newSection = new Section(
+        title.trim(),
+        timePeriod,
+        newPosition, // assign calculated position
+        Date.now()
+      );
+  
+      await addSectionH(newSection); // store + SQLite will now save this
+  
       console.log("Created successfully!");
       setTitle("");
       onClose();
@@ -96,6 +115,7 @@ export default function SectionModal({
       console.error("Section creation failed:", err);
     }
   };
+  
 
   const cyclePeriod = () => {
     setTimePeriod(
