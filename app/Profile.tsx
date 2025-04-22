@@ -2,31 +2,26 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, SafeAreaView, Pressable, Dimensions, PixelRatio, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useTheme } from './ThemeContext'; // Import the ThemeContext
+import { useTheme } from './ThemeContext';    // Import the ThemeContext
 import Index from './(tabs)';
+// import bcrypt from 'bcryptjs';
+import { supabase } from '../storage/supabase'; 
+
 
 const width = Dimensions.get('window').width-1
-
-type User = {
-  username: string;
-  email: string;
-  password: string;
-}
-
-const mockDatabase: User[] = []; //Array to act as database to test
 
 export default function Profile() {
   const router = useRouter();
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isCreating, setIsCreating] = useState(false);    //toggle between login and create account
-  const { currentTheme } = useTheme(); // Get the current theme from context
-  const [message, setMessage] = useState(''); //to send error or success messages  
+  const [isCreating, setIsCreating] = useState(false);    // toggle between login and create account
+  const { currentTheme } = useTheme();                    // Get the current theme from context
+  const [message, setMessage] = useState('');             // to send error or success messages  
 
 
-  const handleSubmit = () => {
-    setMessage(''); //reset message
+  const handleLogin = async () => {     // async so 'await' works
+    setMessage('');                     // reset message
 
     if (isCreating) {
       if (!email || !username || !password) {
@@ -34,39 +29,60 @@ export default function Profile() {
         return;
       }
 
-      const userExists = mockDatabase.some(    // .some() returns true or false depending whether user object satisfies provided conditions
-        (user) => user.username === username || user.email === email //=== (stict equality - types must match aswell as content), == (loose equality)
-      );
+      const { data: existingUser, error: fetchError } = await supabase.from('Users')    // fetches data from 'Users' where email matches user input
+        .select('email')
+        .eq('email', email);   
+      
+      console.log('existingUser:', existingUser);
 
-      if (userExists) {
-        setMessage('An account with this username or email already exists.');
+      if (fetchError) {
+        console.error(fetchError);    // logs error in console
+        setMessage('Error checking for existing user.');
         return;
       }
 
-      mockDatabase.push({ username, email, password }); //adds new user object to end of array
-      setMessage('Account created successfully!');
-      setIsCreating(false);
-      setUsername('');
-      setEmail('');
-      setPassword('');
+      if (existingUser.length > 0) {    // .length because supabase returns empty array rather than null if no existing user
+        setMessage('An account with this email already exists.');   
+        return;
+      }
+
+      // add new user to table
+      const { error: insertError } = await supabase.from('Users').insert([{ email, username, password }]);
+
+      if (insertError) {
+        console.error(insertError);
+        setMessage('Error creating account.');
+      } else {
+        setMessage('Account created successfully!');
+        setIsCreating(false);                         
+        setUsername('');
+        setEmail('');
+        setPassword('');
+      }
 
     } else {
-      //login
-      if (!username || !password) {
+
+      // login
+      if (!email || !password) {
         setMessage('Please fill in all fields.');
         return;
       }
 
-      const user = mockDatabase.find(    //returns first user object it finds that matches the conditions
-        (user) => user.username === username && user.password === password
-      );
+      const { data: users, error: loginError } = await supabase.from('Users')   // select all where username equals user input
+        .select('*')
+        .eq('email', email);   
 
-      if (user) {
-        setMessage('Logged in successfully!');
+      if (loginError) {
+        console.error(loginError);
+        setMessage('An error occurred during login.');
+        return;
+      }
+
+      if (users.length > 0 && password === users[0].password) {   // must use indexing as supabase returns array
+        setMessage('Logged in successfully!');                    // === is strict equality (types must match aswell)
         router.back();
-
-      } else {   //.find() will return undefined if it cannot find user    
-        setMessage('Incorrect username or password.');
+      } else {
+        setMessage('Incorrect username or password.')
       }
     }
   };
@@ -85,7 +101,6 @@ const styles = StyleSheet.create({
     },
 
     container: {
-      //height: 370,
       width: width*0.85,
       backgroundColor: currentTheme["101010"], // Use theme background color
       paddingHorizontal: 20,
@@ -156,26 +171,26 @@ const styles = StyleSheet.create({
          <SafeAreaView style={styles.container}>
 
            <MaterialCommunityIcons name="account" size={80} color={currentTheme.white} />
-
-           <TextInput
-             style={styles.input}
-             placeholder="Username"
-             placeholderTextColor={currentTheme.gray}
-             value={username}
-             onChangeText={setUsername}
-           />
-
+           
            {isCreating && (
              <TextInput
                style={styles.input}
-               placeholder="Email"
+               placeholder="Username"
                placeholderTextColor={currentTheme.gray}
-               value={email}
-               onChangeText={setEmail}
-               keyboardType="email-address"
-               autoCapitalize="none"
+               value={username}
+               onChangeText={setUsername}
              />
            )}
+
+           <TextInput
+             style={styles.input}
+             placeholder="Email"
+             placeholderTextColor={currentTheme.gray}
+             value={email}
+             onChangeText={setEmail}
+             keyboardType="email-address"
+             autoCapitalize="none"
+           />
 
            <TextInput
              style={styles.input}
@@ -192,7 +207,7 @@ const styles = StyleSheet.create({
               </Text>
            )}
 
-           <Pressable onPress={handleSubmit} style={styles.exitButton}>
+           <Pressable onPress={handleLogin} style={styles.exitButton}>
              <Text style={styles.exitButtonText}>
                {isCreating ? 'Create Account' : 'Log In'}
              </Text>
