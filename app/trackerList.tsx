@@ -6,10 +6,11 @@ import { useTrackerStore } from "@/storage/store";
 import { Tracker, exampleTrackers } from "@/types/Tracker";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { Text } from "react-native";
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { TouchableOpacity } from "react-native";
 import { getIconInfo } from "@/types/Misc";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import { useFocusEffect } from '@react-navigation/native';
 
 /*function to get image from input tracker*/
 export const getImage = (inputTracker: Tracker, size: number): {icon: JSX.Element} => {
@@ -83,6 +84,11 @@ export default function trackerList(){
     const buttons = ["Daily", "Weekly", "Monthly"]; //Time Period button states
     const [selected, setSelected] = useState("Daily");
 
+    useEffect(() => {
+        // This effect will be triggered when `trackers` updates
+        console.log('Trackers updated', trackers);
+    }, [trackers]); // Watch for changes in trackers
+    
     return(
         <SafeAreaView 
             style = {[

@@ -2,31 +2,87 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, SafeAreaView, Pressable, Dimensions, PixelRatio, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useTheme } from './ThemeContext'; // Import the ThemeContext
+import { useTheme } from './ThemeContext';    // Import the ThemeContext
+import Index from './(tabs)';
+// import bcrypt from 'bcryptjs';
+import { supabase } from '../storage/supabase'; 
+
+
+const width = Dimensions.get('window').width-1
 
 export default function Profile() {
   const router = useRouter();
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isCreating, setIsCreating] = useState(false);    //toggle between login and create account
-  const { currentTheme } = useTheme(); // Get the current theme from context
+  const [isCreating, setIsCreating] = useState(false);    // toggle between login and create account
+  const { currentTheme } = useTheme();                    // Get the current theme from context
+  const [message, setMessage] = useState('');             // to send error or success messages  
 
 
-  const handleSubmit = () => {
+  const handleLogin = async () => {     // async so 'await' works
+    setMessage('');                     // reset message
+
     if (isCreating) {
-      // Account creation logic goes here
       if (!email || !username || !password) {
-        alert('Please fill in all fields.');
-      } else {
-        alert('Account Created!');
+        setMessage('Please fill in all fields.');
+        return;
       }
-    } else {
-      // Login logic goes here
-      if (!username || !password) {
-        alert('Please fill in all fields.');
+
+      const { data: existingUser, error: fetchError } = await supabase.from('Users')    // fetches data from 'Users' where email matches user input
+        .select('email')
+        .eq('email', email);   
+      
+      console.log('existingUser:', existingUser);
+
+      if (fetchError) {
+        console.error(fetchError);    // logs error in console
+        setMessage('Error checking for existing user.');
+        return;
+      }
+
+      if (existingUser.length > 0) {    // .length because supabase returns empty array rather than null if no existing user
+        setMessage('An account with this email already exists.');   
+        return;
+      }
+
+      // add new user to table
+      const { error: insertError } = await supabase.from('Users').insert([{ email, username, password }]);
+
+      if (insertError) {
+        console.error(insertError);
+        setMessage('Error creating account.');
       } else {
-        alert('Logged In!');
+        setMessage('Account created successfully!');
+        setIsCreating(false);                         
+        setUsername('');
+        setEmail('');
+        setPassword('');
+      }
+
+    } else {
+
+      // login
+      if (!email || !password) {
+        setMessage('Please fill in all fields.');
+        return;
+      }
+
+      const { data: users, error: loginError } = await supabase.from('Users')   // select all where username equals user input
+        .select('*')
+        .eq('email', email);   
+
+      if (loginError) {
+        console.error(loginError);
+        setMessage('An error occurred during login.');
+        return;
+      }
+
+      if (users.length > 0 && password === users[0].password) {   // must use indexing as supabase returns array
+        setMessage('Logged in successfully!');                    // === is strict equality (types must match aswell)
+        router.back();
+      } else {
+        setMessage('Incorrect username or password.')
       }
     }
   };
@@ -45,7 +101,6 @@ const styles = StyleSheet.create({
     },
 
     container: {
-      //height: 370,
       width: width*0.85,
       backgroundColor: currentTheme["101010"], // Use theme background color
       paddingHorizontal: 20,
@@ -116,26 +171,26 @@ const styles = StyleSheet.create({
          <SafeAreaView style={styles.container}>
 
            <MaterialCommunityIcons name="account" size={80} color={currentTheme.white} />
-
-           <TextInput
-             style={styles.input}
-             placeholder="Username"
-             placeholderTextColor={currentTheme.gray}
-             value={username}
-             onChangeText={setUsername}
-           />
-
+           
            {isCreating && (
              <TextInput
                style={styles.input}
-               placeholder="Email"
+               placeholder="Username"
                placeholderTextColor={currentTheme.gray}
-               value={email}
-               onChangeText={setEmail}
-               keyboardType="email-address"
-               autoCapitalize="none"
+               value={username}
+               onChangeText={setUsername}
              />
            )}
+
+           <TextInput
+             style={styles.input}
+             placeholder="Email"
+             placeholderTextColor={currentTheme.gray}
+             value={email}
+             onChangeText={setEmail}
+             keyboardType="email-address"
+             autoCapitalize="none"
+           />
 
            <TextInput
              style={styles.input}
@@ -146,7 +201,13 @@ const styles = StyleSheet.create({
              onChangeText={setPassword}
            />
 
-           <Pressable onPress={handleSubmit} style={styles.exitButton}>
+           {message !== '' && (
+              <Text style={{ color: currentTheme.lightblue, marginTop: 5 }}>
+                {message}
+              </Text>
+           )}
+
+           <Pressable onPress={handleLogin} style={styles.exitButton}>
              <Text style={styles.exitButtonText}>
                {isCreating ? 'Create Account' : 'Log In'}
              </Text>
@@ -168,14 +229,10 @@ const styles = StyleSheet.create({
             <Text style={styles.exitButtonText}>Exit</Text>
          </Pressable>
      </View>
-  
-
-
-
-);
+  );
 }
 
-const width = Dimensions.get('window').width-1
+
 
 
   

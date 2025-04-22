@@ -6,14 +6,28 @@ import { StatusBar } from "react-native";
 import { openDatabase } from "@/storage/sqlite";
 import { useEffect } from "react";
 import { ThemeProvider } from "./ThemeContext";
-import { useTrackerStore } from "@/storage/store";
+import { useSectionStore, useTrackerStore } from "@/storage/store";
 import { exampleTrackers, TimePeriod, Tracker } from "@/types/Tracker";
-export default function Layout() {
+import { Section } from "@/types/Section";
+import { setupDatabase } from "@/components/ZustandRefresh";
 
+export default function Layout() {
   //import methods
   const setTrackers = useTrackerStore((s) => s.setTrackers);
-  const addTracker = useTrackerStore((s) => s.addTracker);
-  
+  const addTracker = useTrackerStore((s) => s.addTracker2);
+  const getTracker = useTrackerStore((s) => s.getTracker);
+  const setSectionsH= useSectionStore((s) => s.setSectionsH);
+  const addSectionH = useSectionStore((s) => s.addSectionH);
+  const initialAddTrackerToSection = useSectionStore((s) => s.initialAddTrackerToSection);
+  //types
+  type SectionRow = {
+    section_id: number;
+    section_title: string;
+    time_period: TimePeriod;
+    position: number;
+    last_modified: number;
+  };
+
   type TrackerRow = {
     tracker_id: number;
     tracker_name: string;
@@ -24,44 +38,17 @@ export default function Layout() {
     unit?: string;
     current_amount?: number;
   };
+
+  type SectionTrackerRelation = {
+    section_id: number,
+    tracker_id: number,
+    tracker_position: number,
+  }
   
   useEffect(() => { //runs on launch
-    const setupDatabase = async () => { //function to copy and open database
-      try{
-        const db = await openDatabase();1
-        console.log("Database initialized");
-
-        //Querying
-        //ALL trackers
-        const trackersInfo: TrackerRow[] = await db.getAllAsync<TrackerRow>("SELECT tracker_id,tracker_name,icon,time_period,unit,bound_amount,current_amount,last_modified FROM trackers");
-        const sectionsInfo = await db.getAllAsync("SELECT section_id,section_title,time_period,position,last_modified FROM sections");
-        const sectionTrackersInfo = await db.getAllAsync("SELECT section_id,tracker_id,tracker_position FROM section_trackers");
-
-        //initializing all trackers first
-        // write to Zustand
-        const trackers : Tracker[] = trackersInfo.map(tracker => { //for referencing
-          const newTracker = new Tracker(
-            tracker.tracker_name,
-            tracker.icon,
-            tracker.time_period,
-            tracker.last_modified,
-            tracker.bound_amount,
-            tracker.unit,
-            tracker.current_amount ? tracker.current_amount : 0 //shouldnt be undefined
-          );
-          addTracker(newTracker);
-          return newTracker;
-        });
-      } catch (error) {
-        console.error("Database error:",error);
-      }
-    };
     NavigationBar.setPositionAsync("absolute");
     NavigationBar.setBackgroundColorAsync("transparent");
     setupDatabase();
-
-    // //Example trackers
-    setTrackers(exampleTrackers);
   });
 
 

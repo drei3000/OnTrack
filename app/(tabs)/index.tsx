@@ -1,4 +1,4 @@
-import { View, Alert, Pressable, Text, ScrollView, StyleSheet, TouchableOpacity, Modal} from "react-native";
+import { View, Alert, Pressable, Text, ScrollView, StyleSheet, TouchableOpacity, Modal } from "react-native";
 import { Ionicons, MaterialCommunityIcons, AntDesign, Entypo } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -12,8 +12,14 @@ import { Tracker } from "@/types/Tracker";
 import { Section } from "@/types/Section";
 import { useState as useReactState } from "react";
 import { useTrackerStore } from "@/storage/store"; // Import the Zustand store
-import { getImage } from  "../trackerList"; // Import the getImage function
-import {CalendarProps} from "../../components/CalendarComponent";
+import { getImage } from "../trackerList"; // Import the getImage function
+import { CalendarProps } from "../../components/CalendarComponent";
+import NewSectionModal from "@/components/SectionModal";
+
+import { getIconInfo } from "@/types/Misc";
+
+import { useSectionStore } from "@/storage/store";
+import type { TimePeriod } from "@/types/Tracker";
 
 // Used in square icon styling for dynamic styles - grid same for all phone sizes
 const screenWidth = Dimensions.get("window").width;
@@ -24,19 +30,15 @@ const sidesPadding = 16; // for grid mostly
 const itemSize = (screenWidth - totalSpacing - sidesPadding * 2) / itemsPerRow;
 
 export default function Index() {
-  //trackers
-  const trackersDaily: Tracker[] = new Array<Tracker>();
-  const trackersWeekly: Tracker[] = new Array<Tracker>();
-  const trackersMonthly: Tracker[] = new Array<Tracker>();
-
-  //sections
-  const sectionsDaily: Section[] = new Array<Section>();
-  const sectionsWeekly: Section[] = new Array<Section>();
-  const sectionsMonthly: Section[] = new Array<Section>();
 
   const trackers = useTrackerStore((state) => state.trackers);
+  const sections = useSectionStore((state) => state.sectionsH);
+  const addTrackerToSection = useSectionStore((state) => state.addTrackerToSection);
+
+  const [sectionModalOpen, setSectionModalOpen] = useState(false);
 
   const [isModalVisible, setIsModalVisible] = useReactState(false);
+  const [targetSection, setTargetSection] = useReactState<Section | null>(null);
 
   const router = useRouter();
   const { currentTheme } = useTheme(); // Get the current theme from context
@@ -56,6 +58,7 @@ export default function Index() {
 
   const handleCloseModal = () => {
     setIsModalVisible(false);
+    setTargetSection(null);
   };
 
   type CalendarMode = CalendarProps["mode"];
@@ -75,28 +78,28 @@ export default function Index() {
         </Pressable>
         {buttons.map((btn) => (
           <TouchableOpacity
-          key={btn}
-          style={{
-            flex: 1,
-            alignItems: "center",
-            justifyContent: "center",
-            paddingHorizontal: 16,
-            paddingVertical: 8,
-            borderRadius: 10,
-            backgroundColor: "transparent", // Always transparent
-          }}
-          onPress={() => setSelected(btn)}
-        >
-          <Text
+            key={btn}
             style={{
-              color: selected === btn ? currentTheme.white : currentTheme.gray,
-              fontWeight: selected === btn ? "bold" : "500",
-              fontSize: selected === btn ? 17 : 15,
+              flex: 1,
+              alignItems: "center",
+              justifyContent: "center",
+              paddingHorizontal: 16,
+              paddingVertical: 8,
+              borderRadius: 10,
+              backgroundColor: "transparent", // Always transparent
             }}
+            onPress={() => setSelected(btn)}
           >
-            {btn}
-          </Text>
-        </TouchableOpacity>
+            <Text
+              style={{
+                color: selected === btn ? currentTheme.white : currentTheme.gray,
+                fontWeight: selected === btn ? "bold" : "500",
+                fontSize: selected === btn ? 17 : 15,
+              }}
+            >
+              {btn}
+            </Text>
+          </TouchableOpacity>
         ))}
         <Pressable
           onPress={() => router.push("/newTrackerView")}
@@ -120,142 +123,134 @@ export default function Index() {
           <Text style={[styles.progressText, { color: currentTheme.white }]}>76%</Text>
         </View>
 
-        {/* Title text */}
-        <Text style={[styles.title, { color: currentTheme.white }]}>Goals</Text>
+        {/* START dynamic sections rendering */}
+        {sections
+          .filter((s) => s.timePeriod === selected)
+          .sort((a, b) => a.position - b.position)
+          .map((section) => (
+            <View key={`${section.sectionTitle}-${section.timePeriod}`}>
+              {/* Section Title */}
+              <Text style={[styles.title, { color: currentTheme.white }]}>
+                {section.sectionTitle}
+              </Text>
 
-        {/* Row of action buttons */}
-        <View style={styles.iconRow}>
-          <Pressable
-            onPress={() => Alert.alert("Sleep button pressed")}
-            style={squareIconButtonStyle(itemSize)}
-          >
-            <MaterialCommunityIcons name="power-sleep" size={40} color={currentTheme.white} />
-          </Pressable>
+              {/* Section's Row of Tracker Icons */}
+              <View style={styles.iconRow}>
+                {section.trackers.map((tracker) => (
+                  <Pressable
+                    key={tracker.trackerName + tracker.timePeriod}
+                    onPress={() =>
+                      router.push({
+                        pathname: "/editTracker",
+                        params: {
+                          trackerN: tracker.trackerName,
+                          timeP: tracker.timePeriod,
+                          color: getIconInfo(tracker.icon).color, 
+                          image: getIconInfo(tracker.icon).name
+                        },
+                      })
+                    }
+                    style={squareIconButtonStyle(itemSize)}
+                  >
+                    {getImage(tracker, 40).icon}
+                  </Pressable>
+                ))}
 
-          <Pressable
-            onPress={() => Alert.alert("Food button pressed")}
-            style={squareIconButtonStyle(itemSize)}
-          >
-            <Ionicons name="fast-food-outline" size={40} color={currentTheme.white} />
-          </Pressable>
+                {/* Plus button to open modal and store section */}
+                <Pressable
+                  onPress={() => {
+                    setTargetSection(section);     // Store selected section
+                    setIsModalVisible(true);       // Show modal
+                  }}
+                  style={squareIconButtonStyle(itemSize)}
+                >
+                  <AntDesign name="plus" size={30} color={currentTheme.white} />
+                </Pressable>
+              </View>
+            </View>
+          ))}
+        {/* END dynamic sections rendering */}
 
-          <Pressable
-            onPress={() => Alert.alert("Calorie button pressed")}
-            style={squareIconButtonStyle(itemSize)}
-          >
-            <Ionicons name="flame-outline" size={40} color={currentTheme.white} />
-          </Pressable>
-
-          <Pressable
-            onPress={() => Alert.alert("Code button pressed")}
-            style={squareIconButtonStyle(itemSize)}
-          >
-            <AntDesign name="codesquareo" size={30} color={currentTheme.white} />
-          </Pressable>
-
-          <Pressable
-            onPress={handlePlusPress}
-            style={squareIconButtonStyle(itemSize)}
-          >
-            <AntDesign name="plus" size={30} color={currentTheme.white} />
-          </Pressable>
-        </View>
-
-        {/* Title text */}
-        <Text style={[styles.title, { color: currentTheme.white }]}>Limits</Text>
-
-        <View style={styles.iconRow}>
-          <Pressable
-            onPress={() => Alert.alert("Limit button alert")}
-            style={squareIconButtonStyle(itemSize)}
-          >
-            <Ionicons name="cash-outline" size={40} color={currentTheme.white} />
-          </Pressable>
-
-          <Pressable
-            onPress={() => Alert.alert("Button pressed")}
-            style={squareIconButtonStyle(itemSize)}
-          >
-            <MaterialCommunityIcons name="spoon-sugar" size={40} color={currentTheme.white} />
-          </Pressable>
-
-          <Pressable
-            onPress={() => Alert.alert("Button pressed")}
-            style={squareIconButtonStyle(itemSize)}
-          >
-            <AntDesign name="dashboard" size={30} color={currentTheme.white} />
-          </Pressable>
-
-          <Pressable
-            onPress={() => Alert.alert("Limit button alert")}
-            style={squareIconButtonStyle(itemSize)}
-          >
-            <AntDesign name="instagram" size={40} color={currentTheme.white} />
-          </Pressable>
-
-        </View>
-        
         <Pressable //SECTION CREATION PRESSABLE Can change style it looks ugly
-            //onPress={() => create section}
-            style = {[
-              styles.sectionCreateButton,
-              {borderColor: currentTheme.dimgray},
-            ]}
-          >
-            <AntDesign name="plus" size = {60} color = {currentTheme.white} />
-          </Pressable>
+          //onPress={() => create section}
+          style={[styles.sectionCreateButton, { borderColor: currentTheme.dimgray }]}
+          onPress={() => setSectionModalOpen(true)}
+        >
+          <AntDesign name="plus" size={50} color={currentTheme.white} />
+        </Pressable>
 
         {/* Modal for the popup */}
-      <Modal
-        visible={isModalVisible}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={handleCloseModal}
-      >
-        <View style={[styles.modalOverlay, { backgroundColor: currentTheme["rgba(0, 0, 0, 0.8)"]}]}>
-          <View
-            style={[styles.modalContent,{ backgroundColor: currentTheme["101010"] },]}
-          >
-            {/* Close button */}
-            <Pressable
-              onPress={handleCloseModal}
-              style={styles.closeButton}
+        <Modal
+          visible={isModalVisible}
+          animationType="slide"
+          transparent={true}
+          onRequestClose={handleCloseModal}
+        >
+          <View style={[styles.modalOverlay, { backgroundColor: currentTheme["rgba(0, 0, 0, 0.8)"] }]}>
+            <View
+              style={[styles.modalContent, { backgroundColor: currentTheme["101010"] }]}
             >
-              <AntDesign name="close" size={24} color={currentTheme.white} />
-            </Pressable>
-            
-            {/* Scrollable content */}
-            <ScrollView
-              style={styles.scrollView2} // Use for non-layout styles like width, height, etc.
-              contentContainerStyle={{
-                flexDirection: "row", // Arrange items in rows
-                flexWrap: "wrap", // Allow wrapping to the next row
-                justifyContent: "center", // Center items horizontally
-                paddingBottom: 50, // Add padding if needed
-              }}
-            >
-              {trackers.map((tracker) => (
-                <TouchableOpacity
-                  key={tracker.trackerName + tracker.timePeriod}
-                  style={[
-                    styles.trackerButton,
-                    {
-                      borderBottomColor: currentTheme.dimgray,
-                      backgroundColor: currentTheme["101010"],
-                    },
-                  ]}
-                >
-                  <View style={styles.iconContainer}>
-                    {getImage(tracker,40).icon}
-                  </View>
-                  <Text style={[styles.trackerText, { color: currentTheme.white }]}>{tracker.trackerName}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>    
+              {/* Close button */}
+              <Pressable
+                onPress={handleCloseModal}
+                style={styles.closeButton}
+              >
+                <AntDesign name="close" size={24} color={currentTheme.white} />
+              </Pressable>
 
+              {/* Scrollable content */}
+              <ScrollView
+                style={styles.scrollView2} // Use for non-layout styles like width, height, etc.
+                contentContainerStyle={{
+                  flexDirection: "row", // Arrange items in rows
+                  flexWrap: "wrap", // Allow wrapping to the next row
+                  justifyContent: "center", // Center items horizontally
+                  paddingBottom: 50, // Add padding if needed
+                }}
+              >
+                {trackers.map((tracker) => (
+                  <TouchableOpacity
+                    key={tracker.trackerName + tracker.timePeriod}
+                    onPress={() => {
+                      if (!targetSection) return;
+
+                      const exists = targetSection.trackers.some(
+                        (t) => t.trackerName === tracker.trackerName && t.timePeriod === tracker.timePeriod
+                      );
+                      if (exists) {
+                        handleCloseModal();
+                        return;
+                      }
+
+                      addTrackerToSection(
+                        targetSection.sectionTitle,
+                        targetSection.timePeriod,
+                        tracker
+                      );
+                      handleCloseModal();
+                    }}
+                    style={[
+                      styles.trackerButton,
+                      {
+                        borderBottomColor: currentTheme.dimgray,
+                        backgroundColor: currentTheme["101010"],
+                      },
+                    ]}
+                  >
+                    <View style={styles.iconContainer}>
+                      {getImage(tracker, 40).icon}
+                    </View>
+                    <Text style={styles.trackerText}>{tracker.trackerName}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          </View>
+        </Modal>
+        <NewSectionModal
+          visible={sectionModalOpen}
+          onClose={() => setSectionModalOpen(false)}
+        />
       </ScrollView>
     </SafeAreaView>
   );
@@ -307,6 +302,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 20,
     marginTop: 50,
+    textAlign: "center",
   },
   iconRow: {
     flexDirection: "row",
@@ -324,10 +320,10 @@ const styles = StyleSheet.create({
   },
   sectionCreateButton: {
     padding: 12,
-    width: '85%', //feel free to change
+    width: '100%', //feel free to change
     borderRadius: 5,
     borderWidth: 1,
-    //borderStyle: 'dashed',
+    borderStyle: 'dashed' as const,
 
     alignItems: 'center',
     justifyContent: 'center',
@@ -378,3 +374,4 @@ const styles = StyleSheet.create({
     textAlign: "center", // Center-align text
   },
 });
+
