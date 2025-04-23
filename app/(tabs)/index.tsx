@@ -268,12 +268,13 @@ export default function Index() {
             style = {[
               pan.getLayout(), //stored in pan object created by useRef earlier
               {borderWidth: 1,
+                borderRadius: 8,
                 borderColor: editMode ? currentTheme["lowOpacityWhite"] : 'transparent',
                 marginTop: section.position === 0 ? 30 : 15, //num1 from circle, num2 from other sections
                 paddingVertical: 10,
                 width: '100%',
                 minWidth: '100%',
-                backgroundColor: movingSection ? currentTheme['lowOpacityWhite'] : 'transparent',
+                backgroundColor: (movingSection && (currentMovingSection === `${section.sectionTitle}-${section.timePeriod}`)) ? currentTheme['lowOpacityWhite'] : 'transparent',
               }
             ]}
             {...(currentMovingSection === `${section.sectionTitle}-${section.timePeriod}` ? panResponder.panHandlers : {})}//passing gesture handlers into view
@@ -373,21 +374,22 @@ export default function Index() {
                     key={tracker.trackerName + tracker.timePeriod}
                     onPress={() => {
                       if (!targetSection) return;
-
                       const exists = targetSection.trackers.some(
                         (t) => t.trackerName === tracker.trackerName && t.timePeriod === tracker.timePeriod
                       );
                       if (exists) {
+                        console.log("TRACKER EXISTS IN SECTION ALREADY")
                         handleCloseModal();
                         return;
-                      }
-
-                      addTrackerToSection(
-                        targetSection.sectionTitle,
-                        targetSection.timePeriod,
-                        tracker
+                      }else{
+                        console.log("followed through")
+                        addTrackerToSection(
+                          targetSection.sectionTitle,
+                          targetSection.timePeriod,
+                          tracker
                       );
                       handleCloseModal();
+                      }
                     }}
                     style={[
                       styles.trackerButton,

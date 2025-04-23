@@ -9,7 +9,6 @@ const dbDestinationPath = `${FileSystem.documentDirectory}SQLite/${dbName}`;//De
 
 //Copy database
 const copyDatabase = async () => {
-
     //If file exists in users system
     const fileExists = await FileSystem.getInfoAsync(dbDestinationPath);
 

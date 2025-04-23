@@ -80,23 +80,32 @@ export const useSectionStore = create<SectionsHomeStore>((set) => ({
 
   addTrackerToSection: async (sectionTitle, time_period, tracker) => {
     const db = await openDatabase();
-
     let newSection: Section | undefined;
-
+    
     set((state) => {
-      const section = state.sectionsH.find(section =>
-        section.timePeriod === time_period && section.sectionTitle === sectionTitle
-      );
-      if (!section) return state;
+        const section = state.sectionsH.find(section =>
+          section.timePeriod === time_period && section.sectionTitle === sectionTitle
+        );
+        if (section) {
+            newSection = section;
+          return {
+            sectionsH: state.sectionsH.map(s =>
+              s === section
+                ? {
+                  ...s,
+                  trackers: [...s.trackers, tracker],
+                  size: s.size + 1,
+                } as Section
+                : s
+            )
+          };
+        }
+        return { sectionsH: state.sectionsH };
+      });
+      
+    if(!newSection) return;
 
-      section.addTracker(tracker);
-      newSection = section;
-
-      return { sectionsH: [...state.sectionsH] };
-    });
-
-    if (!newSection) return;
-
+    console.log("hello")
     const [{ section_id }] = await db.getAllAsync<{ section_id: number }>(
       `SELECT section_id FROM sections WHERE section_title = ? AND time_period = ?`,
       [sectionTitle, time_period]
