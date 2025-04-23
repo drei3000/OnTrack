@@ -43,6 +43,7 @@ export const setupDatabase = async () => {
     setTrackers([]);
     setSectionsH([]);
 
+    var trackersDBFormat: Tracker[] = []; //initialize trackers in db format to set
     const trackers: TrackerRow[] = trackersInfo.map((tracker) => {
       const newTracker = new Tracker(
         tracker.tracker_name,
@@ -53,10 +54,13 @@ export const setupDatabase = async () => {
         tracker.unit,
         tracker.current_amount ?? 0
       );
-      addTracker(newTracker);
+      //addTracker(newTracker);
+      trackersDBFormat.push(newTracker);
       return tracker;
     });
+    setTrackers(trackersDBFormat);
 
+    var sectionsDBFormat: Section[] = []; //initialize trackers in db format to set
     const sections: SectionRow[] = sectionsInfo.map((section) => {
       const newSection = new Section(
         section.section_title,
@@ -64,9 +68,11 @@ export const setupDatabase = async () => {
         section.position,
         section.last_modified
       );
-      addSectionH(newSection);
+      sectionsDBFormat.push(newSection);
       return section;
     });
+    setSectionsH(sectionsDBFormat)
+
 
     sections.sort((a, b) => a.position - b.position);
     sections.forEach((section) => {

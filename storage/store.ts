@@ -15,7 +15,7 @@ type TrackersStore = {
 export const useTrackerStore = create<TrackersStore>((set, get) => ({
     trackers: [],
     setTrackers: (newTrackers) => set({ trackers: newTrackers}),
-    addTracker: async (tracker) => {
+    addTracker: async (tracker) => { // Only call when add button pressed!
       set((state) => ({
         trackers: [...state.trackers, tracker]
       }));
