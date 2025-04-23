@@ -32,8 +32,6 @@ export default function Profile() {
       const { data: existingUser, error: fetchError } = await supabase.from('Users')    // fetches data from 'Users' where email matches user input
         .select('email')
         .eq('email', email);   
-      
-      console.log('existingUser:', existingUser);
 
       if (fetchError) {
         console.error(fetchError);    // logs error in console
