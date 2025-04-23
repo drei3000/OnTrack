@@ -100,6 +100,7 @@ const styles = StyleSheet.create({
 
     container: {
       width: width*0.85,
+      height: 350,
       backgroundColor: currentTheme["101010"], // Use theme background color
       paddingHorizontal: 20,
       paddingVertical: 10,
@@ -107,9 +108,10 @@ const styles = StyleSheet.create({
       borderWidth: 1,
       borderColor: currentTheme.dimgray,
       alignItems: "center",
-      justifyContent: "flex-start",
+      justifyContent: 'center',
+      //justifyContent: "flex-start",
     },
-  
+
     header: {
       fontSize: 18,
       color: currentTheme.white,
@@ -117,7 +119,7 @@ const styles = StyleSheet.create({
       textAlign: 'center',
       marginBottom: 10, 
     },
-  
+
     input: {
       width: '82%',
       padding: 12,
@@ -166,7 +168,11 @@ const styles = StyleSheet.create({
          <Text style={styles.header}>Profile</Text>
 
          {/* Modal box */}
-         <SafeAreaView style={styles.container}>
+         <SafeAreaView style={[
+          styles.container,
+          {paddingVertical: 500 as const,
+          }
+          ]}>
 
            <MaterialCommunityIcons name="account" size={80} color={currentTheme.white} />
            
