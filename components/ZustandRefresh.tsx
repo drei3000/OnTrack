@@ -56,7 +56,6 @@ export const setupDatabase = async () => {
       );
       //addTracker(newTracker);
       trackersDBFormat.push(newTracker);
-      console.log("trackername: "+tracker.tracker_name+" \nid: "+tracker.tracker_id);
       return tracker;
     });
     setTrackers(trackersDBFormat);
@@ -73,7 +72,6 @@ export const setupDatabase = async () => {
         section.last_modified
       );
       sectionsDBFormat.push(newSection);
-      console.log("sectionname: "+section.section_title);
       return section;
     });
     setSectionsH(sectionsDBFormat)
@@ -81,13 +79,10 @@ export const setupDatabase = async () => {
 
     sections.sort((a, b) => a.position - b.position);
     sections.forEach((section) => {
-      console.log("section: "+section.section_title)
-      console.log("trackers: ")
       const trackersInSection = sectionTrackersInfo
         .filter((st) => st.section_id === section.section_id)
         .sort((a, b) => a.tracker_position - b.tracker_position);
       trackersInSection.forEach((trackerInS) => {
-        console.log(trackerInS.tracker_id)
         const trackerRow = trackers.find((t) => t.tracker_id === trackerInS.tracker_id);
         if (trackerRow) {
           const tracker = getTracker(trackerRow.tracker_name, trackerRow.time_period);

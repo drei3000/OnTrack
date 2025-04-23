@@ -99,7 +99,6 @@ export default function Index() {
             const pan = panRefs.current[sectionKey];
             pan?.extractOffset();
           } else {
-            console.log('No section found');
           }
         });
         setMovingSection(true);
@@ -378,11 +377,9 @@ export default function Index() {
                         (t) => t.trackerName === tracker.trackerName && t.timePeriod === tracker.timePeriod
                       );
                       if (exists) {
-                        console.log("TRACKER EXISTS IN SECTION ALREADY")
                         handleCloseModal();
                         return;
                       }else{
-                        console.log("followed through")
                         addTrackerToSection(
                           targetSection.sectionTitle,
                           targetSection.timePeriod,

@@ -102,10 +102,9 @@ export const useSectionStore = create<SectionsHomeStore>((set) => ({
         }
         return { sectionsH: state.sectionsH };
       });
-      
-    if(!newSection) return;
 
-    console.log("hello")
+    if(!newSection) return;
+    
     const [{ section_id }] = await db.getAllAsync<{ section_id: number }>(
       `SELECT section_id FROM sections WHERE section_title = ? AND time_period = ?`,
       [sectionTitle, time_period]
