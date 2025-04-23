@@ -1,4 +1,4 @@
-import { View, Alert, Pressable, Text, ScrollView, StyleSheet, TouchableOpacity, Modal } from "react-native";
+import { Animated, PanResponder, View, Alert, Pressable, Text, ScrollView, StyleSheet, TouchableOpacity, Modal } from "react-native";
 import { Ionicons, MaterialCommunityIcons, AntDesign, Entypo } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -7,7 +7,7 @@ import { Dimensions } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useTheme } from "../ThemeContext"; // Import the ThemeContext
 import { openDatabase } from "@/storage/sqlite";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { Tracker } from "@/types/Tracker";
 import { Section } from "@/types/Section";
 import { useState as useReactState } from "react";
@@ -30,18 +30,104 @@ const sidesPadding = 16; // for grid mostly
 const itemSize = (screenWidth - totalSpacing - sidesPadding * 2) / itemsPerRow;
 
 export default function Index() {
+  const router = useRouter();
+  const { currentTheme } = useTheme(); // Get the current theme from context
 
+  //backend structures
   const trackers = useTrackerStore((state) => state.trackers);
   const sections = useSectionStore((state) => state.sectionsH);
   const addTrackerToSection = useSectionStore((state) => state.addTrackerToSection);
 
+  /* States */
+  //modal states
   const [sectionModalOpen, setSectionModalOpen] = useState(false);
-
   const [isModalVisible, setIsModalVisible] = useReactState(false);
   const [targetSection, setTargetSection] = useReactState<Section | null>(null);
 
-  const router = useRouter();
-  const { currentTheme } = useTheme(); // Get the current theme from context
+  //Time Period States (+ mode of calendar)
+  type CalendarMode = CalendarProps["mode"];
+  const buttons: CalendarMode[] = ["Daily", "Weekly", "Monthly"];
+  const [selected, setSelected] = useState<CalendarMode>("Daily");
+
+  //Edit mode states
+  const [editMode, setEditMode] = useState(false);
+  const [exitedEdit, setExitedEdit] = useState(false); //if just exited (fixes slight bug)
+  const [movingSection, setMovingSection] = useState(false);
+  const [movingSections, setMovingSections] = useState({}); //stores the movement state of all sections
+  const [currentMovingSection, setCurrentMovingSection] = useState<string | null>(null);
+  //Edit mode refs
+  const panRefs = useRef<{ [key: string]: Animated.ValueXY }>({});
+  const pan = useRef(new Animated.ValueXY()).current; //ref to section being moved
+  const scrollEnabledState = useRef(true); // Track scroll state
+  const scrollRef = useRef<ScrollView>(null);
+  const sectionRefs = useRef<{ [key: string]: View | null }>({});
+
+  const findSectionAtPosY = async (touchY: number): Promise<Section> => { //finds section given y coord
+    const measurements = await Promise.all(
+      sections.map(section => {
+        return new Promise<{ id: string, y: number, height: number }>((resolve) => {
+          const ref = sectionRefs.current[`${section.sectionTitle}-${section.timePeriod}`];
+          if (!ref) return resolve({ id: `${section.sectionTitle}-${section.timePeriod}`, y: Infinity, height: 0 });
+  
+          ref.measure((x, y, width, height, pageX, pageY) => { //measurements of reference
+            resolve({ id: `${section.sectionTitle}-${section.timePeriod}`, y: pageY, height });
+          });
+        });
+      })
+    );
+  
+    const found = measurements.find(m => touchY >= m.y && touchY <= m.y + m.height);
+  
+    if (!found) throw new Error('No section found at touch position');
+    const section = sections.find(section => `${section.sectionTitle}-${section.timePeriod}` === found.id);
+    if (!section) throw new Error('Section not found in state');
+  
+    return section;
+  };
+  //Function to respond to section movement
+  const panResponder = useMemo(() => PanResponder.create({
+      onStartShouldSetPanResponder: () => editMode, // only drag if in edit mode
+      onMoveShouldSetPanResponder: () => editMode, //edit mode also
+
+      onPanResponderGrant: (e) => { //if granted (edit mode)
+        
+        const touchY = e.nativeEvent.pageY;
+        findSectionAtPosY(touchY).then((section) => {
+          if (section) {
+            const sectionKey = `${section.sectionTitle}-${section.timePeriod}`;
+            setCurrentMovingSection(sectionKey);
+            const pan = panRefs.current[sectionKey];
+            pan?.extractOffset();
+          } else {
+            console.log('No section found');
+          }
+        });
+        setMovingSection(true);
+        
+        /*Stops parent scroll view from interfering*/
+        scrollEnabledState.current = false; 
+        if (scrollRef.current) {
+          scrollRef.current.setNativeProps({ scrollEnabled: false });
+        }
+      },
+
+
+      onPanResponderMove: (_, gestureState) => {
+        const pan = panRefs.current[currentMovingSection!]; //force (oops)
+        if (pan){ pan.setValue({ x: 0, y: gestureState.dy })};
+      },
+
+      onPanResponderRelease: () => {
+        const pan = panRefs.current[currentMovingSection!];
+        pan?.flattenOffset();
+        /*Reallows interference*/
+        scrollEnabledState.current = true;
+        if (scrollRef.current) {
+          scrollRef.current.setNativeProps({ scrollEnabled: true });
+        }
+        setMovingSection(false);
+      },
+    }), [editMode, currentMovingSection]);
 
   // Dynamic styles for square icon buttons
   const squareIconButtonStyle = (size: number) => ({
@@ -52,6 +138,7 @@ export default function Index() {
     height: size,
   });
 
+  //Modal functions
   const handlePlusPress = () => {
     setIsModalVisible(true);
   };
@@ -61,11 +148,8 @@ export default function Index() {
     setTargetSection(null);
   };
 
-  type CalendarMode = CalendarProps["mode"];
-  const buttons: CalendarMode[] = ["Daily", "Weekly", "Monthly"];
-  const [selected, setSelected] = useState<CalendarMode>("Daily");
-
   return (
+    //whole screen
     <SafeAreaView style={[styles.safeArea, { backgroundColor: currentTheme["101010"] }]}>
       <StatusBar style="light" />
       {/* This view is for the top-left and top-right icons */}
@@ -109,7 +193,31 @@ export default function Index() {
         </Pressable>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollView}>
+      <ScrollView
+        ref = {scrollRef} //whether scroll is enabled
+        scrollEnabled = {scrollEnabledState.current}
+        onStartShouldSetResponder={() => !scrollEnabledState.current}
+        contentContainerStyle={[
+        styles.scrollView,
+        {}
+      ]}>
+        <Pressable
+        pointerEvents="auto"
+        onLongPress={()=> { //on long press edit
+          (!editMode && !exitedEdit) && setEditMode(true);
+        }}
+        onPressIn={(e) =>{ //press in to close edit
+          editMode && (setEditMode(false), setExitedEdit(true));
+        }}
+        onPressOut={() =>{
+          !editMode && setExitedEdit(false);
+        }}
+        style={[
+          styles.scrollView,
+          {
+            paddingHorizontal: 5,}
+        ]}
+        >
         <View style={styles.progressContainer}>
           <Progress.Circle
             size={100} // Size of the circle
@@ -123,12 +231,56 @@ export default function Index() {
           <Text style={[styles.progressText, { color: currentTheme.white }]}>76%</Text>
         </View>
 
-        {/* START dynamic sections rendering */}
+        {/*START dynamic sections rendering */}
         {sections
           .filter((s) => s.timePeriod === selected)
           .sort((a, b) => a.position - b.position)
-          .map((section) => (
-            <View key={`${section.sectionTitle}-${section.timePeriod}`}>
+          .map((section) => {
+            const sectionKey = `${section.sectionTitle}-${section.timePeriod}`;
+            if (!panRefs.current[sectionKey]) {
+              panRefs.current[sectionKey] = new Animated.ValueXY();
+            }
+            const pan = panRefs.current[sectionKey];
+            return(
+            <View 
+              key={`${section.sectionTitle}-${section.timePeriod}`}
+              ref={ref => sectionRefs.current[`${section.sectionTitle}-${section.timePeriod}`] = ref}
+              onStartShouldSetResponder={() => true}
+              onResponderGrant={(e) => {
+                if (editMode) {
+                  const touchY = e.nativeEvent.pageY;
+                  findSectionAtPosY(touchY).then((section) => {
+                    if (section) {
+                      setCurrentMovingSection(`${section.sectionTitle}-${section.timePeriod}`);
+                    }
+                  });
+                }
+              }}
+              onResponderStart={(e) => {
+                // Block the press event from parent 
+                if (editMode) {
+                  e.stopPropagation();
+                }
+              }}
+            >
+            <Animated.View //Moveable view (on edit mode)
+            
+            style = {[
+              pan.getLayout(), //stored in pan object created by useRef earlier
+              {borderWidth: 1,
+                borderColor: editMode ? currentTheme["lowOpacityWhite"] : 'transparent',
+                marginTop: section.position === 0 ? 30 : 15, //num1 from circle, num2 from other sections
+                paddingVertical: 10,
+                width: '100%',
+                minWidth: '100%',
+                backgroundColor: movingSection ? currentTheme['lowOpacityWhite'] : 'transparent',
+              }
+            ]}
+            {...(currentMovingSection === `${section.sectionTitle}-${section.timePeriod}` ? panResponder.panHandlers : {})}//passing gesture handlers into view
+            
+            >
+
+
               {/* Section Title */}
               <Text style={[styles.title, { color: currentTheme.white }]}>
                 {section.sectionTitle}
@@ -150,7 +302,9 @@ export default function Index() {
                         },
                       })
                     }
-                    style={squareIconButtonStyle(itemSize)}
+                    style={[
+                      squareIconButtonStyle(itemSize),
+                    ]}
                   >
                     {getImage(tracker, 40).icon}
                   </Pressable>
@@ -162,16 +316,21 @@ export default function Index() {
                     setTargetSection(section);     // Store selected section
                     setIsModalVisible(true);       // Show modal
                   }}
-                  style={squareIconButtonStyle(itemSize)}
+                  style={squareIconButtonStyle(itemSize)
+                    
+                  }
                 >
                   <AntDesign name="plus" size={30} color={currentTheme.white} />
                 </Pressable>
               </View>
+            </Animated.View>
             </View>
-          ))}
+            )
+            })}
+        
         {/* END dynamic sections rendering */}
 
-        <Pressable //SECTION CREATION PRESSABLE Can change style it looks ugly
+        <Pressable //section creation
           //onPress={() => create section}
           style={[styles.sectionCreateButton, { borderColor: currentTheme.dimgray }]}
           onPress={() => setSectionModalOpen(true)}
@@ -200,6 +359,7 @@ export default function Index() {
 
               {/* Scrollable content */}
               <ScrollView
+                
                 style={styles.scrollView2} // Use for non-layout styles like width, height, etc.
                 contentContainerStyle={{
                   flexDirection: "row", // Arrange items in rows
@@ -251,6 +411,7 @@ export default function Index() {
           visible={sectionModalOpen}
           onClose={() => setSectionModalOpen(false)}
         />
+        </Pressable>
       </ScrollView>
     </SafeAreaView>
   );
@@ -300,8 +461,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: "bold",
-    marginBottom: 20,
-    marginTop: 50,
+    marginBottom: 0,
     textAlign: "center",
   },
   iconRow: {
@@ -316,7 +476,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     justifyContent: "center",
     alignItems: "center",
-    margin: spacing / 2,
+    marginHorizontal: spacing / 2,
+    marginTop: spacing,
   },
   sectionCreateButton: {
     padding: 12,
