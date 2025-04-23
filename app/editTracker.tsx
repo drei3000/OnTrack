@@ -1,4 +1,4 @@
-import { Modal, StyleSheet } from "react-native";
+import { Modal, StyleSheet, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "./ThemeContext";
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -7,7 +7,7 @@ import { useState } from "react";
 import { getImage } from "./trackerList";
 import { Dimensions, PixelRatio } from "react-native";
 import { View, Pressable,Image, Text , ScrollView} from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons,Entypo } from "@expo/vector-icons";
 import DropDownPicker from "react-native-dropdown-picker";
 import { useEffect } from "react";
 import { TextInput } from "react-native";
@@ -133,13 +133,25 @@ export default function editTracker(){
     const styles = StyleSheet.create({
         // Content inside overlay (background, size etc)
         container: {
-          height: '100%',
-          width: '100%',
+          flex: 1,
+          justifyContent: "flex-start",
+          alignItems: "center",
           backgroundColor: currentTheme["101010"],
-          paddingHorizontal: 20,
           borderColor: currentTheme.dimgray,
-          alignContent: 'center',
         },
+          topRow: {
+            width: "100%",
+            flexDirection: "row",
+            justifyContent: "space-between",
+            paddingHorizontal: 16,
+            paddingTop: 8,
+          },
+          cornerButton: {
+            width: 45,
+            height: 45,
+            justifyContent: "center",
+            alignItems: "center",
+          },
         // Contains input fields
         inputContainer: {
           width: '90%',
@@ -348,6 +360,21 @@ export default function editTracker(){
       }
     };
 
+    const handleDeleteTracker = async () => {
+      try {
+        const db = await openDatabase();
+        
+        await db.runAsync(
+          `DELETE FROM trackers WHERE tracker_name = ? AND time_period = ?`,
+          [trackerName, timePeriod]
+        );
+        
+        setupDatabase();
+        router.back();
+      } catch (err) {
+        console.error('Could not update tracker', err);
+      }
+    };
     //add margin at top equal to height - height of components
     var marginForTop = (height - ((60/scale)*6 + (20/scale)*6 + (width)*0.45)) / 2
     marginForTop = marginForTop < 0 ? 0 : ((marginForTop/scale)/2); //give up tonight dont pmo
@@ -358,6 +385,37 @@ export default function editTracker(){
         styles.container,
         {alignItems: 'center'}
     ]}>
+       <View style={styles.topRow}>
+              <Pressable
+                onPress={() => router.back()}
+                style={[styles.cornerButton, { backgroundColor: currentTheme["101010"] }]}
+              >
+                <MaterialCommunityIcons name="keyboard-backspace" size={40} color={currentTheme.white} />
+              </Pressable>
+              <Pressable
+          onPress={() => Alert.alert(
+            "Delete this tracker?",
+            "This action cannot be undone.",
+            [
+              {
+                text: "Cancel",
+                style: "cancel",
+              },
+              {
+                text: "Delete",
+                style: "destructive",
+                onPress: () => {
+                  handleDeleteTracker();
+                },
+              },
+            ],
+            { cancelable: true }
+          )}
+          style={[styles.cornerButton, { backgroundColor: currentTheme["101010"] }]}
+        >
+          <MaterialCommunityIcons name="trash-can-outline" size={40} color={currentTheme.white} />
+        </Pressable>
+      </View>
         <View style = {[
             imageBoxStyles.imageButtonsContainer,
             {marginTop: marginForTop}]}>
