@@ -113,7 +113,6 @@ export default function Index() {
 
 
       onPanResponderMove: (_, gestureState) => {
-        console.log("MOVING", currentMovingSection);
         const pan = panRefs.current[currentMovingSection!]; //force (oops)
         if (pan){ pan.setValue({ x: 0, y: gestureState.dy })};
       },
@@ -148,7 +147,6 @@ export default function Index() {
     setIsModalVisible(false);
     setTargetSection(null);
   };
-
 
   return (
     //whole screen
@@ -243,7 +241,6 @@ export default function Index() {
               panRefs.current[sectionKey] = new Animated.ValueXY();
             }
             const pan = panRefs.current[sectionKey];
-            console.log("PanRef " +sectionKey);
             return(
             <View 
               key={`${section.sectionTitle}-${section.timePeriod}`}
@@ -272,7 +269,7 @@ export default function Index() {
               pan.getLayout(), //stored in pan object created by useRef earlier
               {borderWidth: 1,
                 borderColor: editMode ? currentTheme["lowOpacityWhite"] : 'transparent',
-                marginTop: section.position === 0 ? 30 : 20, //num1 from circle, num2 from other sections
+                marginTop: section.position === 0 ? 30 : 15, //num1 from circle, num2 from other sections
                 paddingVertical: 10,
                 width: '100%',
                 minWidth: '100%',
@@ -305,7 +302,9 @@ export default function Index() {
                         },
                       })
                     }
-                    style={squareIconButtonStyle(itemSize)}
+                    style={[
+                      squareIconButtonStyle(itemSize),
+                    ]}
                   >
                     {getImage(tracker, 40).icon}
                   </Pressable>
@@ -317,7 +316,9 @@ export default function Index() {
                     setTargetSection(section);     // Store selected section
                     setIsModalVisible(true);       // Show modal
                   }}
-                  style={squareIconButtonStyle(itemSize)}
+                  style={squareIconButtonStyle(itemSize)
+                    
+                  }
                 >
                   <AntDesign name="plus" size={30} color={currentTheme.white} />
                 </Pressable>
@@ -460,8 +461,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: "bold",
-    marginBottom: 20,
-    marginTop: 0,
+    marginBottom: 0,
     textAlign: "center",
   },
   iconRow: {
@@ -477,7 +477,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginHorizontal: spacing / 2,
-
+    marginTop: spacing,
   },
   sectionCreateButton: {
     padding: 12,
