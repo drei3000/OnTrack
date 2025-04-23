@@ -53,20 +53,57 @@ export default function Index() {
   const [editMode, setEditMode] = useState(false);
   const [exitedEdit, setExitedEdit] = useState(false); //if just exited (fixes slight bug)
   const [movingSection, setMovingSection] = useState(false);
-  
+  const [movingSections, setMovingSections] = useState({}); //stores the movement state of all sections
+  const [currentMovingSection, setCurrentMovingSection] = useState<string | null>(null);
   //Edit mode refs
+  const panRefs = useRef<{ [key: string]: Animated.ValueXY }>({});
   const pan = useRef(new Animated.ValueXY()).current; //ref to section being moved
   const scrollEnabledState = useRef(true); // Track scroll state
   const scrollRef = useRef<ScrollView>(null);
+  const sectionRefs = useRef<{ [key: string]: View | null }>({});
 
+  const findSectionAtPosY = async (touchY: number): Promise<Section> => { //finds section given y coord
+    const measurements = await Promise.all(
+      sections.map(section => {
+        return new Promise<{ id: string, y: number, height: number }>((resolve) => {
+          const ref = sectionRefs.current[`${section.sectionTitle}-${section.timePeriod}`];
+          if (!ref) return resolve({ id: `${section.sectionTitle}-${section.timePeriod}`, y: Infinity, height: 0 });
+  
+          ref.measure((x, y, width, height, pageX, pageY) => { //measurements of reference
+            resolve({ id: `${section.sectionTitle}-${section.timePeriod}`, y: pageY, height });
+          });
+        });
+      })
+    );
+  
+    const found = measurements.find(m => touchY >= m.y && touchY <= m.y + m.height);
+  
+    if (!found) throw new Error('No section found at touch position');
+    const section = sections.find(section => `${section.sectionTitle}-${section.timePeriod}` === found.id);
+    if (!section) throw new Error('Section not found in state');
+  
+    return section;
+  };
   //Function to respond to section movement
   const panResponder = useMemo(() => PanResponder.create({
       onStartShouldSetPanResponder: () => editMode, // only drag if in edit mode
       onMoveShouldSetPanResponder: () => editMode, //edit mode also
 
-      onPanResponderGrant: () => { //if granted (edit mode)
+      onPanResponderGrant: (e) => { //if granted (edit mode)
+        
+        const touchY = e.nativeEvent.pageY;
+        findSectionAtPosY(touchY).then((section) => {
+          if (section) {
+            const sectionKey = `${section.sectionTitle}-${section.timePeriod}`;
+            setCurrentMovingSection(sectionKey);
+            const pan = panRefs.current[sectionKey];
+            pan?.extractOffset();
+          } else {
+            console.log('No section found');
+          }
+        });
         setMovingSection(true);
-        pan.extractOffset(); //anchors position to new location
+        
         /*Stops parent scroll view from interfering*/
         scrollEnabledState.current = false; 
         if (scrollRef.current) {
@@ -75,13 +112,15 @@ export default function Index() {
       },
 
 
-      onPanResponderMove: Animated.event(
-        [null, { dy: pan.y }], // Only respond to Y movement
-        { useNativeDriver: false } 
-      ),
+      onPanResponderMove: (_, gestureState) => {
+        console.log("MOVING", currentMovingSection);
+        const pan = panRefs.current[currentMovingSection!]; //force (oops)
+        if (pan){ pan.setValue({ x: 0, y: gestureState.dy })};
+      },
 
       onPanResponderRelease: () => {
-        pan.flattenOffset(); //sets offset to 0, future movement relative to current position (doesnt seem to affect anything?) 
+        const pan = panRefs.current[currentMovingSection!];
+        pan?.flattenOffset();
         /*Reallows interference*/
         scrollEnabledState.current = true;
         if (scrollRef.current) {
@@ -89,7 +128,7 @@ export default function Index() {
         }
         setMovingSection(false);
       },
-    }), [editMode]);
+    }), [editMode, currentMovingSection]);
 
   // Dynamic styles for square icon buttons
   const squareIconButtonStyle = (size: number) => ({
@@ -112,6 +151,7 @@ export default function Index() {
 
 
   return (
+    //whole screen
     <SafeAreaView style={[styles.safeArea, { backgroundColor: currentTheme["101010"] }]}>
       <StatusBar style="light" />
       {/* This view is for the top-left and top-right icons */}
@@ -197,10 +237,28 @@ export default function Index() {
         {sections
           .filter((s) => s.timePeriod === selected)
           .sort((a, b) => a.position - b.position)
-          .map((section) => (
+          .map((section) => {
+            const sectionKey = `${section.sectionTitle}-${section.timePeriod}`;
+            if (!panRefs.current[sectionKey]) {
+              panRefs.current[sectionKey] = new Animated.ValueXY();
+            }
+            const pan = panRefs.current[sectionKey];
+            console.log("PanRef " +sectionKey);
+            return(
             <View 
               key={`${section.sectionTitle}-${section.timePeriod}`}
+              ref={ref => sectionRefs.current[`${section.sectionTitle}-${section.timePeriod}`] = ref}
               onStartShouldSetResponder={() => true}
+              onResponderGrant={(e) => {
+                if (editMode) {
+                  const touchY = e.nativeEvent.pageY;
+                  findSectionAtPosY(touchY).then((section) => {
+                    if (section) {
+                      setCurrentMovingSection(`${section.sectionTitle}-${section.timePeriod}`);
+                    }
+                  });
+                }
+              }}
               onResponderStart={(e) => {
                 // Block the press event from parent 
                 if (editMode) {
@@ -209,6 +267,7 @@ export default function Index() {
               }}
             >
             <Animated.View //Moveable view (on edit mode)
+            
             style = {[
               pan.getLayout(), //stored in pan object created by useRef earlier
               {borderWidth: 1,
@@ -217,10 +276,10 @@ export default function Index() {
                 paddingVertical: 10,
                 width: '100%',
                 minWidth: '100%',
-                //backgroundColor: editMode ? 'red' : 'transparent', debugging
+                backgroundColor: movingSection ? currentTheme['lowOpacityWhite'] : 'transparent',
               }
             ]}
-            {...panResponder.panHandlers} //passing gesture handlers into view
+            {...(currentMovingSection === `${section.sectionTitle}-${section.timePeriod}` ? panResponder.panHandlers : {})}//passing gesture handlers into view
             
             >
 
@@ -265,7 +324,8 @@ export default function Index() {
               </View>
             </Animated.View>
             </View>
-          ))}
+            )
+            })}
         
         {/* END dynamic sections rendering */}
 
