@@ -7,7 +7,7 @@ import { Dimensions } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useTheme } from "../ThemeContext"; // Import the ThemeContext
 import { openDatabase } from "@/storage/sqlite";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { Tracker } from "@/types/Tracker";
 import { Section } from "@/types/Section";
 import { useState as useReactState } from "react";
@@ -30,42 +30,66 @@ const sidesPadding = 16; // for grid mostly
 const itemSize = (screenWidth - totalSpacing - sidesPadding * 2) / itemsPerRow;
 
 export default function Index() {
+  const router = useRouter();
+  const { currentTheme } = useTheme(); // Get the current theme from context
 
+  //backend structures
   const trackers = useTrackerStore((state) => state.trackers);
   const sections = useSectionStore((state) => state.sectionsH);
   const addTrackerToSection = useSectionStore((state) => state.addTrackerToSection);
 
+  /* States */
+  //modal states
   const [sectionModalOpen, setSectionModalOpen] = useState(false);
-
   const [isModalVisible, setIsModalVisible] = useReactState(false);
   const [targetSection, setTargetSection] = useReactState<Section | null>(null);
 
+  //Time Period States (+ mode of calendar)
+  type CalendarMode = CalendarProps["mode"];
+  const buttons: CalendarMode[] = ["Daily", "Weekly", "Monthly"];
+  const [selected, setSelected] = useState<CalendarMode>("Daily");
+
+  //Edit mode states
   const [editMode, setEditMode] = useState(false);
-  const [exitedEdit, setExitedEdit] = useState(false);
-  const router = useRouter();
-  const { currentTheme } = useTheme(); // Get the current theme from context
-  const pan = useRef(new Animated.ValueXY()).current;
+  const [exitedEdit, setExitedEdit] = useState(false); //if just exited (fixes slight bug)
   const [movingSection, setMovingSection] = useState(false);
-const panResponder = useRef(
-  PanResponder.create({
   
-    onStartShouldSetPanResponder: () => editMode, // only drag if in edit mode
-    onPanResponderGrant: () => {
-      pan.extractOffset();
-      setMovingSection(true);
-      console.log("hello")
-    },
-    onPanResponderMove: Animated.event(
-      [null, { dy: pan.y }], // Only respond to Y movement
-      { useNativeDriver: false }
-    ),
-    onPanResponderRelease: () => {
-      pan.flattenOffset();
-      setMovingSection(false);
-      console.log("bye")
-    },
-  })
-).current;
+  //Edit mode refs
+  const pan = useRef(new Animated.ValueXY()).current; //ref to section being moved
+  const scrollEnabledState = useRef(true); // Track scroll state
+  const scrollRef = useRef<ScrollView>(null);
+
+  //Function to respond to section movement
+  const panResponder = useMemo(() => PanResponder.create({
+      onStartShouldSetPanResponder: () => editMode, // only drag if in edit mode
+      onMoveShouldSetPanResponder: () => editMode, //edit mode also
+
+      onPanResponderGrant: () => { //if granted (edit mode)
+        setMovingSection(true);
+        pan.extractOffset(); //anchors position to new location
+        /*Stops parent scroll view from interfering*/
+        scrollEnabledState.current = false; 
+        if (scrollRef.current) {
+          scrollRef.current.setNativeProps({ scrollEnabled: false });
+        }
+      },
+
+
+      onPanResponderMove: Animated.event(
+        [null, { dy: pan.y }], // Only respond to Y movement
+        { useNativeDriver: false } 
+      ),
+
+      onPanResponderRelease: () => {
+        pan.flattenOffset(); //sets offset to 0, future movement relative to current position (doesnt seem to affect anything?) 
+        /*Reallows interference*/
+        scrollEnabledState.current = true;
+        if (scrollRef.current) {
+          scrollRef.current.setNativeProps({ scrollEnabled: true });
+        }
+        setMovingSection(false);
+      },
+    }), [editMode]);
 
   // Dynamic styles for square icon buttons
   const squareIconButtonStyle = (size: number) => ({
@@ -76,6 +100,7 @@ const panResponder = useRef(
     height: size,
   });
 
+  //Modal functions
   const handlePlusPress = () => {
     setIsModalVisible(true);
   };
@@ -85,9 +110,7 @@ const panResponder = useRef(
     setTargetSection(null);
   };
 
-  type CalendarMode = CalendarProps["mode"];
-  const buttons: CalendarMode[] = ["Daily", "Weekly", "Monthly"];
-  const [selected, setSelected] = useState<CalendarMode>("Daily");
+
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: currentTheme["101010"] }]}>
       <StatusBar style="light" />
@@ -132,18 +155,20 @@ const panResponder = useRef(
         </Pressable>
       </View>
 
-      <ScrollView contentContainerStyle={[
+      <ScrollView
+        ref = {scrollRef} //whether scroll is enabled
+        scrollEnabled = {scrollEnabledState.current}
+        onStartShouldSetResponder={() => !scrollEnabledState.current}
+        contentContainerStyle={[
         styles.scrollView,
         {}
       ]}>
         <Pressable
-        //pointerEvents="none"
-        //pointerEvents = {movingSection === true? "none" : "auto"} 
-        pointerEvents={editMode ? 'auto' : 'box-none'}
+        pointerEvents="auto"
         onLongPress={()=> { //on long press edit
           (!editMode && !exitedEdit) && setEditMode(true);
         }}
-        onPressIn={() =>{ //press in to close edit
+        onPressIn={(e) =>{ //press in to close edit
           editMode && (setEditMode(false), setExitedEdit(true));
         }}
         onPressOut={() =>{
@@ -168,25 +193,34 @@ const panResponder = useRef(
           <Text style={[styles.progressText, { color: currentTheme.white }]}>76%</Text>
         </View>
 
-        {/* START dynamic sections rendering */}
+        {/*START dynamic sections rendering */}
         {sections
           .filter((s) => s.timePeriod === selected)
           .sort((a, b) => a.position - b.position)
           .map((section) => (
-            
-            <Animated.View key={`${section.sectionTitle}-${section.timePeriod}`}
+            <View 
+              key={`${section.sectionTitle}-${section.timePeriod}`}
+              onStartShouldSetResponder={() => true}
+              onResponderStart={(e) => {
+                // Block the press event from parent 
+                if (editMode) {
+                  e.stopPropagation();
+                }
+              }}
+            >
+            <Animated.View //Moveable view (on edit mode)
             style = {[
-              pan.getLayout(),
+              pan.getLayout(), //stored in pan object created by useRef earlier
               {borderWidth: 1,
                 borderColor: editMode ? currentTheme["lowOpacityWhite"] : 'transparent',
                 marginTop: section.position === 0 ? 30 : 20, //num1 from circle, num2 from other sections
                 paddingVertical: 10,
                 width: '100%',
                 minWidth: '100%',
+                //backgroundColor: editMode ? 'red' : 'transparent', debugging
               }
-              
             ]}
-            {...panResponder.panHandlers}
+            {...panResponder.panHandlers} //passing gesture handlers into view
             
             >
 
@@ -230,11 +264,12 @@ const panResponder = useRef(
                 </Pressable>
               </View>
             </Animated.View>
+            </View>
           ))}
         
         {/* END dynamic sections rendering */}
 
-        <Pressable //SECTION CREATION PRESSABLE Can change style it looks ugly
+        <Pressable //section creation
           //onPress={() => create section}
           style={[styles.sectionCreateButton, { borderColor: currentTheme.dimgray }]}
           onPress={() => setSectionModalOpen(true)}
@@ -263,6 +298,7 @@ const panResponder = useRef(
 
               {/* Scrollable content */}
               <ScrollView
+                
                 style={styles.scrollView2} // Use for non-layout styles like width, height, etc.
                 contentContainerStyle={{
                   flexDirection: "row", // Arrange items in rows

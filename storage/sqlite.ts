@@ -58,7 +58,7 @@ const overwriteDatabase = async () => {
 
 // Open the copied database
 export const openDatabase = async () => {
-    //await copyDatabase();
-    await overwriteDatabase();
+    await copyDatabase();
+    //await overwriteDatabase();
     return SQLite.openDatabaseAsync(dbName);
 };
