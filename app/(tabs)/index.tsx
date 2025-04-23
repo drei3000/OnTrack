@@ -1,4 +1,4 @@
-import { View, Alert, Pressable, Text, ScrollView, StyleSheet, TouchableOpacity, Modal } from "react-native";
+import { Animated, PanResponder, View, Alert, Pressable, Text, ScrollView, StyleSheet, TouchableOpacity, Modal } from "react-native";
 import { Ionicons, MaterialCommunityIcons, AntDesign, Entypo } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -7,7 +7,7 @@ import { Dimensions } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useTheme } from "../ThemeContext"; // Import the ThemeContext
 import { openDatabase } from "@/storage/sqlite";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Tracker } from "@/types/Tracker";
 import { Section } from "@/types/Section";
 import { useState as useReactState } from "react";
@@ -40,8 +40,32 @@ export default function Index() {
   const [isModalVisible, setIsModalVisible] = useReactState(false);
   const [targetSection, setTargetSection] = useReactState<Section | null>(null);
 
+  const [editMode, setEditMode] = useState(false);
+  const [exitedEdit, setExitedEdit] = useState(false);
   const router = useRouter();
   const { currentTheme } = useTheme(); // Get the current theme from context
+  const pan = useRef(new Animated.ValueXY()).current;
+  const [movingSection, setMovingSection] = useState(false);
+const panResponder = useRef(
+  PanResponder.create({
+  
+    onStartShouldSetPanResponder: () => editMode, // only drag if in edit mode
+    onPanResponderGrant: () => {
+      pan.extractOffset();
+      setMovingSection(true);
+      console.log("hello")
+    },
+    onPanResponderMove: Animated.event(
+      [null, { dy: pan.y }], // Only respond to Y movement
+      { useNativeDriver: false }
+    ),
+    onPanResponderRelease: () => {
+      pan.flattenOffset();
+      setMovingSection(false);
+      console.log("bye")
+    },
+  })
+).current;
 
   // Dynamic styles for square icon buttons
   const squareIconButtonStyle = (size: number) => ({
@@ -64,7 +88,6 @@ export default function Index() {
   type CalendarMode = CalendarProps["mode"];
   const buttons: CalendarMode[] = ["Daily", "Weekly", "Monthly"];
   const [selected, setSelected] = useState<CalendarMode>("Daily");
-
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: currentTheme["101010"] }]}>
       <StatusBar style="light" />
@@ -109,7 +132,29 @@ export default function Index() {
         </Pressable>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollView}>
+      <ScrollView contentContainerStyle={[
+        styles.scrollView,
+        {}
+      ]}>
+        <Pressable
+        //pointerEvents="none"
+        //pointerEvents = {movingSection === true? "none" : "auto"} 
+        pointerEvents={editMode ? 'auto' : 'box-none'}
+        onLongPress={()=> { //on long press edit
+          (!editMode && !exitedEdit) && setEditMode(true);
+        }}
+        onPressIn={() =>{ //press in to close edit
+          editMode && (setEditMode(false), setExitedEdit(true));
+        }}
+        onPressOut={() =>{
+          !editMode && setExitedEdit(false);
+        }}
+        style={[
+          styles.scrollView,
+          {
+            paddingHorizontal: 5,}
+        ]}
+        >
         <View style={styles.progressContainer}>
           <Progress.Circle
             size={100} // Size of the circle
@@ -128,7 +173,24 @@ export default function Index() {
           .filter((s) => s.timePeriod === selected)
           .sort((a, b) => a.position - b.position)
           .map((section) => (
-            <View key={`${section.sectionTitle}-${section.timePeriod}`}>
+            
+            <Animated.View key={`${section.sectionTitle}-${section.timePeriod}`}
+            style = {[
+              pan.getLayout(),
+              {borderWidth: 1,
+                borderColor: editMode ? currentTheme["lowOpacityWhite"] : 'transparent',
+                marginTop: section.position === 0 ? 30 : 20, //num1 from circle, num2 from other sections
+                paddingVertical: 10,
+                width: '100%',
+                minWidth: '100%',
+              }
+              
+            ]}
+            {...panResponder.panHandlers}
+            
+            >
+
+
               {/* Section Title */}
               <Text style={[styles.title, { color: currentTheme.white }]}>
                 {section.sectionTitle}
@@ -167,8 +229,9 @@ export default function Index() {
                   <AntDesign name="plus" size={30} color={currentTheme.white} />
                 </Pressable>
               </View>
-            </View>
+            </Animated.View>
           ))}
+        
         {/* END dynamic sections rendering */}
 
         <Pressable //SECTION CREATION PRESSABLE Can change style it looks ugly
@@ -251,6 +314,7 @@ export default function Index() {
           visible={sectionModalOpen}
           onClose={() => setSectionModalOpen(false)}
         />
+        </Pressable>
       </ScrollView>
     </SafeAreaView>
   );
@@ -301,7 +365,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 20,
-    marginTop: 50,
+    marginTop: 0,
     textAlign: "center",
   },
   iconRow: {
@@ -316,7 +380,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     justifyContent: "center",
     alignItems: "center",
-    margin: spacing / 2,
+    marginHorizontal: spacing / 2,
+
   },
   sectionCreateButton: {
     padding: 12,

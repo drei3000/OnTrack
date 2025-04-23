@@ -6,9 +6,10 @@ import { setupDatabase } from "@/components/ZustandRefresh";
 
 export default function Layout() {
   useEffect(() => { //runs on launch
+    setupDatabase();
     NavigationBar.setPositionAsync("absolute");
     NavigationBar.setBackgroundColorAsync("transparent");
-    setupDatabase();
+    
   });
 
 

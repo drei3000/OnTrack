@@ -29,6 +29,7 @@ const themes = {
     green: 'green', // Confirm button background
     white: 'white',
     "rgba(0, 0, 0, 0.8)" : "rgba(0, 0, 0, 0.8)", // Modal background color
+    "lowOpacityWhite" : "rgba(255, 255, 255, 0.3)", // Modal background color
   },
   light: {
     "101010": "#FFFFFF", // Background color
@@ -57,6 +58,7 @@ const themes = {
     green: "#00FF00", // Confirm button background
     white: 'black',
     "rgba(0, 0, 0, 0.8)" : "rgba(255, 255, 255, 0.8)", // Modal background color
+    "lowOpacityWhite" : "rgba(0, 0, 0, 0.2)", // on edit border
   },
 };
 
