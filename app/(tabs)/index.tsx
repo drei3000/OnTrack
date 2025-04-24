@@ -506,7 +506,7 @@ const styles = StyleSheet.create({
   },
   sectionCreateButton: {
     padding: 12,
-    minWidth: '100%', //feel free to change
+    minWidth: '80%', //feel free to change
     borderRadius: 5,
     borderWidth: 1,
     borderStyle: 'dashed' as const,
