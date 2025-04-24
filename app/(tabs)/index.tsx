@@ -93,9 +93,8 @@ export default function Index() {
         });
       })
     );
-  
+
     const found = measurements.find(m => touchY >= m.y && touchY <= m.y + m.height);
-  
     if (!found) throw new Error('No section found at touch position');
     const section = sections.find(section => `${section.sectionTitle}-${section.timePeriod}` === found.id);
     if (!section) throw new Error('Section not found in state');
@@ -114,8 +113,9 @@ export default function Index() {
         findSectionAtPosY(touchY).then((section) => {
           if (section) {
             const sectionKey = `${section.sectionTitle}-${section.timePeriod}`;
+            const {height,position} = getSectInfo(section.sectionTitle);
             setCurrentMovingSection(sectionKey);
-
+            setCurrentMovingPos(position);
             const pan = panRefs.current[sectionKey];
             pan?.extractOffset();
           } else {
@@ -135,7 +135,6 @@ export default function Index() {
         const pan = panRefs.current[currentMovingSection!]; //force (oops)
         if (pan){ pan.setValue({ x: 0, y: gestureState.dy })};
         //console.log(`dy: ${gestureState.dy}`);
-
       },
 
       onPanResponderRelease: () => {
@@ -147,6 +146,7 @@ export default function Index() {
           scrollRef.current.setNativeProps({ scrollEnabled: true });
         }
         setMovingSection(false);
+        setCurrentMovingPos(-1);
       },
     }), [editMode, currentMovingSection]);
 
