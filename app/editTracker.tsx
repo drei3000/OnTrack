@@ -371,13 +371,34 @@ export default function editTracker(){
       try {
         const db = await openDatabase();
 
-        await db.runAsync(
+        //get positions of all relations first
+        const rows : SectionTrackerRelation[] | null = await db.getAllAsync(
+          `SELECT tracker_id, section_id, tracker_position, relation_id FROM section_trackers
+           WHERE tracker_id IN (
+             SELECT tracker_id FROM trackers WHERE tracker_name = ? AND time_period = ?
+           );`,
+          [trackerName, timePeriod]
+        );
+
+        await db.runAsync( //delete relations 
           `DELETE FROM section_trackers
           WHERE tracker_id IN (
             SELECT tracker_id FROM trackers WHERE tracker_name = ? AND time_period = ?
           );`,
           [trackerName, timePeriod]
         );
+
+        //move sections ahead down one
+        for (const row of rows) {
+          await db.runAsync(
+            `UPDATE section_trackers
+             SET tracker_position = tracker_position - 1
+             WHERE section_id = ? AND tracker_position > ?`,
+            [row.section_id, row.tracker_position]
+          );
+        }
+
+        
         
         await db.runAsync(
           `DELETE FROM trackers WHERE tracker_name = ? AND time_period = ?`,
