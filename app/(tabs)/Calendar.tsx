@@ -98,7 +98,7 @@ export default function Index() {
             style={{
                 color: selected === btn ? currentTheme.white : currentTheme.gray,
                 fontWeight: selected === btn ? "bold" : "500",
-                fontSize: selected === btn ? 17 : 15,
+                fontSize: selected === btn ? 15.2 : 15,
             }}
             >
             {btn}
