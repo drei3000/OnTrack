@@ -360,21 +360,36 @@ export default function editTracker(){
       }
     };
 
+    type SectionTrackerRelation = {
+      section_id: number,
+      tracker_id: number,
+      tracker_position: number,
+      relation_id: number,
+    }
+
     const handleDeleteTracker = async () => {
       try {
         const db = await openDatabase();
+
+        await db.runAsync(
+          `DELETE FROM section_trackers
+          WHERE tracker_id IN (
+            SELECT tracker_id FROM trackers WHERE tracker_name = ? AND time_period = ?
+          );`,
+          [trackerName, timePeriod]
+        );
         
         await db.runAsync(
           `DELETE FROM trackers WHERE tracker_name = ? AND time_period = ?`,
           [trackerName, timePeriod]
         );
-        
         setupDatabase();
         router.back();
       } catch (err) {
         console.error('Could not update tracker', err);
       }
     };
+
     //add margin at top equal to height - height of components
     var marginForTop = (height - ((60/scale)*6 + (20/scale)*6 + (width)*0.45)) / 2
     marginForTop = marginForTop < 0 ? 0 : ((marginForTop/scale)/2); //give up tonight dont pmo

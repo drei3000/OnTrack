@@ -134,6 +134,7 @@ export default function Index() {
                 fontWeight: selected === btn ? "bold" : "500",
                 fontSize: selected === btn ? 17 : 15,
                 }}
+
             >
                 {btn}
             </Text>
