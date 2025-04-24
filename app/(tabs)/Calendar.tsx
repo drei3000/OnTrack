@@ -201,7 +201,12 @@ export default function Index() {
                         }
                         style={buttonContentWrapper}
                     >
-                        {getImage(tracker, 30).icon} {/* Tracker icon */}
+                        {
+                        // Safe icon render (fallback prevents raw string → <Text> error)
+                        typeof getImage(tracker, 30).icon === "string"
+                            ? <MaterialCommunityIcons name="image" size={30} color={currentTheme["101010"]} />
+                            : getImage(tracker, 30).icon
+                        }
                         <Text style={pressableTextStyle}>{tracker.trackerName}</Text>
                     </Pressable>
                     </LinearGradient>
