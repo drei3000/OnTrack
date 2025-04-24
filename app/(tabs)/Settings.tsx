@@ -90,7 +90,7 @@ export default function Index() {
     {
       title: "Tracker List",
       description: "See Trackers | Edit Trackers",
-      icon: "rectangle",
+      icon: "clipboard-list",
       onPress: () => router.push("../../trackerList"), // Navigate to tracker list
     },
     {
