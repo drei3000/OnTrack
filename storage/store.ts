@@ -102,24 +102,24 @@ export const useSectionStore = create<SectionsHomeStore>((set) => ({
         }
         return { sectionsH: state.sectionsH };
       });
-
     if(!newSection) return;
-    
+
     const [{ section_id }] = await db.getAllAsync<{ section_id: number }>(
       `SELECT section_id FROM sections WHERE section_title = ? AND time_period = ?`,
       [sectionTitle, time_period]
     );
-
     const [{ tracker_id }] = await db.getAllAsync<{ tracker_id: number }>(
       `SELECT tracker_id FROM trackers WHERE tracker_name = ? AND time_period = ?`,
       [tracker.trackerName, tracker.timePeriod]
     );
-
+    try{
     await db.runAsync(
       `INSERT INTO section_trackers (section_id, tracker_id, tracker_position, last_modified)
        VALUES (?, ?, ?, ?)`,
       [section_id, tracker_id, newSection.trackers.length - 1, Date.now()]
-    );
+    )}catch(error){
+        console.log(error);
+    };
   },
 
   initialAddTrackerToSection: (sectionTitle, time_period, tracker) => set((state) => {

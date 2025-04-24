@@ -70,7 +70,7 @@ export default function Index() {
     const section : Section =  sections.find((s) => s.sectionTitle === sectionTitle && s.timePeriod === selected)!
     var sectHeight : number = 44; //(24) {fontsize} + (2 * 10) {padding size}
     var position : number = -1;
-    console.log("sect to add to 44: "+spacing *(Math.ceil((itemsPerRow +1)/ 4))+" calculation = "+Math.ceil((itemsPerRow + 1)/4))
+    //console.log("sect to add to 44: "+spacing *(Math.ceil((itemsPerRow +1)/ 4))+" calculation = "+Math.ceil((itemsPerRow + 1)/4))
     if(section){
       const rows = Math.ceil((section.trackers.length +1)/ 4);
       sectHeight += (spacing + itemSize) *(rows); //spacing per row
@@ -79,7 +79,8 @@ export default function Index() {
     return {height: sectHeight, position: position}
   }
 
-  const findSectionAtPosY = async (touchY: number): Promise<Section> => { //finds section given y coord
+  //finds section given y coord
+  const findSectionAtPosY = async (touchY: number): Promise<Section> => { 
     const measurements = await Promise.all(
       sections.map(section => {
         return new Promise<{ id: string, y: number, height: number }>((resolve) => {
@@ -133,8 +134,8 @@ export default function Index() {
       onPanResponderMove: (_, gestureState) => {
         const pan = panRefs.current[currentMovingSection!]; //force (oops)
         if (pan){ pan.setValue({ x: 0, y: gestureState.dy })};
-        console.log(`dy: ${gestureState.dy}`);
-        
+        //console.log(`dy: ${gestureState.dy}`);
+
       },
 
       onPanResponderRelease: () => {
@@ -258,7 +259,6 @@ export default function Index() {
           .map((section) => {
             //for each section map their heights (ordered by position)
             const {height} = getSectInfo(section.sectionTitle);
-            console.log(height);
             sectionHeights.push(height)
             const sectionKey = `${section.sectionTitle}-${section.timePeriod}`;
             if (!panRefs.current[sectionKey]) {
