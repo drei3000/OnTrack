@@ -177,7 +177,7 @@ export default function Index() {
               style={{
                 color: selected === btn ? currentTheme.white : currentTheme.gray,
                 fontWeight: selected === btn ? "bold" : "500",
-                fontSize: selected === btn ? 17 : 15,
+                fontSize: selected === btn ? 15. : 15,
               }}
             >
               {btn}
@@ -359,7 +359,6 @@ export default function Index() {
 
               {/* Scrollable content */}
               <ScrollView
-                
                 style={styles.scrollView2} // Use for non-layout styles like width, height, etc.
                 contentContainerStyle={{
                   flexDirection: "row", // Arrange items in rows
@@ -368,7 +367,9 @@ export default function Index() {
                   paddingBottom: 50, // Add padding if needed
                 }}
               >
-                {trackers.map((tracker) => (
+                {trackers
+                  .filter((tracker) => tracker.timePeriod === selected) // Filter trackers by selected time period
+                  .map((tracker) => (
                   <TouchableOpacity
                     key={tracker.trackerName + tracker.timePeriod}
                     onPress={() => {
@@ -399,7 +400,7 @@ export default function Index() {
                     <View style={styles.iconContainer}>
                       {getImage(tracker, 40).icon}
                     </View>
-                    <Text style={styles.trackerText}>{tracker.trackerName}</Text>
+                    <Text style={[styles.trackerText, { color: currentTheme.white }]}>{tracker.trackerName}</Text>
                   </TouchableOpacity>
                 ))}
               </ScrollView>
@@ -530,7 +531,7 @@ const styles = StyleSheet.create({
   trackerText: {
     fontSize: 14, // Smaller font size for labels
     fontWeight: "500",
-
+    
     textAlign: "center", // Center-align text
   },
 });

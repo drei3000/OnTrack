@@ -41,7 +41,7 @@ const renderTracker = ({ tracker, router, currentTheme }: { tracker: Tracker; ro
         key = {tracker.trackerName}
         style = {[
             styles.trackerButton,
-            {borderBottomColor: currentTheme['dimgray']}
+            {borderColor: 'transparent'}, 
         ]}>
             {/*icon*/}
             <View style = {[styles.iconContainer]}>

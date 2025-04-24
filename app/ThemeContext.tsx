@@ -30,6 +30,7 @@ const themes = {
     white: 'white',
     "rgba(0, 0, 0, 0.8)" : "rgba(0, 0, 0, 0.8)", // Modal background color
     "lowOpacityWhite" : "rgba(255, 255, 255, 0.3)", // Modal background color
+    trackerSeparation : 'transparent',
   },
   light: {
     "101010": "#FFFFFF", // Background color
@@ -59,11 +60,12 @@ const themes = {
     white: 'black',
     "rgba(0, 0, 0, 0.8)" : "rgba(255, 255, 255, 0.8)", // Modal background color
     "lowOpacityWhite" : "rgba(0, 0, 0, 0.2)", // on edit border
+    trackerSeparation : 'dimgray',
   },
 };
 
 // Create the context
-const ThemeContext = createContext({
+export const ThemeContext = createContext({
         isDarkMode: true,
         toggleTheme: () => {},
         currentTheme: themes.dark,

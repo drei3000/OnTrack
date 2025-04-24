@@ -37,7 +37,7 @@ export default function newTrackerView() {
 
   /*states*/
   //input states
-  const timePeriods = ['Daily','Weekly','Monthly','Yearly']
+  const timePeriods = ['Daily','Weekly','Monthly',]
   const [currentTPIndex, setCurrentTPIndex] = useState(0); //TimePeriod button
   const [isGoal, setIsGoal] = useState(true); 
   const [title, setTitle] = useState(''); 
