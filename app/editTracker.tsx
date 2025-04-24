@@ -366,25 +366,59 @@ export default function editTracker(){
         console.error('Could not update tracker', err);
       }
     };
-
+  
     // Delete tracker from database
+    type SectionTrackerRelation = {
+      section_id: number,
+      tracker_id: number,
+      tracker_position: number,
+      relation_id: number,
+    }
     const handleDeleteTracker = async () => {
       try {
         const db = await openDatabase();
+
+        //get positions of all relations first
+        const rows : SectionTrackerRelation[] | null = await db.getAllAsync(
+          `SELECT tracker_id, section_id, tracker_position, relation_id FROM section_trackers
+           WHERE tracker_id IN (
+             SELECT tracker_id FROM trackers WHERE tracker_name = ? AND time_period = ?
+           );`,
+          [trackerName, timePeriod]
+        );
+
+        await db.runAsync( //delete relations 
+          `DELETE FROM section_trackers
+          WHERE tracker_id IN (
+            SELECT tracker_id FROM trackers WHERE tracker_name = ? AND time_period = ?
+          );`,
+          [trackerName, timePeriod]
+        );
+
+        //move sections ahead down one
+        for (const row of rows) {
+          await db.runAsync(
+            `UPDATE section_trackers
+             SET tracker_position = tracker_position - 1
+             WHERE section_id = ? AND tracker_position > ?`,
+            [row.section_id, row.tracker_position]
+          );
+        }
+
+        
         
         await db.runAsync(
           `DELETE FROM trackers WHERE tracker_name = ? AND time_period = ?`,
           [trackerName, timePeriod]
         );
-        
         setupDatabase();
         router.back();
       } catch (err) {
         console.error('Could not update tracker', err);
       }
     };
-    
-    // Margin for top alignment
+
+    //add margin at top equal to height - height of components
     var marginForTop = (height - ((60/scale)*6 + (20/scale)*6 + (width)*0.45)) / 2
     marginForTop = marginForTop < 0 ? 0 : ((marginForTop/scale)/2); //give up tonight dont pmo
     
