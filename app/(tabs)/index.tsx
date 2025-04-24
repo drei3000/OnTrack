@@ -30,6 +30,16 @@ const totalSpacing = spacing * (itemsPerRow + 1);
 const sidesPadding = 16; // for grid mostly
 const itemSize = (screenWidth - totalSpacing - sidesPadding * 2) / itemsPerRow;
 
+// Helper function (same as one in Calendar.tsx)
+const hexToRgba = (hex: string, alpha: number): string => {
+    const h = hex.replace('#', '');
+    const bigint = parseInt(h, 16);
+    const r = (bigint >> 16) & 255;
+    const g = (bigint >> 8) & 255;
+    const b = bigint & 255;
+    return `rgba(${r},${g},${b},${alpha})`;
+  };
+
 export default function Index() {
   const router = useRouter();
   const { currentTheme } = useTheme(); // Get the current theme from context
@@ -153,6 +163,8 @@ export default function Index() {
   // Dynamic styles for square icon buttons
   const squareIconButtonStyle = (size: number) => ({
     ...styles.squareIconButton,
+    position: "relative" as const,
+    overflow: "hidden" as const,
     backgroundColor: currentTheme["101010"],
     borderColor: currentTheme.dimgray,
     width: size,
@@ -314,7 +326,8 @@ export default function Index() {
               {/* Section's Row of Tracker Icons */}
               <View style={styles.iconRow}>
                 {section.trackers.map((tracker) => (
-                  <Pressable
+                    
+                    <Pressable
                     key={tracker.trackerName + tracker.timePeriod}
                     onPress={() =>
                       router.push({
@@ -322,17 +335,44 @@ export default function Index() {
                         params: {
                           trackerN: tracker.trackerName,
                           timeP: tracker.timePeriod,
-                          color: getIconInfo(tracker.icon).color, 
-                          image: getIconInfo(tracker.icon).name
+                          color: getIconInfo(tracker.icon).color,
+                          image: getIconInfo(tracker.icon).name,
                         },
                       })
-                    }
+                    }     
                     style={[
                       squareIconButtonStyle(itemSize),
-                    ]}
+                      {
+                        backgroundColor: hexToRgba( 
+                            // Set to 0 for transparency                          
+                          getIconInfo(tracker.icon).color, 0               
+                        ),
+                      },
+                    ]}                                                       
                   >
+                    {(() => {                                                
+                      const bound = tracker.bound ?? 0;                   
+                      const progress = bound > 0? Math.min(1, tracker.currentAmount / bound) : 0;                                              
+                      return (                                               
+                        <View                                               
+                          style={{                                          
+                            position: "absolute",                           
+                            bottom: 0,                                         
+                            left: 0,                                        
+                            right: 0,                                       
+                            height: `${progress * 100}%`,                   
+                            backgroundColor: hexToRgba(     
+                                // Set to 0.15 for filling up icon               
+                                getIconInfo(tracker.icon).color, 0.15   
+                            ),                                              
+                          }}                                                
+                        />                                                  
+                      );                                                   
+                    })()}                                                   
+                  
                     {getImage(tracker, 40).icon}
                   </Pressable>
+                  
                 ))}
 
                 {/* Plus button to open modal and store section */}
@@ -496,7 +536,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   squareIconButton: {
-    padding: 12,
+    // padding: 0,
     borderRadius: 5,
     borderWidth: 1,
     justifyContent: "center",
