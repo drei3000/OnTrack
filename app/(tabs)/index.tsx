@@ -20,6 +20,7 @@ import { getIconInfo } from "@/types/Misc";
 
 import { useSectionStore } from "@/storage/store";
 import type { TimePeriod } from "@/types/Tracker";
+import { parseAsync } from "@babel/core";
 
 // Used in square icon styling for dynamic styles - grid same for all phone sizes
 const screenWidth = Dimensions.get("window").width;
@@ -37,7 +38,6 @@ export default function Index() {
   const trackers = useTrackerStore((state) => state.trackers);
   const sections = useSectionStore((state) => state.sectionsH);
   const addTrackerToSection = useSectionStore((state) => state.addTrackerToSection);
-
   /* States */
   //modal states
   const [sectionModalOpen, setSectionModalOpen] = useState(false);
@@ -55,6 +55,9 @@ export default function Index() {
   const [movingSection, setMovingSection] = useState(false);
   const [movingSections, setMovingSections] = useState({}); //stores the movement state of all sections
   const [currentMovingSection, setCurrentMovingSection] = useState<string | null>(null);
+  const [currentMovingPos, setCurrentMovingPos] = useState<number>(-1);
+  const sectionHeights : Number[] = [];
+
   //Edit mode refs
   const panRefs = useRef<{ [key: string]: Animated.ValueXY }>({});
   const pan = useRef(new Animated.ValueXY()).current; //ref to section being moved
@@ -62,7 +65,22 @@ export default function Index() {
   const scrollRef = useRef<ScrollView>(null);
   const sectionRefs = useRef<{ [key: string]: View | null }>({});
 
-  const findSectionAtPosY = async (touchY: number): Promise<Section> => { //finds section given y coord
+  //function to get size and pos of section given title ()
+  const getSectInfo = (sectionTitle: string): {height: number, position: number} => { //ONLY CALL WHEN ALREADY UNWRAPPED SECTION
+    const section : Section =  sections.find((s) => s.sectionTitle === sectionTitle && s.timePeriod === selected)!
+    var sectHeight : number = 44; //(24) {fontsize} + (2 * 10) {padding size}
+    var position : number = -1;
+    //console.log("sect to add to 44: "+spacing *(Math.ceil((itemsPerRow +1)/ 4))+" calculation = "+Math.ceil((itemsPerRow + 1)/4))
+    if(section){
+      const rows = Math.ceil((section.trackers.length +1)/ 4);
+      sectHeight += (spacing + itemSize) *(rows); //spacing per row
+      position = section.position;
+    }
+    return {height: sectHeight, position: position}
+  }
+
+  //finds section given y coord
+  const findSectionAtPosY = async (touchY: number): Promise<Section> => { 
     const measurements = await Promise.all(
       sections.map(section => {
         return new Promise<{ id: string, y: number, height: number }>((resolve) => {
@@ -84,6 +102,7 @@ export default function Index() {
   
     return section;
   };
+
   //Function to respond to section movement
   const panResponder = useMemo(() => PanResponder.create({
       onStartShouldSetPanResponder: () => editMode, // only drag if in edit mode
@@ -96,6 +115,7 @@ export default function Index() {
           if (section) {
             const sectionKey = `${section.sectionTitle}-${section.timePeriod}`;
             setCurrentMovingSection(sectionKey);
+
             const pan = panRefs.current[sectionKey];
             pan?.extractOffset();
           } else {
@@ -114,6 +134,8 @@ export default function Index() {
       onPanResponderMove: (_, gestureState) => {
         const pan = panRefs.current[currentMovingSection!]; //force (oops)
         if (pan){ pan.setValue({ x: 0, y: gestureState.dy })};
+        //console.log(`dy: ${gestureState.dy}`);
+
       },
 
       onPanResponderRelease: () => {
@@ -235,6 +257,9 @@ export default function Index() {
           .filter((s) => s.timePeriod === selected)
           .sort((a, b) => a.position - b.position)
           .map((section) => {
+            //for each section map their heights (ordered by position)
+            const {height} = getSectInfo(section.sectionTitle);
+            sectionHeights.push(height)
             const sectionKey = `${section.sectionTitle}-${section.timePeriod}`;
             if (!panRefs.current[sectionKey]) {
               panRefs.current[sectionKey] = new Animated.ValueXY();
@@ -481,7 +506,7 @@ const styles = StyleSheet.create({
   },
   sectionCreateButton: {
     padding: 12,
-    width: '100%', //feel free to change
+    minWidth: '100%', //feel free to change
     borderRadius: 5,
     borderWidth: 1,
     borderStyle: 'dashed' as const,
