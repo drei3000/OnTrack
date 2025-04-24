@@ -5,7 +5,6 @@ import { TimePeriod } from "@/types/Tracker";
 import { useSectionStore } from "@/storage/store";
 import { useTheme } from "../app/ThemeContext";
 
-
 export default function SectionModal({
   visible,
   onClose,
