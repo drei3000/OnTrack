@@ -13,25 +13,34 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { useFocusEffect } from '@react-navigation/native';
 
 /*function to get image from input tracker*/
-export const getImage = (inputTracker: Tracker, size: number): {icon: JSX.Element} => {
-    const {type, name, color} = getIconInfo(inputTracker.icon);
-    if (type == "fa5"){ //if fa5 icon
-        return{
-            icon: <FontAwesome5 name = {name} size = {size} color ={color}/>
-        }
-    }else if(type == "image"){ // if image
-        return{ //NOT COMPLETED/IMPLEMENTED PROPERLY
-            icon:  <Image style = {[
-                {aspectRatio: 1, height: 60, width: 60, marginLeft: 1, marginTop:1}
-            ]}
-            source={{ uri: name, 
-            }}/>
-        }
+export const getImage = ( inputTracker: Tracker, size: number, forcedColor?: string ): { icon: JSX.Element } => {
+    const { type, name, color } = getIconInfo(inputTracker.icon);
+    const iconColor = forcedColor ?? color;
+
+    if (type === "fa5") {
+        return {
+        icon: <FontAwesome5 name={name} size={size} color={iconColor} />
+        };
+    } else if (type === "image") {
+        return {
+        icon: (
+            <Image
+            style={{
+                aspectRatio: 1,
+                height: 60,
+                width: 60,
+                marginLeft: 1,
+                marginTop: 1,
+            }}
+            source={{ uri: name }}
+            />
+        )
+        };
     }
-    return { // in theory unnecessary
-        icon: <FontAwesome5 name = {""} size = {size} color ={color}/>
-    }
-}
+    return {
+        icon: <FontAwesome5 name={""} size={size} color={iconColor} />
+    };
+};
 
 /* function to render a pressable for an input tracker */
 const renderTracker = ({ tracker, router, currentTheme }: { tracker: Tracker; router: ReturnType<typeof useRouter>; currentTheme: any;}) => {

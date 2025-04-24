@@ -10,13 +10,21 @@ import Calendar from "../../components/CalendarComponent";
 import { CalendarProps } from "../../components/CalendarComponent";
 import { Dimensions } from "react-native";
 import moment from "moment";
-import { LinearGradient } from "expo-linear-gradient";
 import { useTheme } from "../ThemeContext"; // Import ThemeContext
 import { useSectionStore, useTrackerStore } from "@/storage/store";
 import { Tracker } from "@/types/Tracker"; 
 import { Section } from "@/types/Section"; 
 import { getImage } from "../trackerList"; 
 import { getIconInfo } from "@/types/Misc"; 
+
+const hexToRgba = (hex: string, alpha: number): string => {
+    const h = hex.replace('#', '');
+    const bigint = parseInt(h, 16);
+    const r = (bigint >> 16) & 255;
+    const g = (bigint >> 8) & 255;
+    const b = bigint & 255;
+    return `rgba(${r},${g},${b},${alpha})`;
+  };
 
 // Helper to normalise display size on different size displays
 const screenWidth = Dimensions.get("window").width;
@@ -38,15 +46,16 @@ export default function Index() {
     const sections = useSectionStore((state) => state.sectionsH);
     const addTrackerToSection = useSectionStore((state) => state.addTrackerToSection);
 
-    // Dynamic styles for gradient wrappers
-    const gradientWrapperStyle = (height: number) => ({
+    // Dynamic styles for tracker wrappers
+    const trackerWrapperStyle = (height: number) => ({
     width: screenWidth - 35,
     height: 72,
     borderRadius: 15,
     alignSelf: "center" as const,
     justifyContent: "center" as const,
-    padding: 1,
+    // padding: 1,
     marginBottom: 20,
+    overflow: "hidden" as const,
     });
 
     // Dynamic styles for corner buttons
@@ -73,21 +82,6 @@ export default function Index() {
     fontSize: 16,
     marginLeft: 12,
     fontWeight: "bold" as const,
-    };
-
-    // Gradient Builder
-    // Map an icon name to gradient colours, takes hex colour and returns [original, lighter-shade]
-    const gradientFor = (iconName: string): [string, string] => {
-    switch (iconName) {
-        case "instagram":
-        case "sleep":
-        return [currentTheme["E53935"], currentTheme["FFDCD1"]];
-        case "fast-food-outline":
-        case "area-graph":
-        return [currentTheme["0041C2"], currentTheme["E0B0FF"]];
-        default:
-        return [currentTheme.dimgray, currentTheme.gray];
-    }
     };
 
     // Whenever mode is changed we reset anchor date (the middle one we navigate to)
@@ -177,16 +171,22 @@ export default function Index() {
                 {/* Trackers inside the section */}
                 {section.trackers.map((tracker) => {
                 const iconName = getIconInfo(tracker.icon).name;
-                const [from, to] = gradientFor(iconName);
+                const emptyBackgroundColor = hexToRgba(getIconInfo(tracker.icon).color, 0.15);
+                const fillBackgroundColor = hexToRgba(getIconInfo(tracker.icon).color, 0.5);
+                const bound = tracker.bound ?? 0;
+                const currentProgress = bound > 0? Math.min(1, tracker.currentAmount / bound) : 0;
+
+                // To test progress values, maybe add animations?
+                // const currentProgress = 0.6; 
 
                 return (
-                    <LinearGradient
+                    // Renders trackers, and their progress
+                    <View
                     key={`${tracker.trackerName}-${tracker.timePeriod}`}
-                    colors={[from, to]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={gradientWrapperStyle(60)}
+                    style={[trackerWrapperStyle(60), { backgroundColor: emptyBackgroundColor }]}
                     >
+                        <View style={{ position: "absolute", top: 0, left: 0, height: "100%", width: `${currentProgress * 100}%`, backgroundColor: fillBackgroundColor }} />
+
                     <Pressable
                         onPress={() =>
                         router.push({
@@ -202,14 +202,14 @@ export default function Index() {
                         style={buttonContentWrapper}
                     >
                         {
-                        // Safe icon render (fallback prevents raw string → <Text> error)
-                        typeof getImage(tracker, 30).icon === "string"
-                            ? <MaterialCommunityIcons name="image" size={30} color={currentTheme["101010"]} />
-                            : getImage(tracker, 30).icon
+                        // Safe icon render, had problem with string from getImage
+                        typeof getImage(tracker, 30, currentTheme.white).icon === "string"
+                            ? <MaterialCommunityIcons name="image" size={30} color={currentTheme.white} />
+                            : getImage(tracker, 30, currentTheme.white).icon
                         }
                         <Text style={pressableTextStyle}>{tracker.trackerName}</Text>
                     </Pressable>
-                    </LinearGradient>
+                    </View>
                 );
                 })}
             </View>
