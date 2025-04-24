@@ -25,7 +25,7 @@
     "@supabase/supabase-js": "^2.49.1",
     "@thednp/color-picker": "^2.0.3",
     "bcryptjs": "^3.0.2",
-    "expo": "^52.0.0",
+    "expo": "~52.0.46",
     "expo-asset": "^11.0.5",
     "expo-blur": "~14.0.3",
     "expo-constants": "~17.0.7",
