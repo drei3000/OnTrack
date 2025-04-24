@@ -41,67 +41,88 @@ const hexToRgba = (hex: string, alpha: number): string => {
   };
 
 export default function Index() {
-  const router = useRouter();
-  const { currentTheme } = useTheme(); // Get the current theme from context
+    const router = useRouter();
+    const { currentTheme } = useTheme(); // Get the current theme from context
 
-  //backend structures
-  const trackers = useTrackerStore((state) => state.trackers);
-  const sections = useSectionStore((state) => state.sectionsH);
-  const addTrackerToSection = useSectionStore((state) => state.addTrackerToSection);
-  /* States */
-  //modal states
-  const [sectionModalOpen, setSectionModalOpen] = useState(false);
-  const [isModalVisible, setIsModalVisible] = useReactState(false);
-  const [targetSection, setTargetSection] = useReactState<Section | null>(null);
+    //backend structures
+    const trackers = useTrackerStore((state) => state.trackers);
+    const sections = useSectionStore((state) => state.sectionsH);
+    const addTrackerToSection = useSectionStore((state) => state.addTrackerToSection);
+    /* States */
+    //modal states
+    const [sectionModalOpen, setSectionModalOpen] = useState(false);
+    const [isModalVisible, setIsModalVisible] = useReactState(false);
+    const [targetSection, setTargetSection] = useReactState<Section | null>(null);
 
-  //Time Period States (+ mode of calendar)
-  type CalendarMode = CalendarProps["mode"];
-  const buttons: CalendarMode[] = ["Daily", "Weekly", "Monthly"];
-  const [selected, setSelected] = useState<CalendarMode>("Daily");
+    //Time Period States (+ mode of calendar)
+    type CalendarMode = CalendarProps["mode"];
+    const buttons: CalendarMode[] = ["Daily", "Weekly", "Monthly"];
+    const [selected, setSelected] = useState<CalendarMode>("Daily");
 
-  //Edit mode states
-  const [editMode, setEditMode] = useState(false);
-  const [exitedEdit, setExitedEdit] = useState(false); //if just exited (fixes slight bug)
-  const [movingSection, setMovingSection] = useState(false);
-  const [movingSections, setMovingSections] = useState({}); //stores the movement state of all sections
-  const [currentMovingSection, setCurrentMovingSection] = useState<string | null>(null);
-  const [currentMovingPos, setCurrentMovingPos] = useState<number>(-1);
-  const sectionHeights : Number[] = [];
+    //Edit mode states
+    const [editMode, setEditMode] = useState(false);
+    const [exitedEdit, setExitedEdit] = useState(false); //if just exited (fixes slight bug)
+    const [movingSection, setMovingSection] = useState(false);
+    const [movingSections, setMovingSections] = useState({}); //stores the movement state of all sections
+    const [currentMovingSection, setCurrentMovingSection] = useState<string | null>(null);
+    const [currentMovingPos, setCurrentMovingPos] = useState<number>(-1);
+    const sectionHeights : Number[] = [];
 
-  //Edit mode refs
-  const panRefs = useRef<{ [key: string]: Animated.ValueXY }>({});
-  const pan = useRef(new Animated.ValueXY()).current; //ref to section being moved
-  const scrollEnabledState = useRef(true); // Track scroll state
-  const scrollRef = useRef<ScrollView>(null);
-  const sectionRefs = useRef<{ [key: string]: View | null }>({});
+    // 
+    function averageProgress(): number {
+        let totalRatio = 0;
+        let counted = 0;
+    
+        sections.filter(s => s.timePeriod === selected).forEach(section => {
+            section.trackers.forEach(t => {
+            // accept only trackers that have a target > 0
+            const target  = Number(t.bound ?? t.bound ?? t.bound ?? 0);
+            if (target <= 0) return;
+    
+            const current = Number(t.currentAmount ?? 0);
+            totalRatio += Math.min(1, current / target);
+            counted += 1;
+            });
+        });
+    
+        if (counted === 0) return 0;          
+        return totalRatio / counted; // return normalised value
+    }
 
-  //function to get size and pos of section given title ()
-  const getSectInfo = (sectionTitle: string): {height: number, position: number} => { //ONLY CALL WHEN ALREADY UNWRAPPED SECTION
+    //Edit mode refs
+    const panRefs = useRef<{ [key: string]: Animated.ValueXY }>({});
+    const pan = useRef(new Animated.ValueXY()).current; //ref to section being moved
+    const scrollEnabledState = useRef(true); // Track scroll state
+    const scrollRef = useRef<ScrollView>(null);
+    const sectionRefs = useRef<{ [key: string]: View | null }>({});
+
+    //function to get size and pos of section given title ()
+    const getSectInfo = (sectionTitle: string): {height: number, position: number} => { //ONLY CALL WHEN ALREADY UNWRAPPED SECTION
     const section : Section =  sections.find((s) => s.sectionTitle === sectionTitle && s.timePeriod === selected)!
     var sectHeight : number = 44; //(24) {fontsize} + (2 * 10) {padding size}
     var position : number = -1;
     //console.log("sect to add to 44: "+spacing *(Math.ceil((itemsPerRow +1)/ 4))+" calculation = "+Math.ceil((itemsPerRow + 1)/4))
     if(section){
-      const rows = Math.ceil((section.trackers.length +1)/ 4);
-      sectHeight += (spacing + itemSize) *(rows); //spacing per row
-      position = section.position;
+        const rows = Math.ceil((section.trackers.length +1)/ 4);
+        sectHeight += (spacing + itemSize) *(rows); //spacing per row
+        position = section.position;
     }
     return {height: sectHeight, position: position}
-  }
+    }
 
-  //finds section given y coord
-  const findSectionAtPosY = async (touchY: number): Promise<Section> => { 
+    //finds section given y coord
+    const findSectionAtPosY = async (touchY: number): Promise<Section> => { 
     const measurements = await Promise.all(
-      sections.map(section => {
+        sections.map(section => {
         return new Promise<{ id: string, y: number, height: number }>((resolve) => {
-          const ref = sectionRefs.current[`${section.sectionTitle}-${section.timePeriod}`];
-          if (!ref) return resolve({ id: `${section.sectionTitle}-${section.timePeriod}`, y: Infinity, height: 0 });
-  
-          ref.measure((x, y, width, height, pageX, pageY) => { //measurements of reference
+            const ref = sectionRefs.current[`${section.sectionTitle}-${section.timePeriod}`];
+            if (!ref) return resolve({ id: `${section.sectionTitle}-${section.timePeriod}`, y: Infinity, height: 0 });
+
+            ref.measure((x, y, width, height, pageX, pageY) => { //measurements of reference
             resolve({ id: `${section.sectionTitle}-${section.timePeriod}`, y: pageY, height });
-          });
+            });
         });
-      })
+        })
     );
 
     const found = measurements.find(m => touchY >= m.y && touchY <= m.y + m.height);
@@ -181,6 +202,11 @@ export default function Index() {
     setTargetSection(null);
   };
 
+  const circleAverage = averageProgress();
+  const circleAveragePercentage = Math.round(circleAverage * 100);
+  const circleAverageString = `${circleAveragePercentage}%`;
+
+
   return (
     //whole screen
     <SafeAreaView style={[styles.safeArea, { backgroundColor: currentTheme["101010"] }]}>
@@ -254,14 +280,14 @@ export default function Index() {
         <View style={styles.progressContainer}>
           <Progress.Circle
             size={100} // Size of the circle
-            progress={0.76} // 76% progress
+            progress={circleAverage} // 76% progress
             thickness={10} // Border thickness
             showsText={false} // We add text separately
             color={currentTheme.lightgreen} // Progress color
             unfilledColor={currentTheme.dimgray} // Background color
             borderWidth={0} // No border
           />
-          <Text style={[styles.progressText, { color: currentTheme.white }]}>76%</Text>
+          <Text style={[styles.progressText, { color: currentTheme.white }]}>{circleAverageString}</Text>
         </View>
 
         {/*START dynamic sections rendering */}
