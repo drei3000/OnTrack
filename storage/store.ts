@@ -94,6 +94,7 @@ type SectionsHomeStore = {
   addTrackerToSection: (sectionTitle: string, time_period: string, tracker: Tracker) => Promise<void>
   initialAddTrackerToSection: (sectionTitle: string, time_period: string, tracker: Tracker) => void
   removeTrackerFromSection: (sectionTitle: string, time_period: string, tracker: Tracker) => Promise<void>
+  deleteSection: (sectionTitle: string, time_period: string) => Promise<void>
 }
 
 export const useSectionStore = create<SectionsHomeStore>((set, get) => ({
@@ -179,7 +180,7 @@ export const useSectionStore = create<SectionsHomeStore>((set, get) => ({
     }else if(posChange < 0){
         await db.runAsync(
             `UPDATE sections
-                SET position = position + 1, Last_modified = ?
+                SET position = position + 1, last_modified = ?
             WHERE position < ?`,
             [Date.now(), section.position]
         );
@@ -326,6 +327,58 @@ export const useSectionStore = create<SectionsHomeStore>((set, get) => ({
       console.error('Could not remove tracker from section', err);
     }
   },
+
+
+  deleteSection: async (sectionTitle: string, time_period: string) => {
+
+    set(state => {
+        const section = state.sectionsH.find(
+            s => s.sectionTitle === sectionTitle && s.timePeriod === time_period
+        );
+        if (!section) return { sectionsH: state.sectionsH };
+
+        const updated = state.sectionsH.filter(s => s !== section)
+        .map(s => s.position > section.position ? { ...s, position: s.position - 1} as Section : s);
+
+        return { sectionsH: updated};
+    });
+
+    try {
+        const db = await openDatabase();
+    
+        // look-up id & position
+        const secRes = await db.getFirstAsync<{ section_id: number; position: number }>(
+          `SELECT section_id, position FROM sections
+           WHERE section_title = ? AND time_period = ?`,
+          [sectionTitle, time_period]
+        );
+        if (!secRes) return; // already gone
+    
+        const { section_id, position } = secRes;
+    
+        // remove all join table rosw
+        await db.runAsync(
+          `DELETE FROM section_trackers WHERE section_id = ?`,
+          [section_id]
+        );
+    
+        // remove the section itself
+        await db.runAsync(
+          `DELETE FROM sections WHERE section_id = ?`,
+          [section_id]
+        );
+    
+        // close the position gap for the remaining sections
+        await db.runAsync(
+          `UPDATE sections
+             SET position = position - 1, last_modified = ?
+           WHERE position > ?`,
+          [Date.now(), position]
+        );
+      } catch (err) {
+        console.error('Could not delete section', err);
+      }
+    },
 
 
 }));
