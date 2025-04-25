@@ -23,6 +23,17 @@ import type { TimePeriod } from "@/types/Tracker";
 import { parseAsync } from "@babel/core";
 import { Keyframe, SharedValue, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 
+// Helper function (same as one in Calendar.tsx)
+const hexToRgba = (hex: string, alpha: number): string => {
+    const h = hex.replace('#', '');
+    const bigint = parseInt(h, 16);
+    const r = (bigint >> 16) & 255;
+    const g = (bigint >> 8) & 255;
+    const b = bigint & 255;
+    return `rgba(${r},${g},${b},${alpha})`;
+  };
+
+
 // Used in square icon styling for dynamic styles - grid same for all phone sizes
 const screenWidth = Dimensions.get("window").width;
 const itemsPerRow = 4;
@@ -30,6 +41,7 @@ const spacing = 12;
 const totalSpacing = spacing * (itemsPerRow + 1);
 const sidesPadding = 16; // for grid mostly
 const itemSize = (screenWidth - totalSpacing - sidesPadding * 2) / itemsPerRow;
+
 const marginBetweenSections = 15;
 export default function Index() {
   const router = useRouter();
@@ -52,7 +64,6 @@ export default function Index() {
   const buttons: CalendarMode[] = ["Daily", "Weekly", "Monthly"];
   const [selected, setSelected] = useState<CalendarMode>("Daily");
 
-
   //Edit mode states
   const [editMode, setEditMode] = useState(false);
   const [exitedEdit, setExitedEdit] = useState(false); //if just exited (fixes slight bug)
@@ -61,7 +72,6 @@ export default function Index() {
   const [currentMovingSectionKey, setCurrentMovingSectionKey] = useState<string | null>(null);
   const [currentMovingSection, setCurrentMovingSection] = useState<Section | null>(null);
   const [currentMovingIndex, setCurrentMovingIndex] = useState<number>(-1);
-
   
   //heights and push function
   //const [sectionHeights, setSectionHeights] = useState<number[]>([]);
@@ -115,19 +125,44 @@ export default function Index() {
 
   //function to get size and pos of section given title ()
   const getSectInfo = (sectionTitle: string): {height: number, position: number} => { //ONLY CALL WHEN ALREADY UNWRAPPED SECTION
+
+    function averageProgress(): number {
+        let totalRatio = 0;
+        let counted = 0;
+    
+        sections.filter(s => s.timePeriod === selected).forEach(section => {
+            section.trackers.forEach(t => {
+            // accept only trackers that have a target > 0
+            const target  = Number(t.bound ?? t.bound ?? t.bound ?? 0);
+            if (target <= 0) return;
+    
+            const current = Number(t.currentAmount ?? 0);
+            totalRatio += Math.min(1, current / target);
+            counted += 1;
+            });
+        });
+    
+        if (counted === 0) return 0;          
+        return totalRatio / counted; // return normalised value
+    }
+
+
+    //function to get size and pos of section given title ()
+    const getSectInfo = (sectionTitle: string): {height: number, position: number} => { //ONLY CALL WHEN ALREADY UNWRAPPED SECTION
+
     const section : Section =  sections.find((s) => s.sectionTitle === sectionTitle && s.timePeriod === selected)!
     var sectHeight : number = 44; //(24) {fontsize} + (2 * 10) {padding size}
     var position : number = -2;
     //console.log("sect to add to 44: "+spacing *(Math.ceil((itemsPerRow +1)/ 4))+" calculation = "+Math.ceil((itemsPerRow + 1)/4))
     if(section){
+
       const rows = Math.ceil((section.trackers.length +1)/ 4);
       sectHeight += (spacing + itemSize) *(rows); //spacing per row
       position = section.position;
       sectHeight += 22; //something unaccounted for unsure as of current
     }
     return {height: sectHeight, position: position}
-  }
-
+    }
   // For all sections map their heights
   useEffect(() => {
     const heights = sections
@@ -140,21 +175,19 @@ export default function Index() {
       sectionHeightsRef.current.push(...heights);
   }, [sections, selected]); // Dependency array to run this effect when 'sections' or 'selected' changes
   
-  //map sections to refs for translation
-
-  //finds section given y coord
-  const findSectionAtPosY = async (touchY: number): Promise<Section> => { 
+    //finds section given y coord
+    const findSectionAtPosY = async (touchY: number): Promise<Section> => { 
     const measurements = await Promise.all(
-      sections.map(section => {
+        sections.map(section => {
         return new Promise<{ id: string, y: number, height: number }>((resolve) => {
-          const ref = sectionRefs.current[`${section.sectionTitle}-${section.timePeriod}`];
-          if (!ref) return resolve({ id: `${section.sectionTitle}-${section.timePeriod}`, y: Infinity, height: 0 });
-  
-          ref.measure((x, y, width, height, pageX, pageY) => { //measurements of reference
+            const ref = sectionRefs.current[`${section.sectionTitle}-${section.timePeriod}`];
+            if (!ref) return resolve({ id: `${section.sectionTitle}-${section.timePeriod}`, y: Infinity, height: 0 });
+
+            ref.measure((x, y, width, height, pageX, pageY) => { //measurements of reference
             resolve({ id: `${section.sectionTitle}-${section.timePeriod}`, y: pageY, height });
-          });
+            });
         });
-      })
+        })
     );
 
     const found = measurements.find(m => touchY >= m.y && touchY <= m.y + m.height);
@@ -292,6 +325,8 @@ export default function Index() {
   // Dynamic styles for square icon buttons
   const squareIconButtonStyle = (size: number) => ({
     ...styles.squareIconButton,
+    position: "relative" as const,
+    overflow: "hidden" as const,
     backgroundColor: currentTheme["101010"],
     borderColor: currentTheme.dimgray,
     width: size,
@@ -307,6 +342,11 @@ export default function Index() {
     setIsModalVisible(false);
     setTargetSection(null);
   };
+
+  const circleAverage = averageProgress();
+  const circleAveragePercentage = Math.round(circleAverage * 100);
+  const circleAverageString = `${circleAveragePercentage}%`;
+
 
   return (
     //whole screen
@@ -381,14 +421,14 @@ export default function Index() {
         <View style={styles.progressContainer}>
           <Progress.Circle
             size={100} // Size of the circle
-            progress={0.76} // 76% progress
+            progress={circleAverage} // 76% progress
             thickness={10} // Border thickness
             showsText={false} // We add text separately
             color={currentTheme.lightgreen} // Progress color
             unfilledColor={currentTheme.dimgray} // Background color
             borderWidth={0} // No border
           />
-          <Text style={[styles.progressText, { color: currentTheme.white }]}>76%</Text>
+          <Text style={[styles.progressText, { color: currentTheme.white }]}>{circleAverageString}</Text>
         </View>
 
         {/*START dynamic sections rendering */}
@@ -452,7 +492,8 @@ export default function Index() {
               {/* Section's Row of Tracker Icons */}
               <View style={styles.iconRow}>
                 {section.trackers.map((tracker) => (
-                  <Pressable
+                    
+                    <Pressable
                     key={tracker.trackerName + tracker.timePeriod}
                     onPress={() =>
                       router.push({
@@ -460,17 +501,44 @@ export default function Index() {
                         params: {
                           trackerN: tracker.trackerName,
                           timeP: tracker.timePeriod,
-                          color: getIconInfo(tracker.icon).color, 
-                          image: getIconInfo(tracker.icon).name
+                          color: getIconInfo(tracker.icon).color,
+                          image: getIconInfo(tracker.icon).name,
                         },
                       })
-                    }
+                    }     
                     style={[
                       squareIconButtonStyle(itemSize),
-                    ]}
+                      {
+                        backgroundColor: hexToRgba( 
+                            // Set to 0 for transparency                          
+                          getIconInfo(tracker.icon).color, 0               
+                        ),
+                      },
+                    ]}                                                       
                   >
+                    {(() => {                                                
+                      const bound = tracker.bound ?? 0;                   
+                      const progress = bound > 0? Math.min(1, tracker.currentAmount / bound) : 0;                                              
+                      return (                                               
+                        <View                                               
+                          style={{                                          
+                            position: "absolute",                           
+                            bottom: 0,                                         
+                            left: 0,                                        
+                            right: 0,                                       
+                            height: `${progress * 100}%`,                   
+                            backgroundColor: hexToRgba(     
+                                // Set to 0.15 for filling up icon               
+                                getIconInfo(tracker.icon).color, 0.15   
+                            ),                                              
+                          }}                                                
+                        />                                                  
+                      );                                                   
+                    })()}                                                   
+                  
                     {getImage(tracker, 40).icon}
                   </Pressable>
+                  
                 ))}
 
                 {/* Plus button to open modal and store section */}
@@ -635,7 +703,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   squareIconButton: {
-    padding: 12,
+    // padding: 0,
     borderRadius: 5,
     borderWidth: 1,
     justifyContent: "center",
@@ -645,7 +713,7 @@ const styles = StyleSheet.create({
   },
   sectionCreateButton: {
     padding: 12,
-    minWidth: '100%', //feel free to change
+    minWidth: '80%', //feel free to change
     borderRadius: 5,
     borderWidth: 1,
     borderStyle: 'dashed' as const,
