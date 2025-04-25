@@ -10,19 +10,27 @@ type TrackersStore = {
     addTracker: (tracker: Tracker) => Promise<void>
     getTracker: (name: string, timePeriod: string) => Tracker | undefined
     addTracker2: (tracker: Tracker) => void
+    incrementTracker: (trackerName: string, timePeriod: TimePeriod, change?: number) => Promise<void> 
 }
 
 export const useTrackerStore = create<TrackersStore>((set, get) => ({
+    // State
     trackers: [],
-    setTrackers: (newTrackers) => set({ trackers: newTrackers}),
-    addTracker: async (tracker) => { // Only call when add button pressed!
-      set((state) => ({
-        trackers: [...state.trackers, tracker]
-      }));
   
+    // Actions
+    setTrackers: (newTrackers) => set({ trackers: newTrackers }),
+  
+    // Persists brand new tracker
+    addTracker: async (tracker) => {
+      // Local state
+      set(state => ({ trackers: [...state.trackers, tracker] }));
+  
+      // Updates database
       const db = await openDatabase();
       await db.runAsync(
-        `INSERT INTO trackers (tracker_name, icon, time_period, unit, bound_amount, current_amount, last_modified)
+        `INSERT INTO trackers
+           (tracker_name, icon, time_period, unit,
+            bound_amount, current_amount, last_modified)
          VALUES (?, ?, ?, ?, ?, ?, ?)`,
         [
           tracker.trackerName,
@@ -31,20 +39,49 @@ export const useTrackerStore = create<TrackersStore>((set, get) => ({
           tracker.unit ?? null,
           tracker.bound,
           tracker.currentAmount,
-          tracker.last_modified
-        ]
+          tracker.last_modified,
+        ],
       );
     },
-
-    addTracker2: (tracker) => set((state) => ({
-      trackers: [...state.trackers, tracker]
-  })),
-
-    getTracker: (name, timePeriod) => {
-        const tracker = get().trackers.filter((t) => t.timePeriod === timePeriod && t.trackerName === name);
-        return tracker[0] ? tracker[0] : undefined;
-      },
-}))
+  
+    // Non persistent helper
+    addTracker2: (tracker) =>
+      set(state => ({ trackers: [...state.trackers, tracker] })),
+  
+    // Retrieve single tracker
+    getTracker: (name, timePeriod) =>
+      get().trackers.find(
+        (t) => t.trackerName === name && t.timePeriod === timePeriod,
+      ),
+  
+    // Adds change to current amount 
+    incrementTracker: async (name, timePeriod, change = 1) => {
+        set(state => {
+          // mutates object we have already
+          state.trackers.forEach(t => {
+            if (t.trackerName === name && t.timePeriod === timePeriod) {
+              t.currentAmount  = (t.currentAmount ?? 0) + change;
+              t.last_modified  = Date.now();
+            }
+          });
+      
+          // Gvie zustand new array so it re renders
+          return { trackers: [...state.trackers] };   
+        });
+    
+        // Update database
+        const db = await openDatabase();
+        await db.runAsync(
+        `UPDATE trackers
+            SET current_amount = current_amount + ?,
+                last_modified = ?
+        WHERE tracker_name = ? AND time_period = ?`,
+        [change, Date.now(), name, timePeriod],
+        );
+    },
+  
+  }));
+  
 
 // Section Store section
 type SectionsHomeStore = {

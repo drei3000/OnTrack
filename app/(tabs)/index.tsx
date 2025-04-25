@@ -44,6 +44,8 @@ const itemSize = (screenWidth - totalSpacing - sidesPadding * 2) / itemsPerRow;
 
 const marginBetweenSections = 15;
 export default function Index() {
+
+    const incrementTracker = useTrackerStore(state => state.incrementTracker);
   const router = useRouter();
   const { currentTheme } = useTheme(); // Get the current theme from context
 
@@ -492,17 +494,24 @@ export default function Index() {
                     
                     <Pressable
                     key={tracker.trackerName + tracker.timePeriod}
-                    onPress={() =>
-                      router.push({
-                        pathname: "/editTracker",
-                        params: {
-                          trackerN: tracker.trackerName,
-                          timeP: tracker.timePeriod,
-                          color: getIconInfo(tracker.icon).color,
-                          image: getIconInfo(tracker.icon).name,
-                        },
-                      })
-                    }     
+                        // Single tap increment 
+                        onPress={() => {
+                            if (!editMode) { // don’t increment while you’re dragging sections
+                            incrementTracker(tracker.trackerName, tracker.timePeriod);
+                            }
+                        }}
+                        // Hold press opens edit tracker
+                        onLongPress={() => {
+                            router.push({
+                            pathname: "/editTracker",
+                            params: {
+                                trackerN: tracker.trackerName,
+                                timeP:    tracker.timePeriod,
+                                color:    getIconInfo(tracker.icon).color,
+                                image:    getIconInfo(tracker.icon).name,
+                            },
+                            });
+                        }}
                     style={[
                       squareIconButtonStyle(itemSize),
                       {
