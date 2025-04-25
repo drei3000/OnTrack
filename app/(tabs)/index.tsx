@@ -21,6 +21,7 @@ import { getIconInfo } from "@/types/Misc";
 import { useSectionStore } from "@/storage/store";
 import type { TimePeriod } from "@/types/Tracker";
 import { parseAsync } from "@babel/core";
+import { Keyframe, SharedValue, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 
 // Used in square icon styling for dynamic styles - grid same for all phone sizes
 const screenWidth = Dimensions.get("window").width;
@@ -29,7 +30,7 @@ const spacing = 12;
 const totalSpacing = spacing * (itemsPerRow + 1);
 const sidesPadding = 16; // for grid mostly
 const itemSize = (screenWidth - totalSpacing - sidesPadding * 2) / itemsPerRow;
-
+const marginBetweenSections = 15;
 export default function Index() {
   const router = useRouter();
   const { currentTheme } = useTheme(); // Get the current theme from context
@@ -44,40 +45,102 @@ export default function Index() {
   const [isModalVisible, setIsModalVisible] = useReactState(false);
   const [targetSection, setTargetSection] = useReactState<Section | null>(null);
 
+  const offsetY = useRef(0);
+
   //Time Period States (+ mode of calendar)
   type CalendarMode = CalendarProps["mode"];
   const buttons: CalendarMode[] = ["Daily", "Weekly", "Monthly"];
   const [selected, setSelected] = useState<CalendarMode>("Daily");
+
 
   //Edit mode states
   const [editMode, setEditMode] = useState(false);
   const [exitedEdit, setExitedEdit] = useState(false); //if just exited (fixes slight bug)
   const [movingSection, setMovingSection] = useState(false);
   const [movingSections, setMovingSections] = useState({}); //stores the movement state of all sections
-  const [currentMovingSection, setCurrentMovingSection] = useState<string | null>(null);
-  const [currentMovingPos, setCurrentMovingPos] = useState<number>(-1);
-  const sectionHeights : Number[] = [];
+  const [currentMovingSectionKey, setCurrentMovingSectionKey] = useState<string | null>(null);
+  const [currentMovingSection, setCurrentMovingSection] = useState<Section | null>(null);
+  const [currentMovingIndex, setCurrentMovingIndex] = useState<number>(-1);
+
+  
+  //heights and push function
+  //const [sectionHeights, setSectionHeights] = useState<number[]>([]);
+  const sectionHeightsRef = useRef<number[]>([]);
+  
+  const [thresholds, setThresholds] = useState<number[] | undefined>([]);
+  const addSectionHeight = (height: number) => {
+    sectionHeightsRef.current.push(height);
+  };
+
+  //threshholds
+  const ThresholdsFunc = (centralIndex: number, heights: number[]): number[] => {
+    var thresholdsToReturn = [...heights]; // Clone the sectionHeights array
+    if(centralIndex > 0){
+      // Adjust backward (to the left of centralIndex)
+      for (let i = centralIndex - 1; i >= 0; i--) {
+        thresholdsToReturn[i] *= -1; // Multiply by -1 for the inverse effect
+      }
+      thresholdsToReturn[centralIndex-1] -= marginBetweenSections; //- margin
+
+      // Adjust Behind
+      if (centralIndex > 1){
+        for (let i = centralIndex - 2; i >= 0; i--) {
+          thresholdsToReturn[i] = thresholdsToReturn[i + 1] + thresholdsToReturn[i]; // -Cumulative sum - margins 
+        }
+      }
+    }
+    // Adjust forward 
+    if(centralIndex != (thresholdsToReturn.length-1)){
+      for (let i = centralIndex + 2; i < sectionHeightsRef.current.length; i++) {
+        thresholdsToReturn[i] = thresholdsToReturn[i - 1] + thresholdsToReturn[i]; // Cumulative sum + marins
+      }
+    }
+
+    thresholdsToReturn[centralIndex] = 0;
+
+    // Set the updated state
+    setThresholds(thresholdsToReturn);
+    return(thresholdsToReturn)
+  };
 
   //Edit mode refs
-  const panRefs = useRef<{ [key: string]: Animated.ValueXY }>({});
+  const panRefs = useRef<{ [key: string]: Animated.ValueXY }>({}); //ref to all sections
   const pan = useRef(new Animated.ValueXY()).current; //ref to section being moved
   const scrollEnabledState = useRef(true); // Track scroll state
   const scrollRef = useRef<ScrollView>(null);
   const sectionRefs = useRef<{ [key: string]: View | null }>({});
+  const thresholdsRef = useRef<number[]>([]);
+  const currentMovingRef = useRef<Section | null>(null);
+  const positionsMoved = useRef<number>(0);
 
   //function to get size and pos of section given title ()
   const getSectInfo = (sectionTitle: string): {height: number, position: number} => { //ONLY CALL WHEN ALREADY UNWRAPPED SECTION
     const section : Section =  sections.find((s) => s.sectionTitle === sectionTitle && s.timePeriod === selected)!
     var sectHeight : number = 44; //(24) {fontsize} + (2 * 10) {padding size}
-    var position : number = -1;
+    var position : number = -2;
     //console.log("sect to add to 44: "+spacing *(Math.ceil((itemsPerRow +1)/ 4))+" calculation = "+Math.ceil((itemsPerRow + 1)/4))
     if(section){
       const rows = Math.ceil((section.trackers.length +1)/ 4);
       sectHeight += (spacing + itemSize) *(rows); //spacing per row
       position = section.position;
+      sectHeight += 22; //something unaccounted for unsure as of current
     }
     return {height: sectHeight, position: position}
   }
+
+  // For all sections map their heights
+  useEffect(() => {
+    const heights = sections
+      .filter((s) => s.timePeriod === selected)
+      .sort((a, b) => a.position - b.position)
+      .map((section) => {
+        const { height } = getSectInfo(section.sectionTitle);
+        return height;
+      });
+      sectionHeightsRef.current.push(...heights);
+  }, [sections, selected]); // Dependency array to run this effect when 'sections' or 'selected' changes
+  
+  //map sections to refs for translation
 
   //finds section given y coord
   const findSectionAtPosY = async (touchY: number): Promise<Section> => { 
@@ -102,8 +165,17 @@ export default function Index() {
     return section;
   };
 
+  //function that returns an array with 2 swapped values
+  function swap<Array>(arr: Array[], i: number, j: number): Array[] {
+    if (i === j) return [...arr]; // no need to swap
+  
+    const newArr = [...arr];
+    [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
+    return newArr;
+  }
   //Function to respond to section movement
   const panResponder = useMemo(() => PanResponder.create({
+      
       onStartShouldSetPanResponder: () => editMode, // only drag if in edit mode
       onMoveShouldSetPanResponder: () => editMode, //edit mode also
 
@@ -113,9 +185,13 @@ export default function Index() {
         findSectionAtPosY(touchY).then((section) => {
           if (section) {
             const sectionKey = `${section.sectionTitle}-${section.timePeriod}`;
-            const {height,position} = getSectInfo(section.sectionTitle);
-            setCurrentMovingSection(sectionKey);
-            setCurrentMovingPos(position);
+            const {height} = getSectInfo(section.sectionTitle);
+            setCurrentMovingSectionKey(sectionKey);
+            setCurrentMovingSection(section);
+            setCurrentMovingIndex(section.position); //index
+            currentMovingRef.current = section;
+            
+            thresholdsRef.current = ThresholdsFunc(section.position,sectionHeightsRef.current);
             const pan = panRefs.current[sectionKey];
             pan?.extractOffset();
           } else {
@@ -132,13 +208,73 @@ export default function Index() {
 
 
       onPanResponderMove: (_, gestureState) => {
-        const pan = panRefs.current[currentMovingSection!]; //force (oops)
-        if (pan){ pan.setValue({ x: 0, y: gestureState.dy })};
-        //console.log(`dy: ${gestureState.dy}`);
+        const pan = panRefs.current[currentMovingSectionKey!]; //force (oops)
+        if(!pan) return;
+
+        //setting the y to the offset + dy
+        const dy = gestureState.dy;
+        const totalY = offsetY.current + dy;
+        console.log("totalY: "+totalY)
+        pan.setValue({ x: 0, y: totalY });
+        
+        const pos = currentMovingRef.current!.position
+        console.log("pos: "+pos);
+        //console.log(pos);
+        console.log("thresholds: "+thresholdsRef.current);
+        console.log("positions moved: "+positionsMoved.current);
+        console.log(thresholdsRef.current[pos + 1 + positionsMoved.current])
+        if(thresholdsRef.current[pos + 1 + positionsMoved.current] !== null ){
+          if (totalY > thresholdsRef.current[pos+1+positionsMoved.current]){
+            if(positionsMoved.current < 0) {
+              const sectionToMove = sections.find((s) => s.position === pos+positionsMoved.current)!
+              const panToSwap = panRefs.current[`${sectionToMove.sectionTitle}-${sectionToMove.timePeriod}`]
+              currentMovingRef.current && panToSwap.flattenOffset();
+              currentMovingRef.current && panToSwap.setOffset({x: 0, y: 0});
+              currentMovingRef.current && panToSwap.setValue({ x: 0, y: 0 });
+            }else{
+              const sectionToMove = sections.find((s) => s.position === pos+1+positionsMoved.current)!
+              const panToSwap = panRefs.current[`${sectionToMove.sectionTitle}-${sectionToMove.timePeriod}`]
+              currentMovingRef.current && panToSwap.flattenOffset();
+              currentMovingRef.current && panToSwap.setOffset({x: 0, y: -sectionHeightsRef.current[pos]});
+              currentMovingRef.current && panToSwap.setValue({ x: 0, y: 0 });   
+            }
+            pan.setOffset({ x: 0, y: 0 });
+            offsetY.current = totalY; 
+            gestureState.dy = 0;
+            positionsMoved.current+=1;
+          }
+        }
+
+      if(thresholdsRef.current[pos - 1 + positionsMoved.current] !== null){
+        if (totalY < thresholdsRef.current[pos-1+positionsMoved.current]){
+
+          if(positionsMoved.current > 0){ //going back, need to reswap
+            console.log("hellooo");
+            const sectionToMove = sections.find((s) => s.position === pos+positionsMoved.current)!
+            const panToSwap = panRefs.current[`${sectionToMove.sectionTitle}-${sectionToMove.timePeriod}`]
+            currentMovingRef.current && panToSwap.flattenOffset();
+            currentMovingRef.current && panToSwap.setOffset({x: 0, y: 0});
+            currentMovingRef.current && panToSwap.setValue({ x: 0, y: 0 });
+            pan.setOffset({ x: 0, y: 0 });
+          }else{
+          //moveSection(currentMovingIndex+1,"up",sectionHeights[currentMovingSection!.position])
+          //console.log("position "+)
+          const sectionToMove = sections.find((s) => s.position === pos-1+positionsMoved.current)!
+          const panToSwap = panRefs.current[`${sectionToMove.sectionTitle}-${sectionToMove.timePeriod}`]
+          currentMovingRef.current && panToSwap.flattenOffset();
+          currentMovingRef.current && panToSwap.setOffset({x: 0, y: sectionHeightsRef.current[pos-1+positionsMoved.current]});
+          currentMovingRef.current && panToSwap.setValue({ x: 0, y: 0 });
+          pan.setOffset({ x: 0, y: 0 });
+          }
+          offsetY.current = totalY; 
+          gestureState.dy = 0;
+          positionsMoved.current-=1;
+        }
+      }
       },
 
       onPanResponderRelease: () => {
-        const pan = panRefs.current[currentMovingSection!];
+        const pan = panRefs.current[currentMovingSectionKey!];
         pan?.flattenOffset();
         /*Reallows interference*/
         scrollEnabledState.current = true;
@@ -146,10 +282,13 @@ export default function Index() {
           scrollRef.current.setNativeProps({ scrollEnabled: true });
         }
         setMovingSection(false);
-        setCurrentMovingPos(-1);
+        setCurrentMovingIndex(-1);
+        setThresholds(undefined);
       },
-    }), [editMode, currentMovingSection]);
+    }), [editMode, currentMovingSectionKey]);
 
+
+   
   // Dynamic styles for square icon buttons
   const squareIconButtonStyle = (size: number) => ({
     ...styles.squareIconButton,
@@ -256,10 +395,7 @@ export default function Index() {
         {sections
           .filter((s) => s.timePeriod === selected)
           .sort((a, b) => a.position - b.position)
-          .map((section) => {
-            //for each section map their heights (ordered by position)
-            const {height} = getSectInfo(section.sectionTitle);
-            sectionHeights.push(height)
+          .map((section) => {            
             const sectionKey = `${section.sectionTitle}-${section.timePeriod}`;
             if (!panRefs.current[sectionKey]) {
               panRefs.current[sectionKey] = new Animated.ValueXY();
@@ -275,7 +411,7 @@ export default function Index() {
                   const touchY = e.nativeEvent.pageY;
                   findSectionAtPosY(touchY).then((section) => {
                     if (section) {
-                      setCurrentMovingSection(`${section.sectionTitle}-${section.timePeriod}`);
+                      setCurrentMovingSectionKey(`${section.sectionTitle}-${section.timePeriod}`);
                     }
                   });
                 }
@@ -289,19 +425,21 @@ export default function Index() {
             >
             <Animated.View //Moveable view (on edit mode)
             
-            style = {[
-              pan.getLayout(), //stored in pan object created by useRef earlier
-              {borderWidth: 1,
-                borderRadius: 8,
-                borderColor: editMode ? currentTheme["lowOpacityWhite"] : 'transparent',
-                marginTop: section.position === 0 ? 30 : 15, //num1 from circle, num2 from other sections
-                paddingVertical: 10,
-                width: '100%',
-                minWidth: '100%',
-                backgroundColor: (movingSection && (currentMovingSection === `${section.sectionTitle}-${section.timePeriod}`)) ? currentTheme['lowOpacityWhite'] : 'transparent',
-              }
-            ]}
-            {...(currentMovingSection === `${section.sectionTitle}-${section.timePeriod}` ? panResponder.panHandlers : {})}//passing gesture handlers into view
+            style = {
+              [
+                pan.getLayout(), //stored in pan object created by useRef earlier
+                {borderWidth: 1,
+                  borderRadius: 8,
+                  borderColor: editMode ? currentTheme["lowOpacityWhite"] : 'transparent',
+                  marginTop: section.position === 0 ? 30 : 15, //num1 from circle, num2 from other sections
+                  paddingVertical: 10,
+                  width: '100%',
+                  minWidth: '100%',
+                  backgroundColor: (movingSection && (currentMovingSectionKey === `${section.sectionTitle}-${section.timePeriod}`)) ? currentTheme['lowOpacityWhite'] : 'transparent',
+                }
+              ]
+          }
+            {...(currentMovingSectionKey === `${section.sectionTitle}-${section.timePeriod}` ? panResponder.panHandlers : {})}//passing gesture handlers into view
             
             >
 
@@ -395,6 +533,7 @@ export default function Index() {
                 {trackers
                   .filter((tracker) => tracker.timePeriod === selected) // Filter trackers by selected time period
                   .map((tracker) => (
+                    
                   <TouchableOpacity
                     key={tracker.trackerName + tracker.timePeriod}
                     onPress={() => {
