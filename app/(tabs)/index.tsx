@@ -122,10 +122,7 @@ export default function Index() {
   const thresholdsRef = useRef<number[]>([]);
   const currentMovingRef = useRef<Section | null>(null);
   const positionsMoved = useRef<number>(0);
-
-  //function to get size and pos of section given title ()
-  const getSectInfo = (sectionTitle: string): {height: number, position: number} => { //ONLY CALL WHEN ALREADY UNWRAPPED SECTION
-
+  
     function averageProgress(): number {
         let totalRatio = 0;
         let counted = 0;
