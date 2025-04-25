@@ -404,8 +404,6 @@ export default function editTracker(){
             [row.section_id, row.tracker_position]
           );
         }
-
-        
         
         await db.runAsync(
           `DELETE FROM trackers WHERE tracker_name = ? AND time_period = ?`,
