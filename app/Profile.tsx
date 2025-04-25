@@ -102,7 +102,6 @@ const styles = StyleSheet.create({
 
     container: {
       width: width*0.85,
-      //height: 350,
       backgroundColor: currentTheme["101010"], // Use theme background color
       paddingHorizontal: 20,
       paddingVertical: 10,

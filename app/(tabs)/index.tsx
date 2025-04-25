@@ -20,6 +20,19 @@ import { getIconInfo } from "@/types/Misc";
 
 import { useSectionStore } from "@/storage/store";
 import type { TimePeriod } from "@/types/Tracker";
+import { parseAsync } from "@babel/core";
+import { Keyframe, SharedValue, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
+
+// Helper function (same as one in Calendar.tsx)
+const hexToRgba = (hex: string, alpha: number): string => {
+    const h = hex.replace('#', '');
+    const bigint = parseInt(h, 16);
+    const r = (bigint >> 16) & 255;
+    const g = (bigint >> 8) & 255;
+    const b = bigint & 255;
+    return `rgba(${r},${g},${b},${alpha})`;
+  };
+
 
 // Used in square icon styling for dynamic styles - grid same for all phone sizes
 const screenWidth = Dimensions.get("window").width;
@@ -29,7 +42,10 @@ const totalSpacing = spacing * (itemsPerRow + 1);
 const sidesPadding = 16; // for grid mostly
 const itemSize = (screenWidth - totalSpacing - sidesPadding * 2) / itemsPerRow;
 
+const marginBetweenSections = 15;
 export default function Index() {
+
+    const incrementTracker = useTrackerStore(state => state.incrementTracker);
   const router = useRouter();
   const { currentTheme } = useTheme(); // Get the current theme from context
 
@@ -37,12 +53,13 @@ export default function Index() {
   const trackers = useTrackerStore((state) => state.trackers);
   const sections = useSectionStore((state) => state.sectionsH);
   const addTrackerToSection = useSectionStore((state) => state.addTrackerToSection);
-
   /* States */
   //modal states
   const [sectionModalOpen, setSectionModalOpen] = useState(false);
   const [isModalVisible, setIsModalVisible] = useReactState(false);
   const [targetSection, setTargetSection] = useReactState<Section | null>(null);
+
+  const offsetY = useRef(0);
 
   //Time Period States (+ mode of calendar)
   type CalendarMode = CalendarProps["mode"];
@@ -54,38 +71,143 @@ export default function Index() {
   const [exitedEdit, setExitedEdit] = useState(false); //if just exited (fixes slight bug)
   const [movingSection, setMovingSection] = useState(false);
   const [movingSections, setMovingSections] = useState({}); //stores the movement state of all sections
-  const [currentMovingSection, setCurrentMovingSection] = useState<string | null>(null);
+  const [currentMovingSectionKey, setCurrentMovingSectionKey] = useState<string | null>(null);
+  const [currentMovingSection, setCurrentMovingSection] = useState<Section | null>(null);
+  const [currentMovingIndex, setCurrentMovingIndex] = useState<number>(-1);
+  
+  //heights and push function
+  //const [sectionHeights, setSectionHeights] = useState<number[]>([]);
+  const sectionHeightsRef = useRef<number[]>([]);
+  
+  const [thresholds, setThresholds] = useState<number[] | undefined>([]);
+  const addSectionHeight = (height: number) => {
+    sectionHeightsRef.current.push(height);
+  };
+
+  //threshholds
+  const ThresholdsFunc = (centralIndex: number, heights: number[]): number[] => {
+    var thresholdsToReturn = [...heights]; // Clone the sectionHeights array
+    if(centralIndex > 0){
+      // Adjust backward (to the left of centralIndex)
+      for (let i = centralIndex - 1; i >= 0; i--) {
+        thresholdsToReturn[i] *= -1; // Multiply by -1 for the inverse effect
+      }
+      thresholdsToReturn[centralIndex-1] -= marginBetweenSections; //- margin
+
+      // Adjust Behind
+      if (centralIndex > 1){
+        for (let i = centralIndex - 2; i >= 0; i--) {
+          thresholdsToReturn[i] = thresholdsToReturn[i + 1] + thresholdsToReturn[i]; // -Cumulative sum - margins 
+        }
+      }
+    }
+    // Adjust forward 
+    if(centralIndex != (thresholdsToReturn.length-1)){
+      for (let i = centralIndex + 2; i < sectionHeightsRef.current.length; i++) {
+        thresholdsToReturn[i] = thresholdsToReturn[i - 1] + thresholdsToReturn[i]; // Cumulative sum + marins
+      }
+    }
+
+    thresholdsToReturn[centralIndex] = 0;
+
+    // Set the updated state
+    setThresholds(thresholdsToReturn);
+    return(thresholdsToReturn)
+  };
+
   //Edit mode refs
-  const panRefs = useRef<{ [key: string]: Animated.ValueXY }>({});
+  const panRefs = useRef<{ [key: string]: Animated.ValueXY }>({}); //ref to all sections
   const pan = useRef(new Animated.ValueXY()).current; //ref to section being moved
   const scrollEnabledState = useRef(true); // Track scroll state
   const scrollRef = useRef<ScrollView>(null);
   const sectionRefs = useRef<{ [key: string]: View | null }>({});
-
-  const findSectionAtPosY = async (touchY: number): Promise<Section> => { //finds section given y coord
-    const measurements = await Promise.all(
-      sections.map(section => {
-        return new Promise<{ id: string, y: number, height: number }>((resolve) => {
-          const ref = sectionRefs.current[`${section.sectionTitle}-${section.timePeriod}`];
-          if (!ref) return resolve({ id: `${section.sectionTitle}-${section.timePeriod}`, y: Infinity, height: 0 });
+  const thresholdsRef = useRef<number[]>([]);
+  const currentMovingRef = useRef<Section | null>(null);
+  const positionsMoved = useRef<number>(0);
   
-          ref.measure((x, y, width, height, pageX, pageY) => { //measurements of reference
-            resolve({ id: `${section.sectionTitle}-${section.timePeriod}`, y: pageY, height });
-          });
+    function averageProgress(): number {
+        let totalRatio = 0;
+        let counted = 0;
+    
+        sections.filter(s => s.timePeriod === selected).forEach(section => {
+            section.trackers.forEach(t => {
+            // accept only trackers that have a target > 0
+            const target  = Number(t.bound ?? t.bound ?? t.bound ?? 0);
+            if (target <= 0) return;
+    
+            const current = Number(t.currentAmount ?? 0);
+            totalRatio += Math.min(1, current / target);
+            counted += 1;
+            });
         });
-      })
+    
+        if (counted === 0) return 0;          
+        return totalRatio / counted; // return normalised value
+    }
+
+
+    //function to get size and pos of section given title ()
+    const getSectInfo = (sectionTitle: string): {height: number, position: number} => { //ONLY CALL WHEN ALREADY UNWRAPPED SECTION
+
+    const section : Section =  sections.find((s) => s.sectionTitle === sectionTitle && s.timePeriod === selected)!
+    var sectHeight : number = 44; //(24) {fontsize} + (2 * 10) {padding size}
+    var position : number = -2;
+    //console.log("sect to add to 44: "+spacing *(Math.ceil((itemsPerRow +1)/ 4))+" calculation = "+Math.ceil((itemsPerRow + 1)/4))
+    if(section){
+
+      const rows = Math.ceil((section.trackers.length +1)/ 4);
+      sectHeight += (spacing + itemSize) *(rows); //spacing per row
+      position = section.position;
+      sectHeight += 22; //something unaccounted for unsure as of current
+    }
+    return {height: sectHeight, position: position}
+    }
+  // For all sections map their heights
+  useEffect(() => {
+    const heights = sections
+      .filter((s) => s.timePeriod === selected)
+      .sort((a, b) => a.position - b.position)
+      .map((section) => {
+        const { height } = getSectInfo(section.sectionTitle);
+        return height;
+      });
+      sectionHeightsRef.current.push(...heights);
+  }, [sections, selected]); // Dependency array to run this effect when 'sections' or 'selected' changes
+  
+    //finds section given y coord
+    const findSectionAtPosY = async (touchY: number): Promise<Section> => { 
+    const measurements = await Promise.all(
+        sections.map(section => {
+        return new Promise<{ id: string, y: number, height: number }>((resolve) => {
+            const ref = sectionRefs.current[`${section.sectionTitle}-${section.timePeriod}`];
+            if (!ref) return resolve({ id: `${section.sectionTitle}-${section.timePeriod}`, y: Infinity, height: 0 });
+
+            ref.measure((x, y, width, height, pageX, pageY) => { //measurements of reference
+            resolve({ id: `${section.sectionTitle}-${section.timePeriod}`, y: pageY, height });
+            });
+        });
+        })
     );
-  
+
     const found = measurements.find(m => touchY >= m.y && touchY <= m.y + m.height);
-  
     if (!found) throw new Error('No section found at touch position');
     const section = sections.find(section => `${section.sectionTitle}-${section.timePeriod}` === found.id);
     if (!section) throw new Error('Section not found in state');
   
     return section;
   };
+
+  //function that returns an array with 2 swapped values
+  function swap<Array>(arr: Array[], i: number, j: number): Array[] {
+    if (i === j) return [...arr]; // no need to swap
+  
+    const newArr = [...arr];
+    [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
+    return newArr;
+  }
   //Function to respond to section movement
   const panResponder = useMemo(() => PanResponder.create({
+      
       onStartShouldSetPanResponder: () => editMode, // only drag if in edit mode
       onMoveShouldSetPanResponder: () => editMode, //edit mode also
 
@@ -95,11 +217,16 @@ export default function Index() {
         findSectionAtPosY(touchY).then((section) => {
           if (section) {
             const sectionKey = `${section.sectionTitle}-${section.timePeriod}`;
-            setCurrentMovingSection(sectionKey);
+            const {height} = getSectInfo(section.sectionTitle);
+            setCurrentMovingSectionKey(sectionKey);
+            setCurrentMovingSection(section);
+            setCurrentMovingIndex(section.position); //index
+            currentMovingRef.current = section;
+            
+            thresholdsRef.current = ThresholdsFunc(section.position,sectionHeightsRef.current);
             const pan = panRefs.current[sectionKey];
             pan?.extractOffset();
           } else {
-            console.log('No section found');
           }
         });
         setMovingSection(true);
@@ -113,12 +240,73 @@ export default function Index() {
 
 
       onPanResponderMove: (_, gestureState) => {
-        const pan = panRefs.current[currentMovingSection!]; //force (oops)
-        if (pan){ pan.setValue({ x: 0, y: gestureState.dy })};
+        const pan = panRefs.current[currentMovingSectionKey!]; //force (oops)
+        if(!pan) return;
+
+        //setting the y to the offset + dy
+        const dy = gestureState.dy;
+        const totalY = offsetY.current + dy;
+        console.log("totalY: "+totalY)
+        pan.setValue({ x: 0, y: totalY });
+        
+        const pos = currentMovingRef.current!.position
+        console.log("pos: "+pos);
+        //console.log(pos);
+        console.log("thresholds: "+thresholdsRef.current);
+        console.log("positions moved: "+positionsMoved.current);
+        console.log(thresholdsRef.current[pos + 1 + positionsMoved.current])
+        if(thresholdsRef.current[pos + 1 + positionsMoved.current] !== null ){
+          if (totalY > thresholdsRef.current[pos+1+positionsMoved.current]){
+            if(positionsMoved.current < 0) {
+              const sectionToMove = sections.find((s) => s.position === pos+positionsMoved.current)!
+              const panToSwap = panRefs.current[`${sectionToMove.sectionTitle}-${sectionToMove.timePeriod}`]
+              currentMovingRef.current && panToSwap.flattenOffset();
+              currentMovingRef.current && panToSwap.setOffset({x: 0, y: 0});
+              currentMovingRef.current && panToSwap.setValue({ x: 0, y: 0 });
+            }else{
+              const sectionToMove = sections.find((s) => s.position === pos+1+positionsMoved.current)!
+              const panToSwap = panRefs.current[`${sectionToMove.sectionTitle}-${sectionToMove.timePeriod}`]
+              currentMovingRef.current && panToSwap.flattenOffset();
+              currentMovingRef.current && panToSwap.setOffset({x: 0, y: -sectionHeightsRef.current[pos]});
+              currentMovingRef.current && panToSwap.setValue({ x: 0, y: 0 });   
+            }
+            pan.setOffset({ x: 0, y: 0 });
+            offsetY.current = totalY; 
+            gestureState.dy = 0;
+            positionsMoved.current+=1;
+          }
+        }
+
+      if(thresholdsRef.current[pos - 1 + positionsMoved.current] !== null){
+        if (totalY < thresholdsRef.current[pos-1+positionsMoved.current]){
+
+          if(positionsMoved.current > 0){ //going back, need to reswap
+            console.log("hellooo");
+            const sectionToMove = sections.find((s) => s.position === pos+positionsMoved.current)!
+            const panToSwap = panRefs.current[`${sectionToMove.sectionTitle}-${sectionToMove.timePeriod}`]
+            currentMovingRef.current && panToSwap.flattenOffset();
+            currentMovingRef.current && panToSwap.setOffset({x: 0, y: 0});
+            currentMovingRef.current && panToSwap.setValue({ x: 0, y: 0 });
+            pan.setOffset({ x: 0, y: 0 });
+          }else{
+          //moveSection(currentMovingIndex+1,"up",sectionHeights[currentMovingSection!.position])
+          //console.log("position "+)
+          const sectionToMove = sections.find((s) => s.position === pos-1+positionsMoved.current)!
+          const panToSwap = panRefs.current[`${sectionToMove.sectionTitle}-${sectionToMove.timePeriod}`]
+          currentMovingRef.current && panToSwap.flattenOffset();
+          currentMovingRef.current && panToSwap.setOffset({x: 0, y: sectionHeightsRef.current[pos-1+positionsMoved.current]});
+          currentMovingRef.current && panToSwap.setValue({ x: 0, y: 0 });
+          pan.setOffset({ x: 0, y: 0 });
+          }
+          offsetY.current = totalY; 
+          gestureState.dy = 0;
+          positionsMoved.current-=1;
+        }
+      }
       },
 
       onPanResponderRelease: () => {
-        const pan = panRefs.current[currentMovingSection!];
+        const pan = panRefs.current[currentMovingSectionKey!];
         pan?.flattenOffset();
         /*Reallows interference*/
         scrollEnabledState.current = true;
@@ -126,12 +314,18 @@ export default function Index() {
           scrollRef.current.setNativeProps({ scrollEnabled: true });
         }
         setMovingSection(false);
+        setCurrentMovingIndex(-1);
+        setThresholds(undefined);
       },
-    }), [editMode, currentMovingSection]);
+    }), [editMode, currentMovingSectionKey]);
 
+
+   
   // Dynamic styles for square icon buttons
   const squareIconButtonStyle = (size: number) => ({
     ...styles.squareIconButton,
+    position: "relative" as const,
+    overflow: "hidden" as const,
     backgroundColor: currentTheme["101010"],
     borderColor: currentTheme.dimgray,
     width: size,
@@ -147,6 +341,11 @@ export default function Index() {
     setIsModalVisible(false);
     setTargetSection(null);
   };
+
+  const circleAverage = averageProgress();
+  const circleAveragePercentage = Math.round(circleAverage * 100);
+  const circleAverageString = `${circleAveragePercentage}%`;
+
 
   return (
     //whole screen
@@ -178,7 +377,7 @@ export default function Index() {
               style={{
                 color: selected === btn ? currentTheme.white : currentTheme.gray,
                 fontWeight: selected === btn ? "bold" : "500",
-                fontSize: selected === btn ? 17 : 15,
+                fontSize: selected === btn ? 15. : 15,
               }}
             >
               {btn}
@@ -221,21 +420,21 @@ export default function Index() {
         <View style={styles.progressContainer}>
           <Progress.Circle
             size={100} // Size of the circle
-            progress={0.76} // 76% progress
+            progress={circleAverage} // 76% progress
             thickness={10} // Border thickness
             showsText={false} // We add text separately
             color={currentTheme.lightgreen} // Progress color
             unfilledColor={currentTheme.dimgray} // Background color
             borderWidth={0} // No border
           />
-          <Text style={[styles.progressText, { color: currentTheme.white }]}>76%</Text>
+          <Text style={[styles.progressText, { color: currentTheme.white }]}>{circleAverageString}</Text>
         </View>
 
         {/*START dynamic sections rendering */}
         {sections
           .filter((s) => s.timePeriod === selected)
           .sort((a, b) => a.position - b.position)
-          .map((section) => {
+          .map((section) => {            
             const sectionKey = `${section.sectionTitle}-${section.timePeriod}`;
             if (!panRefs.current[sectionKey]) {
               panRefs.current[sectionKey] = new Animated.ValueXY();
@@ -251,7 +450,7 @@ export default function Index() {
                   const touchY = e.nativeEvent.pageY;
                   findSectionAtPosY(touchY).then((section) => {
                     if (section) {
-                      setCurrentMovingSection(`${section.sectionTitle}-${section.timePeriod}`);
+                      setCurrentMovingSectionKey(`${section.sectionTitle}-${section.timePeriod}`);
                     }
                   });
                 }
@@ -265,18 +464,21 @@ export default function Index() {
             >
             <Animated.View //Moveable view (on edit mode)
             
-            style = {[
-              pan.getLayout(), //stored in pan object created by useRef earlier
-              {borderWidth: 1,
-                borderColor: editMode ? currentTheme["lowOpacityWhite"] : 'transparent',
-                marginTop: section.position === 0 ? 30 : 15, //num1 from circle, num2 from other sections
-                paddingVertical: 10,
-                width: '100%',
-                minWidth: '100%',
-                backgroundColor: movingSection ? currentTheme['lowOpacityWhite'] : 'transparent',
-              }
-            ]}
-            {...(currentMovingSection === `${section.sectionTitle}-${section.timePeriod}` ? panResponder.panHandlers : {})}//passing gesture handlers into view
+            style = {
+              [
+                pan.getLayout(), //stored in pan object created by useRef earlier
+                {borderWidth: 1,
+                  borderRadius: 8,
+                  borderColor: editMode ? currentTheme["lowOpacityWhite"] : 'transparent',
+                  marginTop: section.position === 0 ? 30 : 15, //num1 from circle, num2 from other sections
+                  paddingVertical: 10,
+                  width: '100%',
+                  minWidth: '100%',
+                  backgroundColor: (movingSection && (currentMovingSectionKey === `${section.sectionTitle}-${section.timePeriod}`)) ? currentTheme['lowOpacityWhite'] : 'transparent',
+                }
+              ]
+          }
+            {...(currentMovingSectionKey === `${section.sectionTitle}-${section.timePeriod}` ? panResponder.panHandlers : {})}//passing gesture handlers into view
             
             >
 
@@ -289,25 +491,60 @@ export default function Index() {
               {/* Section's Row of Tracker Icons */}
               <View style={styles.iconRow}>
                 {section.trackers.map((tracker) => (
-                  <Pressable
+                    
+                    <Pressable
                     key={tracker.trackerName + tracker.timePeriod}
-                    onPress={() =>
-                      router.push({
-                        pathname: "/editTracker",
-                        params: {
-                          trackerN: tracker.trackerName,
-                          timeP: tracker.timePeriod,
-                          color: getIconInfo(tracker.icon).color, 
-                          image: getIconInfo(tracker.icon).name
-                        },
-                      })
-                    }
+                        // Single tap increment 
+                        onPress={() => {
+                            if (!editMode) { // don’t increment while you’re dragging sections
+                            incrementTracker(tracker.trackerName, tracker.timePeriod);
+                            }
+                        }}
+                        // Hold press opens edit tracker
+                        onLongPress={() => {
+                            router.push({
+                            pathname: "/editTracker",
+                            params: {
+                                trackerN: tracker.trackerName,
+                                timeP:    tracker.timePeriod,
+                                color:    getIconInfo(tracker.icon).color,
+                                image:    getIconInfo(tracker.icon).name,
+                            },
+                            });
+                        }}
                     style={[
                       squareIconButtonStyle(itemSize),
-                    ]}
+                      {
+                        backgroundColor: hexToRgba( 
+                            // Set to 0 for transparency                          
+                          getIconInfo(tracker.icon).color, 0               
+                        ),
+                      },
+                    ]}                                                       
                   >
+                    {(() => {                                                
+                      const bound = tracker.bound ?? 0;                   
+                      const progress = bound > 0? Math.min(1, tracker.currentAmount / bound) : 0;                                              
+                      return (                                               
+                        <View                                               
+                          style={{                                          
+                            position: "absolute",                           
+                            bottom: 0,                                         
+                            left: 0,                                        
+                            right: 0,                                       
+                            height: `${progress * 100}%`,                   
+                            backgroundColor: hexToRgba(     
+                                // Set to 0.15 for filling up icon               
+                                getIconInfo(tracker.icon).color, 0.15   
+                            ),                                              
+                          }}                                                
+                        />                                                  
+                      );                                                   
+                    })()}                                                   
+                  
                     {getImage(tracker, 40).icon}
                   </Pressable>
+                  
                 ))}
 
                 {/* Plus button to open modal and store section */}
@@ -359,7 +596,6 @@ export default function Index() {
 
               {/* Scrollable content */}
               <ScrollView
-                
                 style={styles.scrollView2} // Use for non-layout styles like width, height, etc.
                 contentContainerStyle={{
                   flexDirection: "row", // Arrange items in rows
@@ -368,26 +604,28 @@ export default function Index() {
                   paddingBottom: 50, // Add padding if needed
                 }}
               >
-                {trackers.map((tracker) => (
+                {trackers
+                  .filter((tracker) => tracker.timePeriod === selected) // Filter trackers by selected time period
+                  .map((tracker) => (
+                    
                   <TouchableOpacity
                     key={tracker.trackerName + tracker.timePeriod}
                     onPress={() => {
                       if (!targetSection) return;
-
                       const exists = targetSection.trackers.some(
                         (t) => t.trackerName === tracker.trackerName && t.timePeriod === tracker.timePeriod
                       );
                       if (exists) {
                         handleCloseModal();
                         return;
-                      }
-
-                      addTrackerToSection(
-                        targetSection.sectionTitle,
-                        targetSection.timePeriod,
-                        tracker
+                      }else{
+                        addTrackerToSection(
+                          targetSection.sectionTitle,
+                          targetSection.timePeriod,
+                          tracker
                       );
                       handleCloseModal();
+                      }
                     }}
                     style={[
                       styles.trackerButton,
@@ -400,7 +638,7 @@ export default function Index() {
                     <View style={styles.iconContainer}>
                       {getImage(tracker, 40).icon}
                     </View>
-                    <Text style={styles.trackerText}>{tracker.trackerName}</Text>
+                    <Text style={[styles.trackerText, { color: currentTheme.white }]}>{tracker.trackerName}</Text>
                   </TouchableOpacity>
                 ))}
               </ScrollView>
@@ -471,7 +709,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   squareIconButton: {
-    padding: 12,
+    // padding: 0,
     borderRadius: 5,
     borderWidth: 1,
     justifyContent: "center",
@@ -481,7 +719,7 @@ const styles = StyleSheet.create({
   },
   sectionCreateButton: {
     padding: 12,
-    width: '100%', //feel free to change
+    minWidth: '80%', //feel free to change
     borderRadius: 5,
     borderWidth: 1,
     borderStyle: 'dashed' as const,
@@ -514,7 +752,7 @@ const styles = StyleSheet.create({
   },
 
   trackerButton: {
-    width: "30%", // Adjust to fit 3 items per row
+    width: "26%", // Adjust to fit 3 items per row
     aspectRatio: 1, // Make it square
     margin: 10, // Add spacing between buttons
     justifyContent: "center",
@@ -531,7 +769,7 @@ const styles = StyleSheet.create({
   trackerText: {
     fontSize: 14, // Smaller font size for labels
     fontWeight: "500",
-    color: "white",
+    
     textAlign: "center", // Center-align text
   },
 });

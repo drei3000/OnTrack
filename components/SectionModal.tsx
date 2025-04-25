@@ -5,7 +5,6 @@ import { TimePeriod } from "@/types/Tracker";
 import { useSectionStore } from "@/storage/store";
 import { useTheme } from "../app/ThemeContext";
 
-
 export default function SectionModal({
   visible,
   onClose,
@@ -103,6 +102,8 @@ export default function SectionModal({
         title.trim(),
         timePeriod,
         newPosition, // assign calculated position
+        [],
+        0,
         Date.now()
       );
   

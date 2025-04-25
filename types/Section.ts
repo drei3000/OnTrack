@@ -9,7 +9,7 @@ export class Section{
     timePeriod: TimePeriod;
     lastModified: number;
 
-    constructor(sectionTitle: string,timePeriod: TimePeriod, position: number, lastModified: number){
+    constructor(sectionTitle: string,timePeriod: TimePeriod, position: number, trackers: Tracker[], size: number, lastModified: number){
         this.sectionTitle = sectionTitle;
         this.timePeriod = timePeriod;
         this.position = position;
@@ -20,8 +20,9 @@ export class Section{
         this.trackers.push(newTracker);
         this.size++;
     }
-    //Tracker functions
+    //Tracker function
     addTracker(newTracker: Tracker){
+        console.log("line 1")
         this.trackers.push(newTracker);
         this.size++;
         this.lastModified = Date.now();

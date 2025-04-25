@@ -36,6 +36,22 @@ export const setupDatabase = async () => {
     const sectionsInfo: SectionRow[] = await db.getAllAsync("SELECT section_id,section_title,time_period,position,last_modified FROM sections");
     const sectionTrackersInfo: SectionTrackerRelation[] = await db.getAllAsync("SELECT section_id,tracker_id,tracker_position FROM section_trackers");
 
+    console.log("SECTIONS: ")
+    sectionsInfo.forEach(section => {
+      console.log(section.section_title +" pos: " + section.position+ " id: "+section.section_id)
+    });
+
+    console.log("TRACKERS: ")
+    trackersInfo.forEach(tracker => {
+      console.log(tracker.tracker_name+" id: "+tracker.tracker_id)
+    });
+
+    console.log("RELATIONS: ")
+    sectionTrackersInfo.forEach(relation => {
+      console.log("sectionID: "+relation.section_id+" trackerID: "+relation.tracker_id+" position: "+relation.tracker_position)
+    });
+
+    console.log
     const { setTrackers, addTracker, getTracker } = useTrackerStore.getState();
     const { setSectionsH, addSectionH, initialAddTrackerToSection } = useSectionStore.getState();
 
@@ -60,12 +76,15 @@ export const setupDatabase = async () => {
     });
     setTrackers(trackersDBFormat);
 
+
     var sectionsDBFormat: Section[] = []; //initialize trackers in db format to set
     const sections: SectionRow[] = sectionsInfo.map((section) => {
       const newSection = new Section(
         section.section_title,
         section.time_period,
         section.position,
+        [],
+        0,
         section.last_modified
       );
       sectionsDBFormat.push(newSection);
@@ -79,7 +98,6 @@ export const setupDatabase = async () => {
       const trackersInSection = sectionTrackersInfo
         .filter((st) => st.section_id === section.section_id)
         .sort((a, b) => a.tracker_position - b.tracker_position);
-
       trackersInSection.forEach((trackerInS) => {
         const trackerRow = trackers.find((t) => t.tracker_id === trackerInS.tracker_id);
         if (trackerRow) {

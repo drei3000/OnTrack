@@ -19,6 +19,7 @@ import { openDatabase } from "@/storage/sqlite";
 import { TimePeriod, Tracker } from "@/types/Tracker";
 import {setupDatabase} from "@/components/ZustandRefresh";
 
+// Screen dimensions and scale for responsive design
 const height = Dimensions.get('window').height-1;
 const width = Dimensions.get('window').width-1
 const scale = PixelRatio.get(); //For exact pixel adjustments adjust according to scale
@@ -26,30 +27,32 @@ const scale = PixelRatio.get(); //For exact pixel adjustments adjust according t
 export default function editTracker(){
     /* handling of transitioning between newTrackerView and selectImage */
     const router = useRouter(); 
-    const {trackerN,timeP, image, color} = useLocalSearchParams();
-    const timePeriod = typeof(timeP) === "string" ? timeP : "Daily";
-    const trackerName = typeof(trackerN) === "string" ? trackerN : "no_name";
+    const {trackerN,timeP, image, color} = useLocalSearchParams(); // Get parameters passed to this screen
+    const timePeriod = typeof(timeP) === "string" ? timeP : "Daily"; // Default to "Daily" if time period is not provided
+    const trackerName = typeof(trackerN) === "string" ? trackerN : "no_name"; // Default to "no_name" if tracker name is not provided
     const {currentTheme} = useTheme();
 
-    /*find tracker*/
+    /* Tracker management */
     let tracker = useTrackerStore((state) =>
       state.getTracker(trackerName, timePeriod)
-    );
-    const addTracker = useTrackerStore((s) => s.addTracker2);
-    /*states*/
-    //input states
-    const timePeriods = ['Daily','Weekly','Monthly','Yearly']
-    const [currentTPIndex, setCurrentTPIndex] = useState(timePeriods.indexOf(timePeriod));
-    const [isGoal, setIsGoal] = useState(true);
-    const [title, setTitle] = useState(trackerName);
-    const [currentAmount, setCurrentAmount] = useState('0');
-    const [limit, setLimit] = useState('0');
-    const [selectedImage, setSelectedImage] = useState(`${image ?? ''}`);
-    const [selectedColor, setSelectedColor] = useState(`${color ?? ''}`);
-    const [iconSize, setIconSize] = useState(0);
-    const [open, setOpen] = useState(false);
-    const [value, setValue] = useState<string | null>(null); 
+    ); // Get the tracker from the store using the provided name and time period
+    const addTracker = useTrackerStore((s) => s.addTracker2); // Add tracker function from the store
+    
+    /* States */
+    const timePeriods = ['Daily', 'Weekly', 'Monthly', 'Yearly']; // Available time periods
+    const [currentTPIndex, setCurrentTPIndex] = useState(timePeriods.indexOf(timePeriod)); // Index of the current time period
+    const [isGoal, setIsGoal] = useState(true); // Whether the tracker is a goal or a limit
+    const [title, setTitle] = useState(trackerName); // Tracker title
+    const [currentAmount, setCurrentAmount] = useState('0'); // Current amount for the tracker
+    const [limit, setLimit] = useState('0'); // Goal or limit value
+    const [selectedImage, setSelectedImage] = useState(`${image ?? ''}`); // Selected image for the tracker
+    const [selectedColor, setSelectedColor] = useState(`${color ?? ''}`); // Selected color for the tracker
+    const [iconSize, setIconSize] = useState(0); // Size of the tracker icon
+    const [open, setOpen] = useState(false); // Dropdown open state
+    const [value, setValue] = useState<string | null>(null); // Selected unit value
 
+    /* Effects */
+    // Update state when tracker changes
     useEffect(() => {
       if (!tracker) return;
     
@@ -69,40 +72,41 @@ export default function editTracker(){
     
       setCurrentTPIndex(timePeriods.indexOf(tracker.timePeriod));
     }, [tracker]);
-
-        const [units, setUnits] = useState([
-        { label: "NONE", value: ""},
-        { label: "Kilograms", value: "kg" },
-        { label: "Pounds", value: "lb" },
-        { label: "Grams", value: "g" },
-        { label: "Ounces", value: "oz" },
-        { label: "Liters", value: "l" },
-        { label: "Milliliters", value: "ml" },
-        { label: "Gallons", value: "gal" },
-        { label: "Cups", value: "cup" },
-        { label: "Tablespoons", value: "tbsp" },
-        { label: "Teaspoons", value: "tsp" },
-        { label: "Meters", value: "m" },
-        { label: "Centimeters", value: "cm" },
-        { label: "Millimeters", value: "mm" },
-        { label: "Inches", value: "in" },
-        { label: "Feet", value: "ft" },
-        { label: "Yards", value: "yd" },
-        { label: "Miles", value: "mi" },
-        { label: "Kilometers", value: "km" },
-        { label: "Steps", value: "step" },
-        { label: "Minutes", value: "min" },
-        { label: "Hours", value: "hr" },
-        { label: "Seconds", value: "sec" },
-        { label: "Days", value: "day" },
-        { label: "Weeks", value: "week" },
-        { label: "Months", value: "month" },
-        { label: "Calories", value: "kcal" },
-        { label: "Kilojoules", value: "kj" },
-        { label: "Heart Rate (BPM)", value: "bpm" },
+        
+      /* Units for dropdown */
+    const [units, setUnits] = useState([
+      { label: "NONE", value: ""},
+      { label: "Kilograms", value: "kg" },
+      { label: "Pounds", value: "lb" },
+      { label: "Grams", value: "g" },
+      { label: "Ounces", value: "oz" },
+      { label: "Liters", value: "l" },
+      { label: "Milliliters", value: "ml" },
+      { label: "Gallons", value: "gal" },
+      { label: "Cups", value: "cup" },
+      { label: "Tablespoons", value: "tbsp" },
+      { label: "Teaspoons", value: "tsp" },
+      { label: "Meters", value: "m" },
+      { label: "Centimeters", value: "cm" },
+      { label: "Millimeters", value: "mm" },
+      { label: "Inches", value: "in" },
+      { label: "Feet", value: "ft" },
+      { label: "Yards", value: "yd" },
+      { label: "Miles", value: "mi" },
+      { label: "Kilometers", value: "km" },
+      { label: "Steps", value: "step" },
+      { label: "Minutes", value: "min" },
+      { label: "Hours", value: "hr" },
+      { label: "Seconds", value: "sec" },
+      { label: "Days", value: "day" },
+      { label: "Weeks", value: "week" },
+      { label: "Months", value: "month" },
+      { label: "Calories", value: "kcal" },
+      { label: "Kilojoules", value: "kj" },
+      { label: "Heart Rate (BPM)", value: "bpm" },
     ]);
-    /*Functions*/
-   // When return from child, update state if image param is present
+    
+    // Update selected image and color when parameters change
     useEffect(() => {
         if (image && typeof image === 'string') {//set selected image unless blank
         setSelectedImage(image);
@@ -115,13 +119,13 @@ export default function editTracker(){
         }
     }, [image, color] );
 
-    //When icon is pressed (for selection)
+    // When icon is pressed (for selection)
     const handleImagePressed = () => {
         router.push({
         pathname: './selectImage',
         params: {
-            selectedImage: selectedImage, //pass current image
-            selectedColor: selectedColor, //pass selected Color
+            selectedImage: selectedImage, // Pass current image
+            selectedColor: selectedColor, // Pass selected Color
         },
     });
     }
@@ -130,6 +134,7 @@ export default function editTracker(){
     const toggleGoalButton = () => {
         setIsGoal(prevState => !prevState);
     };
+    
     const styles = StyleSheet.create({
         // Content inside overlay (background, size etc)
         container: {
@@ -288,7 +293,8 @@ export default function editTracker(){
             marginLeft: 5,
         }
         
-      });
+    });
+    
     //Cross, Icon box and tick (used in select image)
     const imageBoxStyles = StyleSheet.create({
     //For image cancellation, image and confirm tracker buttons
@@ -335,6 +341,7 @@ export default function editTracker(){
     },
     })
 
+    // Confirm and save tracker edits
     const handleConfirmEdit = async () => {
       if (title.trim().length < 3) return;
     
@@ -342,7 +349,7 @@ export default function editTracker(){
         ? `image|${selectedImage}`
         : `fa5|${selectedImage}|${selectedColor}`;
     
-      const timePeriod: TimePeriod = ['Daily','Weekly','Monthly','Yearly'][currentTPIndex] as TimePeriod;
+      const timePeriod: TimePeriod = ['Daily','Weekly','Monthly'][currentTPIndex] as TimePeriod;
       const boundNumber: number = limit.trim() === '' ? 0 : parseFloat(limit) * (isGoal ? 1 : -1);
     
       try {
@@ -359,172 +366,193 @@ export default function editTracker(){
         console.error('Could not update tracker', err);
       }
     };
-
+  
+    // Delete tracker from database
+    type SectionTrackerRelation = {
+      section_id: number,
+      tracker_id: number,
+      tracker_position: number,
+      relation_id: number,
+    }
     const handleDeleteTracker = async () => {
       try {
         const db = await openDatabase();
+
+        //get positions of all relations first
+        const rows : SectionTrackerRelation[] | null = await db.getAllAsync(
+          `SELECT tracker_id, section_id, tracker_position, relation_id FROM section_trackers
+           WHERE tracker_id IN (
+             SELECT tracker_id FROM trackers WHERE tracker_name = ? AND time_period = ?
+           );`,
+          [trackerName, timePeriod]
+        );
+
+        await db.runAsync( //delete relations 
+          `DELETE FROM section_trackers
+          WHERE tracker_id IN (
+            SELECT tracker_id FROM trackers WHERE tracker_name = ? AND time_period = ?
+          );`,
+          [trackerName, timePeriod]
+        );
+
+        //move sections ahead down one
+        for (const row of rows) {
+          await db.runAsync(
+            `UPDATE section_trackers
+             SET tracker_position = tracker_position - 1
+             WHERE section_id = ? AND tracker_position > ?`,
+            [row.section_id, row.tracker_position]
+          );
+        }
+
+        
         
         await db.runAsync(
           `DELETE FROM trackers WHERE tracker_name = ? AND time_period = ?`,
           [trackerName, timePeriod]
         );
-        
         setupDatabase();
         router.back();
       } catch (err) {
         console.error('Could not update tracker', err);
       }
     };
+
     //add margin at top equal to height - height of components
     var marginForTop = (height - ((60/scale)*6 + (20/scale)*6 + (width)*0.45)) / 2
     marginForTop = marginForTop < 0 ? 0 : ((marginForTop/scale)/2); //give up tonight dont pmo
-    return(
-     //entire area
-    <SafeAreaView
-    style = {[
-        styles.container,
-        {alignItems: 'center'}
-    ]}>
-       <View style={styles.topRow}>
-              <Pressable
-                onPress={() => router.back()}
-                style={[styles.cornerButton, { backgroundColor: currentTheme["101010"] }]}
-              >
-                <MaterialCommunityIcons name="keyboard-backspace" size={40} color={currentTheme.white} />
-              </Pressable>
-              <Pressable
-          onPress={() => Alert.alert(
-            "Delete this tracker?",
-            "This action cannot be undone.",
-            [
-              {
-                text: "Cancel",
-                style: "cancel",
-              },
-              {
-                text: "Delete",
-                style: "destructive",
-                onPress: () => {
-                  handleDeleteTracker();
-                },
-              },
-            ],
-            { cancelable: true }
-          )}
-          style={[styles.cornerButton, { backgroundColor: currentTheme["101010"] }]}
-        >
-          <MaterialCommunityIcons name="trash-can-outline" size={40} color={currentTheme.white} />
-        </Pressable>
-      </View>
-        <View style = {[
-            imageBoxStyles.imageButtonsContainer,
-            {marginTop: marginForTop}]}>
-
-        {/* Left cross button (render if image)*/}
-        {selectedImage != "" && (
-        <Pressable
-        style={imageBoxStyles.crossButton}
-        onPress={() => setSelectedImage("")}
-        >
-        <Ionicons name="close" size={24} color="white" />
-        </Pressable>
-        )}
-
-        {/* Tracker Icon Option */}
-        <Pressable 
-        style = {imageBoxStyles.icon}
-        onLayout={(event) => {
-            const { height, } = event.nativeEvent.layout;
-            setIconSize(height * 0.7);
-        }}
-
-        onPress={() => handleImagePressed()}
-        > 
-        {isUri(selectedImage) ? ( //use image if imageUri
-        <Image
-        source={{ uri: selectedImage }}
-        style={{
-            width: width*0.45-2,
-            aspectRatio: 1,
-        }}
-        resizeMode="cover"
-        />
-        ) : selectedImage && iconSize > 0 && ( //otherwise if valid use icon
-        <FontAwesome5 
-            name={selectedImage as any}
-            color = {selectedColor} 
-            size = {iconSize}
-            alignSelf = 'center'
-            justifySelf = 'center'
-            />
-        )}
-        </Pressable>
+    
+    return (
+      <SafeAreaView
+        style={[
+          styles.container,
+          { alignItems: 'center' },
+        ]}
+      >
+        {/* Top row with back and delete buttons */}
+        <View style={styles.topRow}>
+          <Pressable
+            onPress={() => router.back()}
+            style={[styles.cornerButton, { backgroundColor: currentTheme["101010"] }]}
+          >
+            <MaterialCommunityIcons name="keyboard-backspace" size={40} color={currentTheme.white} />
+          </Pressable>
+          <Pressable
+            onPress={() => Alert.alert(
+              "Delete this tracker?",
+              "This action cannot be undone.",
+              [
+                { text: "Cancel", style: "cancel" },
+                { text: "Delete", style: "destructive", onPress: handleDeleteTracker },
+              ],
+              { cancelable: true }
+            )}
+            style={[styles.cornerButton, { backgroundColor: currentTheme["101010"] }]}
+          >
+            <MaterialCommunityIcons name="trash-can-outline" size={40} color={currentTheme.white} />
+          </Pressable>
         </View>
-
-
-        {/* Tracker Title */}
+  
+        {/* Tracker icon and image selection */}
+        <View style={[
+          imageBoxStyles.imageButtonsContainer,
+          { marginTop: marginForTop },
+        ]}>
+          {selectedImage != "" && (
+            <Pressable
+              style={imageBoxStyles.crossButton}
+              onPress={() => setSelectedImage("")}
+            >
+              <Ionicons name="close" size={24} color="white" />
+            </Pressable>
+          )}
+          <Pressable
+            style={imageBoxStyles.icon}
+            onLayout={(event) => {
+              const { height } = event.nativeEvent.layout;
+              setIconSize(height * 0.7);
+            }}
+            onPress={handleImagePressed}
+          >
+            {isUri(selectedImage) ? (
+              <Image
+                source={{ uri: selectedImage }}
+                style={{
+                  width: width * 0.45 - 2,
+                  aspectRatio: 1,
+                }}
+                resizeMode="cover"
+              />
+            ) : selectedImage && iconSize > 0 && (
+              <FontAwesome5
+                name={selectedImage as any}
+                color={selectedColor}
+                size={iconSize}
+                alignSelf="center"
+                justifySelf="center"
+              />
+            )}
+          </Pressable>
+        </View>
+  
+        {/* Tracker title input */}
         <View style={styles.inputContainer}>
-        <TextInput
+          <TextInput
             style={styles.input}
             placeholder="Title(*)"
             placeholderTextColor="#aaa"
-            maxLength={25} //titles should be brief
-            value = {title}
-            returnKeyType = "done"
+            maxLength={25}
+            value={title}
+            returnKeyType="done"
             onChangeText={setTitle}
-            onPressIn={() => setOpen(false)} //close dropdown
-        />
+            onPressIn={() => setOpen(false)}
+          />
         </View>
-
-        {/* Tracker currentamount */}
+  
+        {/* Current amount input */}
         <View style={styles.inputContainer}>
-        <TextInput
+          <TextInput
             style={styles.input}
             keyboardType="numeric"
             placeholder="Current amount"
             placeholderTextColor="#aaa"
-            value = {currentAmount}
-            returnKeyType = "done"
+            value={currentAmount}
+            returnKeyType="done"
             onChangeText={(text) => {
-                //only allow numbers and a single decimal point 
-                const cleanedText = text.replace(/[^0-9.]/g, '');
-                const decimalCount = (cleanedText.match(/\./g) || []).length;
-                if (decimalCount <= 1) {
+              const cleanedText = text.replace(/[^0-9.]/g, '');
+              const decimalCount = (cleanedText.match(/\./g) || []).length;
+              if (decimalCount <= 1) {
                 setCurrentAmount(cleanedText);
-                }
+              }
             }}
-            onPressIn={() => setOpen(false)} //close dropdown
-        />
+            onPressIn={() => setOpen(false)}
+          />
         </View>
-
-        {/* Limit/Goal of Tracker (OPTIONAL) */}
+  
+        {/* Goal/Limit input */}
         <View style={styles.inputContainer}>
-        <TextInput
-        style={[styles.input, {color: isGoal ? "#06402B" : "#950606"}]} //if goal text red otherwise green
-        
-        placeholder = {isGoal ? "Goal" : "Limit"}
-        placeholderTextColor="#aaa"
-        maxLength={10}
-        keyboardType="numeric" 
-        returnKeyType = "done" 
-        onPressIn={() => setOpen(false)} //close dropdown
-        onChangeText={(text) => {
-            //only allow numbers and a single decimal point 
-            const cleanedText = text.replace(/[^0-9.]/g, '');
-            const decimalCount = (cleanedText.match(/\./g) || []).length;
-            if (decimalCount <= 1) {
-            setLimit(cleanedText);
-            }
-        }}
-        value={limit}
-        />
+          <TextInput
+            style={[styles.input, { color: isGoal ? "#06402B" : "#950606" }]}
+            placeholder={isGoal ? "Goal" : "Limit"}
+            placeholderTextColor="#aaa"
+            maxLength={10}
+            keyboardType="numeric"
+            returnKeyType="done"
+            onPressIn={() => setOpen(false)}
+            onChangeText={(text) => {
+              const cleanedText = text.replace(/[^0-9.]/g, '');
+              const decimalCount = (cleanedText.match(/\./g) || []).length;
+              if (decimalCount <= 1) {
+                setLimit(cleanedText);
+              }
+            }}
+            value={limit}
+          />
         </View>
-
-
-        {/* Unit Dropdown <bugged for android> (OPTIONAL) */}
+  
+        {/* Unit dropdown */}
         <View style={[styles.dropdownContainer, { zIndex: 10 }]}>
-        
-        <DropDownPicker
+          <DropDownPicker
             open={open}
             value={value}
             items={units}
@@ -544,55 +572,44 @@ export default function editTracker(){
             arrowIconStyle={styles.dropdownArrow}
             tickIconStyle={styles.dropdownTick}
             flatListProps={{
-                nestedScrollEnabled: true,
+              nestedScrollEnabled: true,
             }}
-        />
+          />
         </View>
-        {/*View with time period + goal/limit buttons in*/}
-        <View style = {styles.buttonsContainer}>
-
-        {/* Time period pressable (cycles through time periods) */}
-        <Pressable
-        style = {styles.timePeriodButton}
-        //NO ON PRESS CAPABILITY WOULD COMPLICATE SECTION_TRACKERS
-        //onPress={() => (setCurrentTPIndex((currentTPIndex + 1) % timePeriods.length))}
-        >
-        <Text style = {{
-            color: currentTheme["red"],
-            fontSize: 20,
-            fontWeight: 'bold',
-        }}>
-            {timePeriods[currentTPIndex]}(*)
-        </Text>
-        </Pressable>
-
-        {/* Button to toggle between Goal and Limit */}
-        <Pressable
-        style={[
-            styles.goalLimitButton,
-            limit.length > 0 
-            ? (isGoal ? styles.goalButton : styles.limitButton) //if {goal} then goal style else limit style
-            : null, 
-        ]}
-        onPress={
-            toggleGoalButton
-        }
-        >
-        <Text style={limit.length > 0 ? styles.goalLimitText : styles.buttonText}> 
-            {isGoal ? 'Goal' : 'Limit'}
-        </Text>
-        </Pressable>
+  
+        {/* Time period and goal/limit buttons */}
+        <View style={styles.buttonsContainer}>
+          <Pressable style={styles.timePeriodButton}>
+            <Text style={{
+              color: currentTheme["red"],
+              fontSize: 20,
+              fontWeight: 'bold',
+            }}>
+              {timePeriods[currentTPIndex]}(*)
+            </Text>
+          </Pressable>
+          <Pressable
+            style={[
+              styles.goalLimitButton,
+              limit.length > 0
+                ? (isGoal ? styles.goalButton : styles.limitButton)
+                : null,
+            ]}
+            onPress={toggleGoalButton}
+          >
+            <Text style={limit.length > 0 ? styles.goalLimitText : styles.buttonText}>
+              {isGoal ? 'Goal' : 'Limit'}
+            </Text>
+          </Pressable>
         </View>
-
-
-
-        {/* Right tick button, render if title > 2 (can be changed) */} 
+  
+        {/* Confirm button */}
         {title.length > 2 && (
-        <Pressable style={styles.confirmButton} onPress={handleConfirmEdit}>
-        <Ionicons name="checkmark-done" size={40} color="white" />
-        <Text style = {styles.confirmText}> Confirm </Text>
-        </Pressable>
+          <Pressable style={styles.confirmButton} onPress={handleConfirmEdit}>
+            <Ionicons name="checkmark-done" size={40} color="white" />
+            <Text style={styles.confirmText}> Confirm </Text>
+          </Pressable>
         )}
-    </SafeAreaView>
+      </SafeAreaView>
     );
 }
