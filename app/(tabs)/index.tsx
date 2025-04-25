@@ -45,14 +45,18 @@ const itemSize = (screenWidth - totalSpacing - sidesPadding * 2) / itemsPerRow;
 const marginBetweenSections = 15;
 export default function Index() {
 
-    const incrementTracker = useTrackerStore(state => state.incrementTracker);
+  
   const router = useRouter();
   const { currentTheme } = useTheme(); // Get the current theme from context
+  
 
   //backend structures
   const trackers = useTrackerStore((state) => state.trackers);
   const sections = useSectionStore((state) => state.sectionsH);
   const addTrackerToSection = useSectionStore((state) => state.addTrackerToSection);
+
+  const incrementTracker = useTrackerStore(state => state.incrementTracker);
+
   /* States */
   //modal states
   const [sectionModalOpen, setSectionModalOpen] = useState(false);
@@ -139,7 +143,7 @@ export default function Index() {
 
     const section : Section =  sections.find((s) => s.sectionTitle === sectionTitle && s.timePeriod === selected)!
     var sectHeight : number = 44; //(24) {fontsize} + (2 * 10) {padding size}
-    var position : number = -2;
+    var position : number = -1;
     //console.log("sect to add to 44: "+spacing *(Math.ceil((itemsPerRow +1)/ 4))+" calculation = "+Math.ceil((itemsPerRow + 1)/4))
     if(section){
 
@@ -150,6 +154,7 @@ export default function Index() {
     }
     return {height: sectHeight, position: position}
     }
+    
   // For all sections map their heights
   useEffect(() => {
     const heights = sections
@@ -161,7 +166,8 @@ export default function Index() {
       });
       sectionHeightsRef.current.push(...heights);
   }, [sections, selected]); // Dependency array to run this effect when 'sections' or 'selected' changes
-  
+
+
     //finds section given y coord
     const findSectionAtPosY = async (touchY: number): Promise<Section> => { 
     const measurements = await Promise.all(
@@ -305,6 +311,7 @@ export default function Index() {
         positionsMoved.current = 0;
         setCurrentMovingSectionKey(null);
         setMovingSection(false);
+        
       },
     }), [editMode, currentMovingSectionKey]);
 
