@@ -48,6 +48,9 @@ export default function Index() {
     const trackers = useTrackerStore((state) => state.trackers);
     const sections = useSectionStore((state) => state.sectionsH);
     const addTrackerToSection = useSectionStore((state) => state.addTrackerToSection);
+
+    const incrementTracker = useTrackerStore(state => state.incrementTracker);
+
     /* States */
     //modal states
     const [sectionModalOpen, setSectionModalOpen] = useState(false);
@@ -355,17 +358,24 @@ export default function Index() {
                     
                     <Pressable
                     key={tracker.trackerName + tracker.timePeriod}
-                    onPress={() =>
-                      router.push({
-                        pathname: "/editTracker",
-                        params: {
-                          trackerN: tracker.trackerName,
-                          timeP: tracker.timePeriod,
-                          color: getIconInfo(tracker.icon).color,
-                          image: getIconInfo(tracker.icon).name,
-                        },
-                      })
-                    }     
+                        // Single tap increment 
+                        onPress={() => {
+                            if (!editMode) { // don’t increment while you’re dragging sections
+                            incrementTracker(tracker.trackerName, tracker.timePeriod);
+                            }
+                        }}
+                        // Hold press opens edit tracker
+                        onLongPress={() => {
+                            router.push({
+                            pathname: "/editTracker",
+                            params: {
+                                trackerN: tracker.trackerName,
+                                timeP:    tracker.timePeriod,
+                                color:    getIconInfo(tracker.icon).color,
+                                image:    getIconInfo(tracker.icon).name,
+                            },
+                            });
+                        }}
                     style={[
                       squareIconButtonStyle(itemSize),
                       {
