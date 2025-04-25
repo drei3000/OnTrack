@@ -5,8 +5,8 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTheme } from './ThemeContext';    // Import the ThemeContext
 import Index from './(tabs)';
 // import bcrypt from 'bcryptjs';
-import { supabase } from '../storage/supabase'; 
-
+import { supabase } from '../storage/supabase';
+import { useAuth } from '../app/AuthContext';
 
 const width = Dimensions.get('window').width-1
 
@@ -18,7 +18,8 @@ export default function Profile() {
   const [isCreating, setIsCreating] = useState(false);    // toggle between login and create account
   const { currentTheme } = useTheme();                    // Get the current theme from context
   const [message, setMessage] = useState('');             // to send error or success messages  
-
+  const { login } = useAuth();
+  const { user } = useAuth();
 
   const handleLogin = async () => {     // async so 'await' works
     setMessage('');                     // reset message
@@ -77,7 +78,8 @@ export default function Profile() {
       }
 
       if (users.length > 0 && password === users[0].password) {   // must use indexing as supabase returns array
-        setMessage('Logged in successfully!');                    // === is strict equality (types must match aswell)
+        await login(users[0]);                                    // === is strict equality (types must match aswell)
+        setMessage('Logged in successfully!');                   
         router.back();
       } else {
         setMessage('Incorrect username or password.')
@@ -100,7 +102,7 @@ const styles = StyleSheet.create({
 
     container: {
       width: width*0.85,
-      height: 350,
+      //height: 350,
       backgroundColor: currentTheme["101010"], // Use theme background color
       paddingHorizontal: 20,
       paddingVertical: 10,
@@ -166,6 +168,13 @@ const styles = StyleSheet.create({
        
          {/* Header above modal */}
          <Text style={styles.header}>Profile</Text>
+
+         {/* 🧠 Show if already logged in */}
+         {user && (
+           <Text style={{ color: currentTheme.lightblue, marginBottom: 10 }}>
+             Logged in as: {user.username || user.email}
+           </Text>
+         )}
 
          {/* Modal box */}
          <SafeAreaView style={[
