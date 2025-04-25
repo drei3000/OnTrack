@@ -45,14 +45,18 @@ const itemSize = (screenWidth - totalSpacing - sidesPadding * 2) / itemsPerRow;
 const marginBetweenSections = 15;
 export default function Index() {
 
-    const incrementTracker = useTrackerStore(state => state.incrementTracker);
+  
   const router = useRouter();
   const { currentTheme } = useTheme(); // Get the current theme from context
+  
 
   //backend structures
   const trackers = useTrackerStore((state) => state.trackers);
   const sections = useSectionStore((state) => state.sectionsH);
   const addTrackerToSection = useSectionStore((state) => state.addTrackerToSection);
+
+  const incrementTracker = useTrackerStore(state => state.incrementTracker);
+
   /* States */
   //modal states
   const [sectionModalOpen, setSectionModalOpen] = useState(false);
@@ -70,19 +74,10 @@ export default function Index() {
   const [editMode, setEditMode] = useState(false);
   const [exitedEdit, setExitedEdit] = useState(false); //if just exited (fixes slight bug)
   const [movingSection, setMovingSection] = useState(false);
-  const [movingSections, setMovingSections] = useState({}); //stores the movement state of all sections
   const [currentMovingSectionKey, setCurrentMovingSectionKey] = useState<string | null>(null);
-  const [currentMovingSection, setCurrentMovingSection] = useState<Section | null>(null);
-  const [currentMovingIndex, setCurrentMovingIndex] = useState<number>(-1);
   
   //heights and push function
-  //const [sectionHeights, setSectionHeights] = useState<number[]>([]);
   const sectionHeightsRef = useRef<number[]>([]);
-  
-  const [thresholds, setThresholds] = useState<number[] | undefined>([]);
-  const addSectionHeight = (height: number) => {
-    sectionHeightsRef.current.push(height);
-  };
 
   //threshholds
   const ThresholdsFunc = (centralIndex: number, heights: number[]): number[] => {
@@ -109,9 +104,6 @@ export default function Index() {
     }
 
     thresholdsToReturn[centralIndex] = 0;
-
-    // Set the updated state
-    setThresholds(thresholdsToReturn);
     return(thresholdsToReturn)
   };
 
@@ -151,7 +143,7 @@ export default function Index() {
 
     const section : Section =  sections.find((s) => s.sectionTitle === sectionTitle && s.timePeriod === selected)!
     var sectHeight : number = 44; //(24) {fontsize} + (2 * 10) {padding size}
-    var position : number = -2;
+    var position : number = -1;
     //console.log("sect to add to 44: "+spacing *(Math.ceil((itemsPerRow +1)/ 4))+" calculation = "+Math.ceil((itemsPerRow + 1)/4))
     if(section){
 
@@ -162,6 +154,7 @@ export default function Index() {
     }
     return {height: sectHeight, position: position}
     }
+    
   // For all sections map their heights
   useEffect(() => {
     const heights = sections
@@ -173,7 +166,8 @@ export default function Index() {
       });
       sectionHeightsRef.current.push(...heights);
   }, [sections, selected]); // Dependency array to run this effect when 'sections' or 'selected' changes
-  
+
+
     //finds section given y coord
     const findSectionAtPosY = async (touchY: number): Promise<Section> => { 
     const measurements = await Promise.all(
@@ -217,10 +211,7 @@ export default function Index() {
         findSectionAtPosY(touchY).then((section) => {
           if (section) {
             const sectionKey = `${section.sectionTitle}-${section.timePeriod}`;
-            const {height} = getSectInfo(section.sectionTitle);
             setCurrentMovingSectionKey(sectionKey);
-            setCurrentMovingSection(section);
-            setCurrentMovingIndex(section.position); //index
             currentMovingRef.current = section;
             
             thresholdsRef.current = ThresholdsFunc(section.position,sectionHeightsRef.current);
@@ -250,10 +241,8 @@ export default function Index() {
         pan.setValue({ x: 0, y: totalY });
         
         const pos = currentMovingRef.current!.position
-        console.log("pos: "+pos);
         //console.log(pos);
         console.log("thresholds: "+thresholdsRef.current);
-        console.log("positions moved: "+positionsMoved.current);
         console.log(thresholdsRef.current[pos + 1 + positionsMoved.current])
         if(thresholdsRef.current[pos + 1 + positionsMoved.current] !== null ){
           if (totalY > thresholdsRef.current[pos+1+positionsMoved.current]){
@@ -281,7 +270,6 @@ export default function Index() {
         if (totalY < thresholdsRef.current[pos-1+positionsMoved.current]){
 
           if(positionsMoved.current > 0){ //going back, need to reswap
-            console.log("hellooo");
             const sectionToMove = sections.find((s) => s.position === pos+positionsMoved.current)!
             const panToSwap = panRefs.current[`${sectionToMove.sectionTitle}-${sectionToMove.timePeriod}`]
             currentMovingRef.current && panToSwap.flattenOffset();
@@ -289,8 +277,6 @@ export default function Index() {
             currentMovingRef.current && panToSwap.setValue({ x: 0, y: 0 });
             pan.setOffset({ x: 0, y: 0 });
           }else{
-          //moveSection(currentMovingIndex+1,"up",sectionHeights[currentMovingSection!.position])
-          //console.log("position "+)
           const sectionToMove = sections.find((s) => s.position === pos-1+positionsMoved.current)!
           const panToSwap = panRefs.current[`${sectionToMove.sectionTitle}-${sectionToMove.timePeriod}`]
           currentMovingRef.current && panToSwap.flattenOffset();
@@ -307,15 +293,25 @@ export default function Index() {
 
       onPanResponderRelease: () => {
         const pan = panRefs.current[currentMovingSectionKey!];
+
+        //Snaps pan on release
         pan?.flattenOffset();
+        pan?.setOffset({x: 0, y: thresholdsRef.current[currentMovingRef.current!.position+positionsMoved.current]});
+        pan?.setValue({ x: 0, y: 0 });
+
+
         /*Reallows interference*/
         scrollEnabledState.current = true;
         if (scrollRef.current) {
           scrollRef.current.setNativeProps({ scrollEnabled: true });
         }
+
+        //resets everything
+        currentMovingRef.current = null;
+        positionsMoved.current = 0;
+        setCurrentMovingSectionKey(null);
         setMovingSection(false);
-        setCurrentMovingIndex(-1);
-        setThresholds(undefined);
+        
       },
     }), [editMode, currentMovingSectionKey]);
 

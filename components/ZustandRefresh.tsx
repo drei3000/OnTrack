@@ -3,31 +3,33 @@ import { exampleTrackers, TimePeriod, Tracker } from "@/types/Tracker";
 import { Section } from "@/types/Section";
 import { useSectionStore, useTrackerStore } from "@/storage/store";
 
+export type SectionRow = {
+  section_id: number;
+  section_title: string;
+  time_period: TimePeriod;
+  position: number;
+  last_modified: number;
+};
+
+export type TrackerRow = {
+  tracker_id: number;
+  tracker_name: string;
+  icon: string;
+  time_period: TimePeriod;
+  last_modified: number;
+  bound_amount: number;
+  unit?: string;
+  current_amount?: number;
+};
+
+export type SectionTrackerRelation = {
+  section_id: number,
+  tracker_id: number,
+  tracker_position: number,
+}
+
 export const setupDatabase = async () => {
-    type SectionRow = {
-        section_id: number;
-        section_title: string;
-        time_period: TimePeriod;
-        position: number;
-        last_modified: number;
-      };
-    
-      type TrackerRow = {
-        tracker_id: number;
-        tracker_name: string;
-        icon: string;
-        time_period: TimePeriod;
-        last_modified: number;
-        bound_amount: number;
-        unit?: string;
-        current_amount?: number;
-      };
-    
-      type SectionTrackerRelation = {
-        section_id: number,
-        tracker_id: number,
-        tracker_position: number,
-      }
+
   try {
     const db = await openDatabase();
     console.log("Database initialized");

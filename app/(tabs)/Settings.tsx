@@ -35,7 +35,8 @@ export default function Index() {
       paddingVertical: 15,
       paddingHorizontal: 20,
       borderRadius: 10,
-      marginBottom: 10,
+      marginBottom: 20,
+      marginTop: 5
     },
     settingsTextContainer: {
       marginLeft: 10, // Space between icon and text
@@ -126,7 +127,14 @@ export default function Index() {
           {settingsItems.map((item, index) => (
             <Pressable
               key={index}
-              style={[styles.settingsItem, { backgroundColor: currentTheme["1E1E1E"] }]}
+              style={[
+                styles.settingsItem,
+                {
+                  backgroundColor: currentTheme["101010"], // Set background color to currentTheme["101010"]
+                  borderWidth: 1, // Add a border
+                  borderColor: currentTheme.dimgray, // Set border color to currentTheme.dimgray
+                },
+              ]}
               onPress={item.onPress} // Navigate or perform action on press
             >
               <MaterialCommunityIcons
@@ -146,12 +154,7 @@ export default function Index() {
           ))}
         </ScrollView>
 
-        {/* Footer */}
-        <View style={styles.footer}>
-          <Text style={[styles.footerText, { color: currentTheme.white }]}>
-            © 2025 OnTrack. All rights reserved. {/* Footer text */}
-          </Text>
-        </View>
+        
       </View>
     </SafeAreaView>
   );
