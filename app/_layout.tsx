@@ -3,7 +3,7 @@ import * as NavigationBar from "expo-navigation-bar";
 import { useEffect } from "react";
 import { ThemeProvider } from "./ThemeContext";
 import { setupDatabase } from "@/components/ZustandRefresh";
-import { AuthProvider } from './AuthContext';
+import { LoginProvider } from './LoginContext';
 
 export default function Layout() {
   useEffect(() => { //runs on launch
@@ -15,7 +15,7 @@ export default function Layout() {
 
 
   return (
-    <AuthProvider>
+    <LoginProvider>
       <ThemeProvider>
         <Stack screenOptions={{ headerShown: false }}> {/*Can be true, adds back button and title*/}
           {/*Will always be one of tabs present*/}
@@ -27,6 +27,6 @@ export default function Layout() {
           <Stack.Screen name="selectImage" options={{ presentation: "transparentModal", title: "Select Image" }} />
         </Stack>
      </ThemeProvider>
-   </AuthProvider>
+   </LoginProvider>
   );
 }

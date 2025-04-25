@@ -6,7 +6,7 @@ import { useTheme } from './ThemeContext';    // Import the ThemeContext
 import Index from './(tabs)';
 // import bcrypt from 'bcryptjs';
 import { supabase } from '../storage/supabase';
-import { useAuth } from '../app/AuthContext';
+import { useAuth } from './LoginContext';
 
 const width = Dimensions.get('window').width-1
 
@@ -168,10 +168,10 @@ const styles = StyleSheet.create({
          {/* Header above modal */}
          <Text style={styles.header}>Profile</Text>
 
-         {/* 🧠 Show if already logged in */}
+         {/*To show if logged in */}
          {user && (
            <Text style={{ color: currentTheme.lightblue, marginBottom: 10 }}>
-             Logged in as: {user.username || user.email}
+             Logged in as: {user.username}
            </Text>
          )}
 
