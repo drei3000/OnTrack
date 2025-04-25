@@ -145,7 +145,9 @@ export default function Index() {
         </View>
 
         {/* Dynamic sections with their trackers added */}
-        <ScrollView contentContainerStyle={{ paddingBottom: 50 }}>
+        <ScrollView 
+        contentContainerStyle={{ paddingBottom: 50 }}
+        showsVerticalScrollIndicator={false}>
         {sections
             // Only show the time frame sections and trackers and no empty sections
             .filter((s) => s.timePeriod === selected && s.trackers.length > 0)
