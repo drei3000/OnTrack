@@ -55,7 +55,7 @@ const Item = ({ item, onPress, backgroundColor, iconColor }: ItemProps) => (
 
 export default function selectImage() {
   /* states */
-  const { currentTheme } = useTheme(); //get current theme (dark/light) from context
+  const { currentTheme } = useTheme(); //npx current theme (dark/light) from context
   const [selectedName, setSelectedName] = useState<string>(''); //icon selected
   const [selectedImageUri, setSelectedImageUri] = useState<string>(''); //custom photo selected
   const [prevColor, setPrevColor] = useState<string>(currentTheme["FFFFFF"]) //stores color on opening color selector
