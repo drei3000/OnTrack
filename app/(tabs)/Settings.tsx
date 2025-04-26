@@ -80,7 +80,7 @@ export default function Index() {
       title: "Backup & Restore",
       description: "Cloud Sync | Export Trackers",
       icon: "cloud-upload",
-      onPress: () => console.log("Starting backup..."), // Placeholder for backup functionality
+      onPress: () => router.push("../BackupAndRestore"), // Placeholder for backup functionality
     },
     {
       title: "Privacy & Security",
