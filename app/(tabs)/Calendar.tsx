@@ -16,6 +16,7 @@ import { Tracker } from "@/types/Tracker";
 import { Section } from "@/types/Section"; 
 import { getImage } from "../trackerList"; 
 import { getIconInfo } from "@/types/Misc"; 
+import { useAuth } from "../LoginContext";
 
 const hexToRgba = (hex: string, alpha: number): string => {
     const h = hex.replace('#', '');
@@ -28,7 +29,6 @@ const hexToRgba = (hex: string, alpha: number): string => {
 
 // Helper to normalise display size on different size displays
 const screenWidth = Dimensions.get("window").width;
-
 export default function Index() {
     // Theme and naviagation
     const { currentTheme } = useTheme(); // Access current theme
@@ -45,7 +45,7 @@ export default function Index() {
     const trackers = useTrackerStore((state) => state.trackers);
     const sections = useSectionStore((state) => state.sectionsH);
     const addTrackerToSection = useSectionStore((state) => state.addTrackerToSection);
-
+    const { user } = useAuth();
     // Dynamic styles for tracker wrappers
     const trackerWrapperStyle = (height: number) => ({
     width: screenWidth - 35,
@@ -103,7 +103,12 @@ export default function Index() {
         <StatusBar style="light" />
         {/* Header buttons */}
         <View style={styles.header}>
-        <Pressable onPress={() => Alert.alert("Pfp icon pressed")} style={cornerButtonsStyle}>
+        <Pressable onPress={() => {if (user === null){
+            router.push("/Profile")} 
+          else{
+            router.push("/userLoggedIn")
+          }
+        }} style={cornerButtonsStyle}>
             <MaterialCommunityIcons name="account" size={40} color={currentTheme.white} />
         </Pressable>
 

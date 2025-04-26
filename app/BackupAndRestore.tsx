@@ -15,9 +15,8 @@ export const supabase = createClient(supabaseUrl, supabaseKey);
 export default function AccountSettings() {
   const { currentTheme: theme } = useTheme();
   const { user } = useAuth();
+
   const handleBackup = async () => {
-
-
     const db = await openDatabase();
     if (user===null){
         console.log("Not logged in")
@@ -36,6 +35,7 @@ export default function AccountSettings() {
         }
 
         if (data) try {
+        
             const rows = await db.getAllAsync('SELECT tracker_id, tracker_name, icon, time_period, unit, bound_amount, current_amount, last_modified FROM trackers');
             const sections = await db.getAllAsync('SELECT section_id, section_title, time_period, position, last_modified FROM sections');
             const sectionTrackers = await db.getAllAsync('SELECT relation_id, section_id, tracker_id, tracker_position, last_modified FROM section_trackers');
@@ -56,18 +56,18 @@ export default function AccountSettings() {
               }));
     
     
-            const { error:trackerError } = await supabase.from('Trackers').insert(rowsWithUser);
+            const { error:trackerError } = await supabase.from('Trackers').upsert(rowsWithUser, { onConflict: 'user_id,tracker_id' });
             if (trackerError) {
                 console.error("Tracker Error:", trackerError);
                 return;
               }
               
-            const { error:sectionError } = await supabase.from('Sections').insert(sectionsWithUser);
+            const { error:sectionError } = await supabase.from('Sections').upsert(sectionsWithUser, { onConflict: 'user_id,section_id' });
             if (sectionError) {
                 console.error("Section Error:", sectionError);
                 return;
               }
-            const { error:sectionTrackerError } = await supabase.from('Section_Trackers').insert(sectionTrackersWithUser);
+            const { error:sectionTrackerError } = await supabase.from('Section_Trackers').upsert(sectionTrackersWithUser, { onConflict: 'user_id,tracker_id,section_id' });
             if (sectionTrackerError) {
                 console.error("SectionTracker Error:", sectionTrackerError);
                 return;
