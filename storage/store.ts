@@ -399,12 +399,20 @@ export const useSectionStore = create<SectionsHomeStore>((set, get) => ({
         );
     
         // close the position gap for the remaining sections
-        await db.runAsync(
-          `UPDATE sections
-             SET position = position - 1, last_modified = ?
-           WHERE position > ?`,
-          [Date.now(), position]
-        );
+        const rowsToMoveUp = await db.getAllAsync( //UP physically, -1 position
+          `SELECT section_id, position FROM sections
+           WHERE time_period = ? AND position > ?
+           ORDER BY position ASC`,
+          [time_period,  position]
+        ) as {section_id:number,position:number}[];
+
+        for (const row of rowsToMoveUp) {
+          await db.runAsync(
+            `UPDATE sections SET position = ?, last_modified = ? WHERE section_id = ?`,
+            [row.position - 1, Date.now(), row.section_id]
+          );
+        }
+        
       } catch (err) {
         console.error('Could not delete section', err);
       }

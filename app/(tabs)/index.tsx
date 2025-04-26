@@ -57,7 +57,7 @@ export default function Index() {
   const addTrackerToSection = useSectionStore((state) => state.addTrackerToSection);
   const incrementTracker = useTrackerStore(state => state.incrementTracker);
   const moveSectionBy = useSectionStore(state => state.moveSectionBy);
-
+  const deleteSection = useSectionStore(state => state.deleteSection)
   /* States */
   //modal states
   const [sectionModalOpen, setSectionModalOpen] = useState(false);
@@ -490,7 +490,7 @@ export default function Index() {
       },
     }), [editMode, currentMovingSectionKey, selected, sections]);
 
-    
+
   // Dynamic styles for square icon buttons
   const squareIconButtonStyle = (size: number) => ({
     ...styles.squareIconButton,
@@ -687,7 +687,10 @@ export default function Index() {
                   position: 'absolute',
                   right: 10,
                 }
-              ]}>
+              ]}
+              onPress={() =>
+                deleteSection(section.sectionTitle,section.timePeriod)
+              }>
                 <Feather
                 name="minus-circle"
                 size={30}
