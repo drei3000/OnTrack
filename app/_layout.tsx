@@ -23,6 +23,7 @@ export default function Layout() {
           <Stack.Screen name ="Profile" options={{ presentation: "transparentModal", title: 'Profile'}} />
           {/* Makes transparent screen for tracker creation*/}
           <Stack.Screen name="newTrackerView" options={{ presentation: "transparentModal", title: "New Tracker" }} />
+          <Stack.Screen name="userLoggedIn" options={{ presentation: "transparentModal", title: "User Logged In" }} />
           {/* Makes transparent screen for image selection*/}
           <Stack.Screen name="selectImage" options={{ presentation: "transparentModal", title: "Select Image" }} />
         </Stack>
