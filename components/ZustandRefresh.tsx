@@ -52,8 +52,7 @@ export const setupDatabase = async () => {
     sectionTrackersInfo.forEach(relation => {
       console.log("sectionID: "+relation.section_id+" trackerID: "+relation.tracker_id+" position: "+relation.tracker_position)
     });
-
-    console.log
+    
     const { setTrackers, addTracker, getTracker } = useTrackerStore.getState();
     const { setSectionsH, addSectionH, initialAddTrackerToSection } = useSectionStore.getState();
 
