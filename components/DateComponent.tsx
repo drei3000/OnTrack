@@ -70,11 +70,11 @@ const Date: React.FC<DateComponentProps> = ({ date, onSelectDate, selected, mode
           selected === formattedDate && {
             color: currentTheme["101010"], // Selected text color
             fontWeight: 'bold',
-            fontSize: 24,
+            fontSize: 17,
           },
           selected === formattedDate && mode === 'Weekly' && {
             color: currentTheme["101010"], // Selected text color
-            fontWeight: 'regular',
+            fontWeight: 'bold',
             fontSize: 17,
           }
         ]}
@@ -93,7 +93,8 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 10,
     borderColor: '#ddd',
-    padding: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 0,
     marginVertical: 10,
     alignItems: 'center',
     height: 70,
@@ -102,7 +103,7 @@ const styles = StyleSheet.create({
   },
   // Base style for the day label text
   big: {
-    fontWeight: 'bold',
+    fontWeight: 'regular',
     fontSize: 15,
   },
   // Base style for the day number text

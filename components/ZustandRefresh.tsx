@@ -2,6 +2,7 @@ import { openDatabase } from "@/storage/sqlite";
 import { exampleTrackers, TimePeriod, Tracker } from "@/types/Tracker";
 import { Section } from "@/types/Section";
 import { useSectionStore, useTrackerStore } from "@/storage/store";
+import { useHistoryStore } from "@/storage/store";
 
 export type SectionRow = {
   section_id: number;
@@ -26,7 +27,20 @@ export type SectionTrackerRelation = {
   section_id: number,
   tracker_id: number,
   tracker_position: number,
+};
+
+
+export type TrackerHistoryRow = {
+    history_id: number;
+    tracker_id: number;
+    date: string;
+    bound_amount: number;
+    current_amount: number;
+    unit?: string;
+    cloud_history_id?: number;
+    last_modified: number;
 }
+
 
 export const setupDatabase = async () => {
 
@@ -52,13 +66,17 @@ export const setupDatabase = async () => {
     sectionTrackersInfo.forEach(relation => {
       console.log("sectionID: "+relation.section_id+" trackerID: "+relation.tracker_id+" position: "+relation.tracker_position)
     });
-    
+
     const { setTrackers, addTracker, getTracker } = useTrackerStore.getState();
     const { setSectionsH, addSectionH, initialAddTrackerToSection } = useSectionStore.getState();
 
     // Clear existing state
     setTrackers([]);
     setSectionsH([]);
+
+    // Load all tracker_historiy rows - loadHistory from store.ts
+    await useHistoryStore.getState().loadHistory();
+
 
     var trackersDBFormat: Tracker[] = []; //initialize trackers in db format to set
     const trackers: TrackerRow[] = trackersInfo.map((tracker) => {

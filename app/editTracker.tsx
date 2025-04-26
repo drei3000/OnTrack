@@ -26,7 +26,7 @@ const scale = PixelRatio.get(); //For exact pixel adjustments adjust according t
 
 export default function editTracker(){
     /* handling of transitioning between newTrackerView and selectImage */
-    const router = useRouter(); 
+    const router = useRouter();
     const {trackerN,timeP, image, color} = useLocalSearchParams(); // Get parameters passed to this screen
     const timePeriod = typeof(timeP) === "string" ? timeP : "Daily"; // Default to "Daily" if time period is not provided
     const trackerName = typeof(trackerN) === "string" ? trackerN : "no_name"; // Default to "no_name" if tracker name is not provided
@@ -37,7 +37,7 @@ export default function editTracker(){
       state.getTracker(trackerName, timePeriod)
     ); // Get the tracker from the store using the provided name and time period
     const addTracker = useTrackerStore((s) => s.addTracker2); // Add tracker function from the store
-    
+
     /* States */
     const timePeriods = ['Daily', 'Weekly', 'Monthly', 'Yearly']; // Available time periods
     const [currentTPIndex, setCurrentTPIndex] = useState(timePeriods.indexOf(timePeriod)); // Index of the current time period
@@ -55,13 +55,13 @@ export default function editTracker(){
     // Update state when tracker changes
     useEffect(() => {
       if (!tracker) return;
-    
+
       setTitle(tracker.trackerName);
       setCurrentAmount(`${tracker.currentAmount}`);
       setLimit(`${Math.abs(tracker.bound)}`);
       setIsGoal(tracker.bound > 0);
       setValue(tracker.unit || null);
-    
+
       const [prefix, icon, color] = tracker.icon.split('|');
       if (prefix === 'image') {
         setSelectedImage(icon);
@@ -69,10 +69,10 @@ export default function editTracker(){
         setSelectedImage(icon);
         setSelectedColor(color);
       }
-    
+
       setCurrentTPIndex(timePeriods.indexOf(tracker.timePeriod));
     }, [tracker]);
-        
+
       /* Units for dropdown */
     const [units, setUnits] = useState([
       { label: "NONE", value: ""},
@@ -105,13 +105,13 @@ export default function editTracker(){
       { label: "Kilojoules", value: "kj" },
       { label: "Heart Rate (BPM)", value: "bpm" },
     ]);
-    
+
     // Update selected image and color when parameters change
     useEffect(() => {
         if (image && typeof image === 'string') {//set selected image unless blank
         setSelectedImage(image);
         }else{
-        setSelectedImage(''); 
+        setSelectedImage('');
         }
 
         if(color && typeof color === 'string'){
@@ -134,7 +134,7 @@ export default function editTracker(){
     const toggleGoalButton = () => {
         setIsGoal(prevState => !prevState);
     };
-    
+
     const styles = StyleSheet.create({
         // Content inside overlay (background, size etc)
         container: {
@@ -165,7 +165,7 @@ export default function editTracker(){
           marginBottom: 20,
           borderRadius: 5,
           borderWidth: 1,
-          
+
           alignSelf: 'center',
         },
         // All input fields
@@ -175,7 +175,7 @@ export default function editTracker(){
           textAlign: "center",
           fontSize: 20,
         },
-      
+
         // Dropdown styling
         dropdownContainer: {
             height: 60,
@@ -184,7 +184,7 @@ export default function editTracker(){
           borderRadius: 5,
           borderWidth: 1,
           borderColor: currentTheme.dimgray,
-          zIndex: 1000, 
+          zIndex: 1000,
           alignSelf: 'center',
           alignContent: 'center',
           justifyContent: 'center',
@@ -202,7 +202,7 @@ export default function editTracker(){
           textAlign: 'center',
           fontSize: 20,
         },
-      
+
         tickContainerStyle: {
           marginLeft: -15,
         },
@@ -219,7 +219,7 @@ export default function editTracker(){
           height: 5*scale,
           tintColor: currentTheme.white, //white tick
         },
-      
+
         //Contains buttons (important for row display)
         buttonsContainer: {
           height: 60,
@@ -234,27 +234,27 @@ export default function editTracker(){
           borderRadius: 5,
           borderWidth: 2,
           borderColor: currentTheme.dimgray,
-      
+
           alignItems: 'center',
           justifyContent: 'center',
         },
         goalLimitButton: {
           flex: 1,
           height: '100%',
-      
+
           justifyContent: "center",
           alignItems: "center",
           backgroundColor: currentTheme.black,
-      
+
           borderRadius: 5,
           borderWidth: 2,
           borderColor: currentTheme.dimgray,
-      
+
           fontSize: 20,
           fontWeight: "bold",
           color: currentTheme["FFFFFF"],
         },
-      
+
         // Color of goalLimit button dependent on {goal or limit}
         goalButton: {
           backgroundColor: "#06402B",
@@ -262,7 +262,7 @@ export default function editTracker(){
         limitButton: {
           backgroundColor: "#950606",
         },
-      
+
         //Text if goal or limit {otherwise buttonText}
         goalLimitText: {
           fontSize: 20,
@@ -292,9 +292,9 @@ export default function editTracker(){
             fontSize: 22,
             marginLeft: 5,
         }
-        
+
     });
-    
+
     //Cross, Icon box and tick (used in select image)
     const imageBoxStyles = StyleSheet.create({
     //For image cancellation, image and confirm tracker buttons
@@ -320,7 +320,7 @@ export default function editTracker(){
         borderWidth: 1,
         borderColor: currentTheme.dimgray,
         borderTopColor: '#101010',
-        borderBottomColor: '#860B0B', 
+        borderBottomColor: '#860B0B',
         borderBottomWidth: 7,
         borderLeftColor: 'transparent',
 
@@ -331,7 +331,7 @@ export default function editTracker(){
     icon: {
         aspectRatio: 1,
         width: width * 0.45,
-        
+
         borderColor: currentTheme.dimgray,
         borderWidth: 1,
         justifyContent: 'center',
@@ -344,22 +344,22 @@ export default function editTracker(){
     // Confirm and save tracker edits
     const handleConfirmEdit = async () => {
       if (title.trim().length < 3) return;
-    
+
       const iconString = isUri(selectedImage)
         ? `image|${selectedImage}`
         : `fa5|${selectedImage}|${selectedColor}`;
-    
+
       const timePeriod: TimePeriod = ['Daily','Weekly','Monthly'][currentTPIndex] as TimePeriod;
       const boundNumber: number = limit.trim() === '' ? 0 : parseFloat(limit) * (isGoal ? 1 : -1);
-    
+
       try {
         const db = await openDatabase();
-        
+
         await db.runAsync(
           `UPDATE trackers SET tracker_name = ?, icon = ?, time_period = ?, unit = ?, bound_amount = ?, last_modified = ?, current_amount = ? WHERE tracker_name = ? AND time_period = ?`,
           [title.trim(), iconString, timePeriod, value ?? null, boundNumber, Date.now(), currentAmount, trackerName, timePeriod]
         );
-        
+
         setupDatabase();
         router.back();
       } catch (err) {
@@ -367,28 +367,28 @@ export default function editTracker(){
       }
     };
 
-  
+
     // Delete tracker from database
     const handleDeleteTracker = async () => {
       try {
         const db = await openDatabase();
-        
+
         await db.runAsync(
           `DELETE FROM trackers WHERE tracker_name = ? AND time_period = ?`,
           [trackerName, timePeriod]
         );
-        
+
         setupDatabase();
         router.back();
       } catch (err) {
         console.error('Could not update tracker', err);
       }
     };
-    
+
     // Margin for top alignment
     var marginForTop = (height - ((60/scale)*6 + (20/scale)*6 + (width)*0.45)) / 2
     marginForTop = marginForTop < 0 ? 0 : ((marginForTop/scale)/2); //give up tonight dont pmo
-    
+
     return (
       <SafeAreaView
         style={[
@@ -419,7 +419,7 @@ export default function editTracker(){
             <MaterialCommunityIcons name="trash-can-outline" size={40} color={currentTheme.white} />
           </Pressable>
         </View>
-  
+
         {/* Tracker icon and image selection */}
         <View style={[
           imageBoxStyles.imageButtonsContainer,
@@ -461,7 +461,7 @@ export default function editTracker(){
             )}
           </Pressable>
         </View>
-  
+
         {/* Tracker title input */}
         <View style={styles.inputContainer}>
           <TextInput
@@ -475,7 +475,7 @@ export default function editTracker(){
             onPressIn={() => setOpen(false)}
           />
         </View>
-  
+
         {/* Current amount input */}
         <View style={styles.inputContainer}>
           <TextInput
@@ -495,7 +495,7 @@ export default function editTracker(){
             onPressIn={() => setOpen(false)}
           />
         </View>
-  
+
         {/* Goal/Limit input */}
         <View style={styles.inputContainer}>
           <TextInput
@@ -516,7 +516,7 @@ export default function editTracker(){
             value={limit}
           />
         </View>
-  
+
         {/* Unit dropdown */}
         <View style={[styles.dropdownContainer, { zIndex: 10 }]}>
           <DropDownPicker
@@ -543,7 +543,7 @@ export default function editTracker(){
             }}
           />
         </View>
-  
+
         {/* Time period and goal/limit buttons */}
         <View style={styles.buttonsContainer}>
           <Pressable style={styles.timePeriodButton}>
@@ -569,7 +569,7 @@ export default function editTracker(){
             </Text>
           </Pressable>
         </View>
-  
+
         {/* Confirm button */}
         {title.length > 2 && (
           <Pressable style={styles.confirmButton} onPress={handleConfirmEdit}>

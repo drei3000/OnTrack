@@ -15,7 +15,7 @@ import { useTrackerStore } from "@/storage/store"; // Import the Zustand store
 import { getImage } from "../trackerList"; // Import the getImage function
 import { CalendarProps } from "../../components/CalendarComponent";
 import NewSectionModal from "@/components/SectionModal";
-
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getIconInfo } from "@/types/Misc";
 
 import { useSectionStore } from "@/storage/store";
@@ -46,8 +46,9 @@ const sidesPadding = 16; // for grid mostly
 const itemSize = (screenWidth - totalSpacing - sidesPadding * 2) / itemsPerRow;
 const tabs = 120;
 const marginBetweenSections = 15;
-export default function Index() {
 
+export default function Index() {
+  const insets = useSafeAreaInsets();
   
   const router = useRouter();
   const { currentTheme } = useTheme(); // Get the current theme from context
@@ -59,7 +60,8 @@ export default function Index() {
   const addTrackerToSection = useSectionStore((state) => state.addTrackerToSection);
   const incrementTracker = useTrackerStore(state => state.incrementTracker);
   const moveSectionBy = useSectionStore(state => state.moveSectionBy);
-
+  const deleteSection = useSectionStore(state => state.deleteSection)
+  const removeTrackerFromSection = useSectionStore(state => state.removeTrackerFromSection)
   /* States */
   //modal states
   const [sectionModalOpen, setSectionModalOpen] = useState(false);
@@ -101,6 +103,8 @@ export default function Index() {
     return thresholdsToReturn;
   };
 
+  //Edit mode states
+  const [sectionToDelete, setSectionToDelete] = useState<string | null>(null); //warning state for deletion
   //Edit mode refs
   const panRefs = useRef<{ [key: string]: Animated.ValueXY }>({}); //ref to all sections
   const pan = useRef(new Animated.ValueXY()).current; //ref to section being moved
@@ -124,6 +128,7 @@ export default function Index() {
 
   //Currently-moving section
   const currentMovingRef = useRef<Section | null>(null); // the section being dragged
+  const selectedKeyRef = useRef<string | null>(null);
   const movingSectionRef = useRef<boolean>(false); // flag
   const positionsMoved = useRef<number>(0); // net positions shifted during this drag
 
@@ -168,21 +173,20 @@ export default function Index() {
   useEffect(() => {
     resetSectionState();
   }, [selected,sections]);
-  
-
 
   function averageProgress(): number {
       let totalRatio = 0;
       let counted = 0;
-  
+
       sections.filter(s => s.timePeriod === selected).forEach(section => {
           section.trackers.forEach(t => {
-          // accept only trackers that have a target > 0
-          const target  = Number(t.bound ?? t.bound ?? t.bound ?? 0);
-          if (target <= 0) return;
+            
+          // accept only trackers that have a target != 0
+          const target  = Number(t.bound ?? 0);
+          if (target == 0) return;
   
           const current = Number(t.currentAmount ?? 0);
-          totalRatio += Math.min(1, current / target);
+          totalRatio += Math.min(1, current / (Math.abs(target)));
           counted += 1;
           });
       });
@@ -195,7 +199,7 @@ export default function Index() {
   //function to get height and pos of section given title ()
   const getSectInfo = (sectionTitle: string): {height: number, position: number} => { //ONLY CALL WHEN ALREADY UNWRAPPED SECTION
     const section : Section =  sections.find((s) => s.sectionTitle === sectionTitle && s.timePeriod === selected)!
-    var sectHeight : number = 51.666 + 10; //(30) {height in theory} + (10) {padding size} + 11.666 (unaccounted for in top)
+    var sectHeight : number = 56.666 + 10; //(35) {height in theory} + (10) {padding size} + 11.666 (unaccounted for in top)
     var position : number = -1;
     if(section){
       const rows = Math.ceil((section.trackers.length +1)/ 4);
@@ -250,6 +254,13 @@ export default function Index() {
       onMoveShouldSetPanResponder: () => editMode, //edit mode also
 
       onPanResponderGrant: (e) => { //if granted (edit mode)
+        console.log(" GRANTED")
+        /*Stops parent scroll view from interfering*/
+        scrollEnabledState.current = false; 
+        if (scrollRef.current) {
+          scrollRef.current.setNativeProps({ scrollEnabled: false });
+        }
+
         //Set current scroll total to 0
         scrollingNumRef.current = 0;
         const touchY = e.nativeEvent.pageY;
@@ -272,11 +283,7 @@ export default function Index() {
         setMovingSection(true);
         movingSectionRef.current = true;
 
-        /*Stops parent scroll view from interfering*/
-        scrollEnabledState.current = false; 
-        if (scrollRef.current) {
-          scrollRef.current.setNativeProps({ scrollEnabled: false });
-        }
+        
       },
 
 
@@ -492,7 +499,7 @@ export default function Index() {
       },
     }), [editMode, currentMovingSectionKey, selected, sections]);
 
-    
+
   // Dynamic styles for square icon buttons
   const squareIconButtonStyle = (size: number) => ({
     ...styles.squareIconButton,
@@ -514,6 +521,7 @@ export default function Index() {
     setTargetSection(null);
   };
 
+
   const circleAverage = averageProgress();
   const circleAveragePercentage = Math.round(circleAverage * 100);
   const circleAverageString = `${circleAveragePercentage}%`;
@@ -521,10 +529,25 @@ export default function Index() {
 
   return (
     //whole screen
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: currentTheme["101010"] }]}>
-      <StatusBar style="light" />
-      {/* This view is for the top-left and top-right icons */}
-      <View style={styles.topRow}>
+    <SafeAreaView style={[styles.safeArea, { 
+      position: 'relative',
+    backgroundColor: currentTheme["101010"], }]}>
+      {/*<StatusBar style="light" />*/}
+      {/* Top view row */}
+      <View style={[
+        {
+          backgroundColor: currentTheme['101010'],
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: insets.top + 60,
+          alignContent: 'center',
+          flexDirection: 'row',
+          paddingTop: insets.top,
+          zIndex: 1,
+        }
+      ]}>
         <Pressable
           onPress={() => {if (user === null){
             router.push("/Profile")} 
@@ -532,10 +555,19 @@ export default function Index() {
             router.push("/userLoggedIn")
           }
         }}
-          style={[styles.cornerButton, { backgroundColor: currentTheme["101010"] }]}
+          style={[ { backgroundColor: currentTheme["101010"], height: '100%', aspectRatio: 1, borderWidth: 1, justifyContent: 'center', alignItems: 'center' }]}
         >
           <MaterialCommunityIcons name="account" size={40} color={currentTheme.white} />
         </Pressable>
+        <View
+          style = {[
+            {
+              flex: 1,
+              height: '100%',
+              flexDirection: 'row'
+            }
+          ]}
+        >
         {buttons.map((btn) => (
           <TouchableOpacity
             key={btn}
@@ -543,7 +575,7 @@ export default function Index() {
               flex: 1,
               alignItems: "center",
               justifyContent: "center",
-              paddingHorizontal: 16,
+              paddingHorizontal: 0,
               paddingVertical: 8,
               borderRadius: 10,
               backgroundColor: "transparent", // Always transparent
@@ -561,9 +593,10 @@ export default function Index() {
             </Text>
           </TouchableOpacity>
         ))}
+        </View>
         <Pressable
           onPress={() => router.push("/newTrackerView")}
-          style={[styles.cornerButton, { backgroundColor: currentTheme["101010"] }]}
+          style={[ { backgroundColor: currentTheme["101010"], height: '100%', aspectRatio: 1, borderWidth: 1, justifyContent: 'center', alignItems: 'center' }]}
         >
           <Entypo name="plus" size={40} color={currentTheme.white} />
         </Pressable>
@@ -605,7 +638,13 @@ export default function Index() {
             paddingHorizontal: 5,}
         ]}
         >
-        <View style={styles.progressContainer}>
+        <View style={[styles.progressContainer,
+        {
+          width: 100,
+          height:100,
+          marginTop: 60 + 28,
+        }
+        ]}>
           <Progress.Circle
             size={100} // Size of the circle
             progress={circleAverage} // 76% progress
@@ -614,6 +653,10 @@ export default function Index() {
             color={currentTheme.lightgreen} // Progress color
             unfilledColor={currentTheme.dimgray} // Background color
             borderWidth={0} // No border
+            style={[
+              {position: 'absolute'
+              }
+            ]}
           />
           <Text style={[styles.progressText, { color: currentTheme.white }]}>{circleAverageString}</Text>
         </View>
@@ -657,15 +700,15 @@ export default function Index() {
                 pan.getLayout(), //stored in pan object created by useRef earlier
                 {borderWidth: 1,
                   borderRadius: 8,
-                  borderColor: editMode ? currentTheme["lowOpacityWhite"] : 'transparent',
-                  marginTop: section.position === 0 ? 30 : 15, //num1 from circle, num2 from other sections
+                  borderColor: editMode ? currentTheme["dimgray"] : 'transparent',
+                  marginTop: section.position === 0 ? 20 : 15, //num1 from circle, num2 from other sections
                   paddingVertical: 10,
                   width: '100%',
                   minWidth: '100%',
                   backgroundColor: (movingSection && (currentMovingSectionKey === `${section.sectionTitle}-${section.timePeriod}`)) ? currentTheme['lowOpacityWhite'] : 'transparent',
                 }
               ]
-          }
+            }
             {...(currentMovingSectionKey === `${section.sectionTitle}-${section.timePeriod}` ? panResponderSection.panHandlers : {})}//passing gesture handlers into view
             
             >
@@ -678,6 +721,7 @@ export default function Index() {
                   alignContent: 'center',
                   justifyContent: 'center',
                   flexDirection: 'row',
+                  marginBottom: 5
                 }
               ]}
               >
@@ -692,12 +736,32 @@ export default function Index() {
                 {width: 30,
                   height:30,
                   position: 'absolute',
-                  right: 10,
+                  left: 10,
                 }
-              ]}>
+              ]}
+              onPress={() =>{
+                Alert.alert(
+                  "Delete Section?",
+                  section.sectionTitle + " will be deleted permanently",
+                  [
+                    {
+                      text: "Cancel",
+                      style: "cancel",
+                    },
+                    {
+                      text: "OK",
+                      onPress: () => {
+                        deleteSection(section.sectionTitle,section.timePeriod)
+                      },
+                    },
+                  ],
+                  { cancelable: true }
+                );
+              }
+              }>
                 <Feather
                 name="minus-circle"
-                size={30}
+                size={23}
                 color={currentTheme['white']}
                 />
               </TouchableOpacity>
@@ -706,17 +770,26 @@ export default function Index() {
               {/* Section's Row of Tracker Icons */}
               <View style={styles.iconRow}>
                 {section.trackers.map((tracker) => (
+                  <View
+                    key = {tracker.trackerName + tracker.timePeriod}
+                    style = {[
+                      {flexDirection: 'row'}
+                    ]}
+                  >
+                    
                     
                     <Pressable
-                    key={tracker.trackerName + tracker.timePeriod}
                         // Single tap increment 
                         onPress={() => {
                             if (!editMode) { // don’t increment while you’re dragging sections
                             incrementTracker(tracker.trackerName, tracker.timePeriod);
+                            }else{
+
                             }
                         }}
                         // Hold press opens edit tracker
                         onLongPress={() => {
+                          if(!editMode){
                             router.push({
                             pathname: "/editTracker",
                             params: {
@@ -726,10 +799,12 @@ export default function Index() {
                                 image:    getIconInfo(tracker.icon).name,
                             },
                             });
+                          }
                         }}
                     style={[
                       squareIconButtonStyle(itemSize),
                       {
+                        borderColor: editMode ? currentTheme.dimgray : currentTheme.dimgray,
                         backgroundColor: hexToRgba( 
                             // Set to 0 for transparency                          
                           getIconInfo(tracker.icon).color, 0               
@@ -739,7 +814,7 @@ export default function Index() {
                   >
                     {(() => {                                                
                       const bound = tracker.bound ?? 0;                   
-                      const progress = bound > 0? Math.min(1, tracker.currentAmount / bound) : 0;                                              
+                      const progress = bound !== 0 ? Math.min(1, tracker.currentAmount / Math.abs(bound)) : 0;                                              
                       return (                                               
                         <View                                               
                           style={{                                          
@@ -759,8 +834,33 @@ export default function Index() {
                   
                     {getImage(tracker, 40).icon}
                   </Pressable>
+                  {/* Cross */}
+                  {editMode &&(
+                    <TouchableOpacity
+                    onPress={() => {
+                      removeTrackerFromSection(section.sectionTitle,selected,tracker)
+                    }}
+                    style = {[
+                      {position: 'absolute',
+                        backgroundColor: currentTheme['101010'],
+                        right: -4,
+                        top: 2,
+                        borderRadius: spacing,
+                      }
+                    ]}> 
+                      <Feather
+                          name="x-circle"
+                          size={21}
+                          color={currentTheme['white']}
+                          style={{ margin: -1 }} 
+                        />
+                    </TouchableOpacity>
+                  )}
+                  
+                  </View>
                   
                 ))}
+
 
                 {/* Plus button to open modal and store section */}
                 <Pressable
@@ -768,15 +868,17 @@ export default function Index() {
                     setTargetSection(section);     // Store selected section
                     setIsModalVisible(true);       // Show modal
                   }}
-                  style={squareIconButtonStyle(itemSize)
+                  style={
+                    squareIconButtonStyle(itemSize)
                     
                   }
                 >
                   <AntDesign name="plus" size={30} color={currentTheme.white} />
                 </Pressable>
-              </View>
+                </View>
             </Animated.View>
             </View>
+          
             )
             })}
         
@@ -799,7 +901,11 @@ export default function Index() {
         >
           <View style={[styles.modalOverlay, { backgroundColor: currentTheme["rgba(0, 0, 0, 0.8)"] }]}>
             <View
-              style={[styles.modalContent, { backgroundColor: currentTheme["101010"] }]}
+              style={[styles.modalContent, { 
+                backgroundColor: currentTheme["101010"],
+                borderColor: currentTheme['dimgray'],
+              }    
+            ]}
             >
               {/* Close button */}
               <Pressable
@@ -823,7 +929,6 @@ export default function Index() {
                 {trackers
                   .filter((tracker) => tracker.timePeriod === selected) // Filter trackers by selected time period
                   .map((tracker) => (
-                    
                   <TouchableOpacity
                     key={tracker.trackerName + tracker.timePeriod}
                     onPress={() => {
@@ -846,7 +951,8 @@ export default function Index() {
                     style={[
                       styles.trackerButton,
                       {
-                        borderBottomColor: currentTheme.dimgray,
+                        borderWidth: 1,
+                        borderColor: 'white',
                         backgroundColor: currentTheme["101010"],
                       },
                     ]}
@@ -906,9 +1012,9 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   progressText: {
-    position: "absolute",
-    top: 38,
-    left: 29,
+    // position: "absolute",
+    // top: 38,
+    // left: 29,
     fontSize: 20,
     fontWeight: "bold",
   },
@@ -952,8 +1058,9 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     width: screenWidth * 0.9,
-    height: "70%",
+    height: 450,
     borderRadius: 10,
+    borderWidth: 1,
     padding: 20,
     alignItems: "center",
     justifyContent: "flex-start",
@@ -968,7 +1075,7 @@ const styles = StyleSheet.create({
   },
 
   trackerButton: {
-    width: "26%", // Adjust to fit 3 items per row
+    width: "21%", // Adjust to fit 4 items per row
     aspectRatio: 1, // Make it square
     margin: 10, // Add spacing between buttons
     justifyContent: "center",
