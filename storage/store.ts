@@ -349,7 +349,7 @@ export const useSectionStore = create<SectionsHomeStore>((set, get) => ({
         const rowsToMoveUp = await db.getAllAsync( //UP physically, -1 position
           `SELECT tracker_id, tracker_position FROM section_trackers
             WHERE section_id = ? AND tracker_position > ?
-          ORDER BY position ASC`,
+          ORDER BY tracker_position ASC`,
           [section_id,  removedPos]
         ) as {tracker_id:number,tracker_position:number}[];
 

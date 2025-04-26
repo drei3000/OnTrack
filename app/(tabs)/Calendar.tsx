@@ -126,7 +126,7 @@ export default function Index() {
                 style={{
                 color: selected === btn ? currentTheme.white : currentTheme.gray,
                 fontWeight: selected === btn ? "bold" : "500",
-                fontSize: selected === btn ? 15.1 : 15,
+                fontSize: selected === btn ? 17 : 15,
                 }}
 
             >
@@ -145,9 +145,7 @@ export default function Index() {
         </View>
 
         {/* Dynamic sections with their trackers added */}
-        <ScrollView 
-        contentContainerStyle={{ paddingBottom: 50 }}
-        showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={{ paddingBottom: 50 }}>
         {sections
             // Only show the time frame sections and trackers and no empty sections
             .filter((s) => s.timePeriod === selected && s.trackers.length > 0)
@@ -176,7 +174,7 @@ export default function Index() {
                 const emptyBackgroundColor = hexToRgba(getIconInfo(tracker.icon).color, 0.15);
                 const fillBackgroundColor = hexToRgba(getIconInfo(tracker.icon).color, 0.5);
                 const bound = tracker.bound ?? 0;
-                const currentProgress = bound > 0? Math.min(1, tracker.currentAmount / bound) : 0;
+                const currentProgress = bound !== 0? Math.min(1, tracker.currentAmount / Math.abs(bound)) : 0;
 
                 // To test progress values, maybe add animations?
                 // const currentProgress = 0.6; 

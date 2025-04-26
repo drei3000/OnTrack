@@ -125,6 +125,7 @@ export default function Index() {
 
   //Currently-moving section
   const currentMovingRef = useRef<Section | null>(null); // the section being dragged
+  const selectedKeyRef = useRef<string | null>(null);
   const movingSectionRef = useRef<boolean>(false); // flag
   const positionsMoved = useRef<number>(0); // net positions shifted during this drag
 
@@ -169,21 +170,20 @@ export default function Index() {
   useEffect(() => {
     resetSectionState();
   }, [selected,sections]);
-  
-
 
   function averageProgress(): number {
       let totalRatio = 0;
       let counted = 0;
-  
+
       sections.filter(s => s.timePeriod === selected).forEach(section => {
           section.trackers.forEach(t => {
-          // accept only trackers that have a target > 0
-          const target  = Number(t.bound ?? t.bound ?? t.bound ?? 0);
-          if (target <= 0) return;
+            
+          // accept only trackers that have a target != 0
+          const target  = Number(t.bound ?? 0);
+          if (target == 0) return;
   
           const current = Number(t.currentAmount ?? 0);
-          totalRatio += Math.min(1, current / target);
+          totalRatio += Math.min(1, current / (Math.abs(target)));
           counted += 1;
           });
       });
@@ -251,6 +251,13 @@ export default function Index() {
       onMoveShouldSetPanResponder: () => editMode, //edit mode also
 
       onPanResponderGrant: (e) => { //if granted (edit mode)
+        console.log(" GRANTED")
+        /*Stops parent scroll view from interfering*/
+        scrollEnabledState.current = false; 
+        if (scrollRef.current) {
+          scrollRef.current.setNativeProps({ scrollEnabled: false });
+        }
+
         //Set current scroll total to 0
         scrollingNumRef.current = 0;
         const touchY = e.nativeEvent.pageY;
@@ -273,11 +280,7 @@ export default function Index() {
         setMovingSection(true);
         movingSectionRef.current = true;
 
-        /*Stops parent scroll view from interfering*/
-        scrollEnabledState.current = false; 
-        if (scrollRef.current) {
-          scrollRef.current.setNativeProps({ scrollEnabled: false });
-        }
+        
       },
 
 
@@ -515,6 +518,7 @@ export default function Index() {
     setTargetSection(null);
   };
 
+
   const circleAverage = averageProgress();
   const circleAveragePercentage = Math.round(circleAverage * 100);
   const circleAverageString = `${circleAveragePercentage}%`;
@@ -601,7 +605,12 @@ export default function Index() {
             paddingHorizontal: 5,}
         ]}
         >
-        <View style={styles.progressContainer}>
+        <View style={[styles.progressContainer,
+        {
+          width: 100,
+          height:100,
+        }
+        ]}>
           <Progress.Circle
             size={100} // Size of the circle
             progress={circleAverage} // 76% progress
@@ -610,6 +619,10 @@ export default function Index() {
             color={currentTheme.lightgreen} // Progress color
             unfilledColor={currentTheme.dimgray} // Background color
             borderWidth={0} // No border
+            style={[
+              {position: 'absolute'
+              }
+            ]}
           />
           <Text style={[styles.progressText, { color: currentTheme.white }]}>{circleAverageString}</Text>
         </View>
@@ -653,15 +666,15 @@ export default function Index() {
                 pan.getLayout(), //stored in pan object created by useRef earlier
                 {borderWidth: 1,
                   borderRadius: 8,
-                  borderColor: editMode ? currentTheme["white"] : 'transparent',
-                  marginTop: section.position === 0 ? 30 : 15, //num1 from circle, num2 from other sections
+                  borderColor: editMode ? currentTheme["dimgray"] : 'transparent',
+                  marginTop: section.position === 0 ? 20 : 15, //num1 from circle, num2 from other sections
                   paddingVertical: 10,
                   width: '100%',
                   minWidth: '100%',
                   backgroundColor: (movingSection && (currentMovingSectionKey === `${section.sectionTitle}-${section.timePeriod}`)) ? currentTheme['lowOpacityWhite'] : 'transparent',
                 }
               ]
-          }
+            }
             {...(currentMovingSectionKey === `${section.sectionTitle}-${section.timePeriod}` ? panResponderSection.panHandlers : {})}//passing gesture handlers into view
             
             >
@@ -689,7 +702,7 @@ export default function Index() {
                 {width: 30,
                   height:30,
                   position: 'absolute',
-                  right: 10,
+                  left: 10,
                 }
               ]}
               onPress={() =>{
@@ -713,8 +726,8 @@ export default function Index() {
               }
               }>
                 <Feather
-                name="x-circle"
-                size={30}
+                name="minus-circle"
+                size={23}
                 color={currentTheme['white']}
                 />
               </TouchableOpacity>
@@ -757,7 +770,7 @@ export default function Index() {
                     style={[
                       squareIconButtonStyle(itemSize),
                       {
-                        borderColor: editMode ? currentTheme.white : currentTheme.dimgray,
+                        borderColor: editMode ? currentTheme.dimgray : currentTheme.dimgray,
                         backgroundColor: hexToRgba( 
                             // Set to 0 for transparency                          
                           getIconInfo(tracker.icon).color, 0               
@@ -767,7 +780,7 @@ export default function Index() {
                   >
                     {(() => {                                                
                       const bound = tracker.bound ?? 0;                   
-                      const progress = bound > 0? Math.min(1, tracker.currentAmount / bound) : 0;                                              
+                      const progress = bound !== 0 ? Math.min(1, tracker.currentAmount / Math.abs(bound)) : 0;                                              
                       return (                                               
                         <View                                               
                           style={{                                          
@@ -797,13 +810,13 @@ export default function Index() {
                       {position: 'absolute',
                         backgroundColor: currentTheme['101010'],
                         right: -4,
-                        top: 0,
+                        top: 2,
                         borderRadius: spacing,
                       }
                     ]}> 
                       <Feather
                           name="x-circle"
-                          size={spacing*2}
+                          size={21}
                           color={currentTheme['white']}
                           style={{ margin: -1 }} 
                         />
@@ -959,9 +972,9 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   progressText: {
-    position: "absolute",
-    top: 38,
-    left: 29,
+    // position: "absolute",
+    // top: 38,
+    // left: 29,
     fontSize: 20,
     fontWeight: "bold",
   },
