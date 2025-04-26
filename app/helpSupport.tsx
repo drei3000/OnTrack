@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, ScrollView, StyleSheet } from "react-native";
+import { View, Text, ScrollView, StyleSheet, SafeAreaView } from "react-native";
 import { useTheme } from "./ThemeContext";
 
 export default function HelpSupport() {
@@ -33,7 +33,7 @@ export default function HelpSupport() {
     {
       question: "What is OnTrack?",
       answer:
-        "OnTrack is a mobile app that helps users track their habits and activities. It emphasizes customizability and a user-friendly design, allowing users to log activities such as food consumption, exercise, hobbies, and more.",
+        "OnTrack is a mobile app that helps users track their habits and activities. It emphasizes customisability and a user friendly design, allowing users to log activities such as food consumption, exercise, hobbies, and more.",
     },
     {
       question: "How do I create a custom tracker?",
@@ -68,30 +68,30 @@ export default function HelpSupport() {
   ];
 
   return (
-    <ScrollView
-      style={[
-        styles.container,
-        { backgroundColor: currentTheme.black }, // Use theme background color
-      ]}
-    >
-      <Text style={[styles.header, { color: currentTheme["FFFFFF"] }]}>
-        FAQs
-      </Text>
-      {faqs.map((faq, index) => (
-        <View key={index} style={styles.faqItem}>
-          <Text style={[styles.question, { color: currentTheme["FFFFFF"] }]}>
-            {faq.question}
-          </Text>
-          <Text
-            style={[
-              styles.answer,
-              { color: currentTheme.gray }, // Use secondary text color
-            ]}
-          >
-            {faq.answer}
-          </Text>
-        </View>
-      ))}
-    </ScrollView>
+    <SafeAreaView style={{ flex: 1, backgroundColor: currentTheme.black }}>
+      <ScrollView
+        style={[styles.container]}
+        contentContainerStyle={{ paddingBottom: 20 }} // optional: add bottom padding if needed
+      >
+        <Text style={[styles.header, { color: currentTheme["FFFFFF"] }]}>
+          FAQs
+        </Text>
+        {faqs.map((faq, index) => (
+          <View key={index} style={styles.faqItem}>
+            <Text style={[styles.question, { color: currentTheme["FFFFFF"] }]}>
+              {faq.question}
+            </Text>
+            <Text
+              style={[
+                styles.answer,
+                { color: currentTheme.gray },
+              ]}
+            >
+              {faq.answer}
+            </Text>
+          </View>
+        ))}
+      </ScrollView>
+    </SafeAreaView>
   );
 }

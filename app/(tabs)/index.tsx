@@ -547,7 +547,7 @@ export default function Index() {
               style={{
                 color: selected === btn ? currentTheme.white : currentTheme.gray,
                 fontWeight: selected === btn ? "bold" : "500",
-                fontSize: selected === btn ? 15. : 15,
+                fontSize: selected === btn ? 15.1 : 15,
               }}
             >
               {btn}
@@ -579,7 +579,8 @@ export default function Index() {
         contentContainerStyle={[
         styles.scrollView,
         {}
-      ]}>
+      ]}
+      showsVerticalScrollIndicator={false}>
         <Pressable
         pointerEvents="auto"
         onLongPress={()=> { //on long press edit
@@ -810,6 +811,7 @@ export default function Index() {
                   justifyContent: "center", // Center items horizontally
                   paddingBottom: 50, // Add padding if needed
                 }}
+                showsVerticalScrollIndicator={false}
               >
                 {trackers
                   .filter((tracker) => tracker.timePeriod === selected) // Filter trackers by selected time period
@@ -904,7 +906,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   title: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "bold",
     marginBottom: 0,
     textAlign: "center",

@@ -119,14 +119,15 @@ export default function trackerList(){
                     paddingHorizontal: 16,
                     paddingVertical: 8,
                     borderRadius: 10,
-                    backgroundColor: selected === btn ? currentTheme.white : currentTheme["101010"], // Dynamic background color
+                    
                     }}
                     onPress={() => setSelected(btn)}
                 >
                     <Text
                     style={{
-                        fontWeight: "500",
-                        color: selected === btn ? currentTheme["101010"] : currentTheme.white, // Dynamic text color
+                        color: selected === btn ? currentTheme.white : currentTheme.gray,
+                        fontWeight: selected === btn ? "bold" : "500",
+                        fontSize: selected === btn ? 15.1 : 15,
                     }}
                     >
                     {btn}
