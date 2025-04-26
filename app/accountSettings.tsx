@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, Pressable, StyleSheet, Alert } from "react-native";
 import { useTheme } from "./ThemeContext";
+import { router } from "expo-router";
 
 export default function AccountSettings() {
   const { currentTheme: theme } = useTheme();
@@ -22,7 +23,7 @@ export default function AccountSettings() {
   };
 
   const handleChangePassword = () => {
-    console.log("Navigate to Change Password screen");
+    router.push('/changePassword');
     // Add navigation or logic for changing password
   };
 

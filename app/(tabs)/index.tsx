@@ -23,6 +23,8 @@ import type { TimePeriod } from "@/types/Tracker";
 import { parseAsync } from "@babel/core";
 import { Keyframe, SharedValue, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 
+import { useAuth } from '@/app/LoginContext';
+
 // Helper function (same as one in Calendar.tsx)
 const hexToRgba = (hex: string, alpha: number): string => {
     const h = hex.replace('#', '');
@@ -522,7 +524,7 @@ export default function Index() {
   const circleAverage = averageProgress();
   const circleAveragePercentage = Math.round(circleAverage * 100);
   const circleAverageString = `${circleAveragePercentage}%`;
-
+  const { user } = useAuth();
 
   return (
     //whole screen
@@ -531,7 +533,12 @@ export default function Index() {
       {/* This view is for the top-left and top-right icons */}
       <View style={styles.topRow}>
         <Pressable
-          onPress={() => router.push("/Profile")}
+          onPress={() => {if (user === null){
+            router.push("/Profile")} 
+          else{
+            router.push("/userLoggedIn")
+          }
+        }}
           style={[styles.cornerButton, { backgroundColor: currentTheme["101010"] }]}
         >
           <MaterialCommunityIcons name="account" size={40} color={currentTheme.white} />

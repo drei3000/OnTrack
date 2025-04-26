@@ -13,5 +13,5 @@
       "**/*.tsx",
       ".expo/types/**/*.ts",
       "expo-env.d.ts"
-, "components/CalendarComponent.js", "components/DateComponent.js", "app/Calendar.js", "components/DateComponent.js", "components/CalendarComponent.js", "components/dateComponent.js"    ]
+, "components/CalendarComponent.tsx", "components/DateComponent.tsx", "app/Calendar.tsx", "components/DateComponent.tsx", "components/CalendarComponent.tsx", "components/dateComponent.tsx"    ]
   }
