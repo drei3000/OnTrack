@@ -35,36 +35,7 @@ export default function AccountSettings() {
         }
 
         if (data) try {
-
-            const { error: sectionTrackerDeleteError } = await supabase
-            .from('Section_Trackers')
-            .delete()
-            .eq('user_id', data.user_id);
-      
-          if (sectionTrackerDeleteError) {
-            console.error('Failed to delete from Section_Trackers:', sectionTrackerDeleteError);
-          }
-      
-          // Then delete from Trackers
-          const { error: trackerDeleteError } = await supabase
-            .from('Trackers')
-            .delete()
-            .eq('user_id', data.user_id);
-      
-          if (trackerDeleteError) {
-            console.error('Failed to delete from Trackers:', trackerDeleteError);
-          }
-      
-          // Then delete from Sections
-          const { error: sectionDeleteError } = await supabase
-            .from('Sections')
-            .delete()
-            .eq('user_id', data.user_id);
-      
-          if (sectionDeleteError) {
-            console.error('Failed to delete from Sections:', sectionDeleteError);
-          }
-
+        
             const rows = await db.getAllAsync('SELECT tracker_id, tracker_name, icon, time_period, unit, bound_amount, current_amount, last_modified FROM trackers');
             const sections = await db.getAllAsync('SELECT section_id, section_title, time_period, position, last_modified FROM sections');
             const sectionTrackers = await db.getAllAsync('SELECT relation_id, section_id, tracker_id, tracker_position, last_modified FROM section_trackers');
