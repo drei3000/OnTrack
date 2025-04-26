@@ -1,16 +1,51 @@
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, Pressable } from 'react-native';
+import { supabase } from '../storage/supabase';
+import { useAuth } from './LoginContext'; 
+import { useTheme } from './ThemeContext';
 
 export default function ChangePasswordScreen() {
+  const { currentTheme: theme } = useTheme();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-
-  const handleChangePassword = () => {
+  const {user} = useAuth();
+  const handleChangePassword = async () => {
     if (newPassword !== confirmPassword) {
       alert('New passwords do not match!');
       return;
+    }
+    if (user === null){
+        return;
+    }
+    else{
+        const { data, error } = await supabase
+        .from('Users')
+        .select('password')
+        .eq('email', user.email)  // or use 'username' if that's what you have
+        .single(); // returns one row instead of array
+        if (error) {
+        console.error("Failed to get user_id:", error);
+        } else {
+        const password = data.password;
+        if (currentPassword === password) {
+            const { error: updateError } = await supabase
+            .from('Users')
+            .update({ password: newPassword })
+            .eq('email', user.email);
+
+            if (updateError) {
+                console.error("Failed to update password:", updateError);
+                alert('Failed to update password.');
+                return;
+            }
+                alert('Password changed successfully!');
+            }
+            else{
+                alert('Wrong password.');
+            }
+        }
     }
     
     alert('Password changed successfully!');
@@ -18,59 +53,70 @@ export default function ChangePasswordScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Change Password</Text>
+    <View style={[styles.container,  { backgroundColor: theme["101010"] }]}>
+      <Text style={[styles.title, { color: theme["FFFFFF"] }]}>Change Password</Text>
 
-      <Text style={styles.label}>Current Password</Text>
       <TextInput
         style={styles.input}
         placeholder="Enter current password"
+        placeholderTextColor="#aaa"
         secureTextEntry
         value={currentPassword}
         onChangeText={setCurrentPassword}
       />
 
-      <Text style={styles.label}>New Password</Text>
       <TextInput
         style={styles.input}
         placeholder="Enter new password"
+        placeholderTextColor="#aaa"
         secureTextEntry
         value={newPassword}
         onChangeText={setNewPassword}
       />
 
-      <Text style={styles.label}>Confirm New Password</Text>
       <TextInput
         style={styles.input}
         placeholder="Confirm new password"
+        placeholderTextColor="#aaa"
         secureTextEntry
         value={confirmPassword}
         onChangeText={setConfirmPassword}
       />
 
-      <View style={styles.buttonContainer}>
-        <Button title="Change Password" onPress={handleChangePassword} />
-      </View>
+      <Pressable style={[styles.button, { backgroundColor: theme["101010"] }]} onPress={handleChangePassword}>
+        <Text style={[styles.buttonText, { color: theme["FFFFFF"] }]}>Change Password</Text>
+      </Pressable>
+
     </View>
   );
 };
 const styles = StyleSheet.create({
     container: {
-      flex: 1,
-      padding: 20,
-      backgroundColor: '#fff',
+        flex: 1,
+        padding: 16,
+        justifyContent: "center",
     },
     title: {
-      fontSize: 24,
-      fontWeight: 'bold',
-      marginBottom: 24,
-      textAlign: 'center',
+        fontSize: 24,
+        fontWeight: "bold",
+        marginBottom: 20,
+        textAlign: "center",
     },
     label: {
       fontSize: 16,
       marginBottom: 6,
       marginTop: 12,
     },
+    button: {
+        padding: 15,
+        borderRadius: 8,
+        alignItems: "center",
+        marginBottom: 15,
+      },
+      buttonText: {
+        fontSize: 16,
+        fontWeight: "bold",
+      },
     input: {
       borderWidth: 1,
       borderColor: '#ccc',
@@ -78,8 +124,12 @@ const styles = StyleSheet.create({
       paddingHorizontal: 12,
       paddingVertical: 10,
       fontSize: 16,
+      marginBottom: 16,
     },
     buttonContainer: {
-      marginTop: 30,
+        padding: 15,
+        borderRadius: 8,
+        alignItems: "center",
+        marginBottom: 15,
     },
   });
