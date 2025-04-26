@@ -873,7 +873,11 @@ export default function Index() {
         >
           <View style={[styles.modalOverlay, { backgroundColor: currentTheme["rgba(0, 0, 0, 0.8)"] }]}>
             <View
-              style={[styles.modalContent, { backgroundColor: currentTheme["101010"] }]}
+              style={[styles.modalContent, { 
+                backgroundColor: currentTheme["101010"],
+                borderColor: currentTheme['dimgray'],
+              }    
+            ]}
             >
               {/* Close button */}
               <Pressable
@@ -919,7 +923,8 @@ export default function Index() {
                     style={[
                       styles.trackerButton,
                       {
-                        borderBottomColor: currentTheme.dimgray,
+                        borderWidth: 1,
+                        borderColor: 'white',
                         backgroundColor: currentTheme["101010"],
                       },
                     ]}
@@ -1025,8 +1030,9 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     width: screenWidth * 0.9,
-    height: "70%",
+    height: 450,
     borderRadius: 10,
+    borderWidth: 1,
     padding: 20,
     alignItems: "center",
     justifyContent: "flex-start",
@@ -1041,7 +1047,7 @@ const styles = StyleSheet.create({
   },
 
   trackerButton: {
-    width: "26%", // Adjust to fit 3 items per row
+    width: "21%", // Adjust to fit 4 items per row
     aspectRatio: 1, // Make it square
     margin: 10, // Add spacing between buttons
     justifyContent: "center",
