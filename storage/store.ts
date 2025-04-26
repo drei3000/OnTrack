@@ -365,6 +365,24 @@ export const useSectionStore = create<SectionsHomeStore>((set, get) => ({
         [section_id, tracker_id]
       );
 
+      // close the position gap for the remaining trackers
+      if (removedPos !== undefined){
+        const rowsToMoveUp = await db.getAllAsync( //UP physically, -1 position
+          `SELECT tracker_id, tracker_position FROM section_trackers
+            WHERE section_id = ? AND tracker_position > ?
+          ORDER BY tracker_position ASC`,
+          [section_id,  removedPos]
+        ) as {tracker_id:number,tracker_position:number}[];
+
+        for (const row of rowsToMoveUp) {
+          await db.runAsync(
+            `UPDATE section_trackers SET tracker_position = ?, last_modified = ? WHERE section_id = ?`,
+            [row.tracker_position - 1, Date.now(), section_id]
+          );
+        }
+      }
+
+      /*
       // closes gap in positions made by tracker removal from section_trackers
       if (removedPos !== undefined) {
         await db.runAsync(
@@ -374,6 +392,7 @@ export const useSectionStore = create<SectionsHomeStore>((set, get) => ({
           [section_id, removedPos]
         );
       }
+        */
     } catch (err) {
       console.error('Could not remove tracker from section', err);
     }
@@ -420,12 +439,20 @@ export const useSectionStore = create<SectionsHomeStore>((set, get) => ({
         );
     
         // close the position gap for the remaining sections
-        await db.runAsync(
-          `UPDATE sections
-             SET position = position - 1, last_modified = ?
-           WHERE position > ?`,
-          [Date.now(), position]
-        );
+        const rowsToMoveUp = await db.getAllAsync( //UP physically, -1 position
+          `SELECT section_id, position FROM sections
+           WHERE time_period = ? AND position > ?
+           ORDER BY position ASC`,
+          [time_period,  position]
+        ) as {section_id:number,position:number}[];
+
+        for (const row of rowsToMoveUp) {
+          await db.runAsync(
+            `UPDATE sections SET position = ?, last_modified = ? WHERE section_id = ?`,
+            [row.position - 1, Date.now(), row.section_id]
+          );
+        }
+
       } catch (err) {
         console.error('Could not delete section', err);
       }
