@@ -2,7 +2,7 @@
 
 import { View, Alert, Pressable, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { MaterialCommunityIcons, Entypo, Ionicons, AntDesign } from "@expo/vector-icons";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useState, useEffect } from "react";
 import { useRouter } from "expo-router";
@@ -33,6 +33,7 @@ export default function Index() {
     // Theme and naviagation
     const { currentTheme } = useTheme(); // Access current theme
     const router = useRouter();
+    const insets = useSafeAreaInsets();
     // Calendar ranges and pages
     type CalendarMode = CalendarProps["mode"];
     const buttons: CalendarMode[] = ["Daily", "Weekly", "Monthly"];
@@ -98,59 +99,100 @@ export default function Index() {
     // Dynamic and static rendering
     return (
     <SafeAreaView
-        style={[styles.calendarContainer, { backgroundColor: currentTheme["101010"] }]}
+        style={[styles.calendarContainer, { backgroundColor: currentTheme["101010"], flexDirection: 'column' }]}
     >
         <StatusBar style="light" />
         {/* Header buttons */}
-        <View style={styles.header}>
-        <Pressable onPress={() => {if (user === null){
+        <View style={[
+        {
+          backgroundColor: currentTheme['101010'],
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: insets.top + 60,
+          alignContent: 'center',
+          flexDirection: 'row',
+          paddingTop: insets.top,
+          zIndex: 1,
+        }
+      ]}>
+        <Pressable
+          onPress={() => {if (user === null){
             router.push("/Profile")} 
           else{
             router.push("/userLoggedIn")
           }
-        }} style={cornerButtonsStyle}>
-            <MaterialCommunityIcons name="account" size={40} color={currentTheme.white} />
+        }}
+          style={[ { backgroundColor: currentTheme["101010"], height: '100%', aspectRatio: 1, borderWidth: 1, justifyContent: 'center', alignItems: 'center' }]}
+        >
+          <MaterialCommunityIcons name="account" size={40} color={currentTheme.white} />
         </Pressable>
-
-        {/* Time frame buttons (Daily, weekly, monthly */}
+        <View
+          style = {[
+            {
+              flex: 1,
+              height: '100%',
+              flexDirection: 'row'
+            }
+          ]}
+        >
         {buttons.map((btn) => (
-            <TouchableOpacity
+          <TouchableOpacity
             key={btn}
             style={{
-                flex: 1,
-                alignItems: "center",
-                justifyContent: "center",
-                paddingHorizontal: 16,
-                paddingVertical: 8,
-                borderRadius: 10,
-                backgroundColor: "transparent",
+              flex: 1,
+              
+              alignItems: "center",
+              justifyContent: "center",
+              paddingHorizontal: 0,
+              paddingVertical: 8,
+              borderRadius: 10,
+              backgroundColor: "transparent", // Always transparent
             }}
             onPress={() => setSelected(btn)}
-            >
+          >
             <Text
-                style={{
+              style={{
                 color: selected === btn ? currentTheme.white : currentTheme.gray,
                 fontWeight: selected === btn ? "bold" : "500",
-                fontSize: selected === btn ? 17 : 15,
-                }}
-
+                fontSize: selected === btn ? 15.1 : 15,
+              }}
             >
-                {btn}
+              {btn}
             </Text>
-            </TouchableOpacity>
+          </TouchableOpacity>
         ))}
-        <Pressable onPress={() => router.push("/newTrackerView")} style={cornerButtonsStyle}>
-            <Entypo name="plus" size={40} color={currentTheme.white} />
+        </View>
+        <Pressable
+          onPress={() => router.push("/newTrackerView")}
+          style={[ { backgroundColor: currentTheme["101010"], height: '100%', aspectRatio: 1, borderWidth: 1, justifyContent: 'center', alignItems: 'center' }]}
+        >
+          <Entypo name="plus" size={40} color={currentTheme.white} />
         </Pressable>
         </View>
 
         {/* Calendar horizontal scroll */}
-        <View>
+        <View
+        style = {[{
+            height: 90,
+            paddingTop: 5,
+            alignItems: 'center',
+            alignContent: 'center',
+            justifyContent: 'center',
+            //backgroundColor: 'red',
+            marginTop: insets.top,
+        }]}>
         <Calendar onSelectDate={setSelectedDate} selected={selectedDate || ""} mode={selected} />
         </View>
 
         {/* Dynamic sections with their trackers added */}
-        <ScrollView contentContainerStyle={{ paddingBottom: 50 }}>
+        <ScrollView 
+        contentContainerStyle={{ paddingBottom: 50 }}
+        style = {[{
+            height: '80%',
+        }]}
+        >
         {sections
             // Only show the time frame sections and trackers and no empty sections
             .filter((s) => s.timePeriod === selected && s.trackers.length > 0)
@@ -228,6 +270,7 @@ export default function Index() {
 const styles = StyleSheet.create({
   calendarContainer: {
     flex: 1,
+    //flexDirection: 'column',
     alignItems: "center",
   },
   header: {
