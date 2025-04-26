@@ -115,12 +115,9 @@ export const useSectionStore = create<SectionsHomeStore>((set, get) => ({
     
   },
   
+  //Function to move a section
   moveSectionBy: async(section_title, time_period,posChange) => {
     if (posChange === 0) return;
-    console.log("BEFORE STORE UPDATE:");
-    get().sectionsH.forEach(s => console.log(
-    `${s.sectionTitle} (${s.timePeriod}): pos=${s.position}`
-    ));
 
     const {sectionsH} = get()
 
@@ -149,7 +146,7 @@ export const useSectionStore = create<SectionsHomeStore>((set, get) => ({
             return { ...s, position: s.position - 1 };
           }
 
-          // Displace others (moving up)
+        // Displace others (moving up)
         if (
             targetPos < currentPos &&
             s.position < currentPos &&
@@ -164,9 +161,8 @@ export const useSectionStore = create<SectionsHomeStore>((set, get) => ({
     try{
     //Move in database
     const db = await openDatabase();
-    console.log("flag1");
 
-    //Firstly delete from database
+    //Firstly get id
     const section_idFetched = await db.getFirstAsync(
         `SELECT section_id FROM sections
         WHERE section_title = ? AND time_period = ?`,
@@ -175,42 +171,36 @@ export const useSectionStore = create<SectionsHomeStore>((set, get) => ({
 
     const section_id: number = section_idFetched!.section_id;
 
-    //const section_id: number = section_idFetched!
+    //Delete appropriate section
     await db.runAsync(
         `DELETE FROM sections
         WHERE section_title = ? AND time_period = ?`,
         [section.sectionTitle,section.timePeriod]
     );
-    console.log("flag2");
+
+    //Select and shift sections according to new displacement
     if(posChange > 0){
-        console.log("flag 3.5")
-        console.log("position: "+section.position+" targetPos: "+targetPos);
         const rowsToMoveUp = await db.getAllAsync( //UP physically, -1 position
             `SELECT section_id, position FROM sections
              WHERE time_period = ? AND position > ? AND position <= ?
              ORDER BY position ASC`,
             [section.timePeriod,  section.position, targetPos]
           ) as {section_id:number,position:number}[];
-          console.log("HELLO")
+
           for (const row of rowsToMoveUp) {
-            console.log("toMove: pos="+row.position);
             await db.runAsync(
               `UPDATE sections SET position = ?, last_modified = ? WHERE section_id = ?`,
               [row.position - 1, Date.now(), row.section_id]
             );
           }
     }else if(posChange < 0){
-        console.log("flag 3.5")
-        console.log("position: "+section.position+" targetPos: "+targetPos);
         const rowsToMoveDown = await db.getAllAsync( //down physically, +1 position
             `SELECT section_id, position FROM sections
              WHERE time_period = ? AND position < ? AND position >= ?
              ORDER BY position DESC`,
             [section.timePeriod,  section.position, targetPos]
           ) as {section_id:number,position:number}[];
-          console.log("HELLO")
           for (const row of rowsToMoveDown) {
-            console.log("toMove: pos="+row.position);
             await db.runAsync(
               `UPDATE sections SET position = ?, last_modified = ? WHERE section_id = ?`,
               [row.position + 1, Date.now(), row.section_id]
@@ -218,25 +208,16 @@ export const useSectionStore = create<SectionsHomeStore>((set, get) => ({
           }
     }
 
-    const sectionsInfo: SectionRow[] = await db.getAllAsync("SELECT section_id,section_title,time_period,position,last_modified FROM sections");
-    console.log("INSERTING INTO SECTIONS: ")
-    sectionsInfo.forEach(section => {
-      console.log(section.section_title +" pos: " + section.position+ " id: "+section.section_id)
-    });
-
+    //Reinsert data
     await db.runAsync(
         `INSERT INTO sections (section_id, section_title, time_period, position, last_modified)
        VALUES (?, ?, ?, ?, ?)`,
       [section_id, section.sectionTitle, section.timePeriod, targetPos, Date.now()]
     );
-    console.log("flag5");
     }catch(error) {console.error("didnt write to database",error);}
 
     //update store
     useSectionStore.getState().setSectionsH(updatedSections);
-    useSectionStore.getState().sectionsH.forEach(s => console.log(
-        `${s.sectionTitle} (${s.timePeriod}): pos=${s.position}`
-      ));
 },
 
   removeSectionH: (sectionHToRemove) => set((state) => ({

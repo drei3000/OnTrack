@@ -64,7 +64,7 @@ export default function Index() {
   const [isModalVisible, setIsModalVisible] = useReactState(false);
   const [targetSection, setTargetSection] = useReactState<Section | null>(null);
 
-  const offsetY = useRef(0);
+  
 
   //Time Period States (+ mode of calendar)
   type CalendarMode = CalendarProps["mode"];
@@ -82,9 +82,7 @@ export default function Index() {
 
   const ThresholdsFunc = (centralIndex: number, heights: number[]): number[] => {
     const thresholdsToReturn = new Array(heights.length).fill(0);
-    heights.forEach((h) => {
-      console.log("height: "+h)
-    })
+
     // Forward (right of centralIndex)
     for (let i = centralIndex + 1; i <= heights.length - 1; i++) {
       thresholdsToReturn[i] = thresholdsToReturn[i - 1] + heights[i - 1] + marginBetweenSections+2;
@@ -105,23 +103,34 @@ export default function Index() {
   const panRefs = useRef<{ [key: string]: Animated.ValueXY }>({}); //ref to all sections
   const pan = useRef(new Animated.ValueXY()).current; //ref to section being moved
 
-  //Scroll refs
-  const scrollEnabledState = useRef(true); // Track scroll state
-  const scrollRef = useRef<ScrollView>(null);
-  const sectionRefs = useRef<{ [key: string]: View | null }>({});
-  const thresholdsRef = useRef<number[]>([]);
-  const currentMovingRef = useRef<Section | null>(null);
-  const positionsMoved = useRef<number>(0);
-  const scrolledRef = useRef<number>(0);
-  const layoutHeightRef = useRef(0); //the height of the layout scrollview
-  const contentHeightRef = useRef<number>(0);
-  const movingSectionRef = useRef<boolean>(false);
-  const scrollingNumRef = useRef<number>(0);
-  const autoScrollIntervalRef = useRef<NodeJS.Timer | null>(null);
-  const gestureDyRef = useRef(0);
-  const checkedAlready = useRef<boolean>(false);
+  // ScrollView and scrolling state
+  const scrollRef = useRef<ScrollView>(null);  // ref to the parent ScrollView
+  const scrollEnabledState = useRef(true); // whether parent scroll is currently enabled
+  const scrolledRef = useRef<number>(0); // current scroll Y position
+  const scrollingNumRef = useRef<number>(0); // scroll offset in this drag
 
+  //Layout measurements
+  const layoutHeightRef = useRef<number>(0); // visible height of the ScrollView
+  const contentHeightRef = useRef<number>(0); // total content height of the ScrollView
 
+  //Auto-scroll timer
+  const autoScrollIntervalRef = useRef<NodeJS.Timer | null>(null); // interval ID for edge-scrolling
+
+  //Section swap thresholds & refs
+  const thresholdsRef = useRef<number[]>([]); // Y-positions at which to swap sections
+  const sectionRefs = useRef<{ [key: string]: View | null }>({}); // refs by key to each scetion view
+
+  //Currently-moving section
+  const currentMovingRef = useRef<Section | null>(null); // the section being dragged
+  const movingSectionRef = useRef<boolean>(false); // flag
+  const positionsMoved = useRef<number>(0); // net positions shifted during this drag
+
+  //Gesture/pan tracking
+  const gestureDyRef = useRef(0); // latest gesture change in y
+  const offsetY = useRef(0); // base pan offset before this move
+  const checkedAlready = useRef<boolean>(false); // guard to only swap once per crossing
+
+  //Function to reset drag values
   const resetSectionState = () => {
     // Reset Pan state for each section
     sections.forEach(section => {
@@ -141,21 +150,20 @@ export default function Index() {
     gestureDyRef.current = 0;
     offsetY.current = 0;
   
-    // Clear the auto-scroll interval if it's active
+    // Clear the auto-scroll interval
     if (autoScrollIntervalRef.current) {
       clearInterval(autoScrollIntervalRef.current as any);
       autoScrollIntervalRef.current = null;
     }
   
-    // Re-enable scroll view if necessary
+    // Re-enable scroll view
     if (scrollRef.current) {
       scrollRef.current.setNativeProps({ scrollEnabled: true });
     }
   };
 
-  
+  // Reset the animation state when switching view mode OR when sections is updated
   useEffect(() => {
-    // Reset the animation state when switching view mode
     resetSectionState();
   }, [selected,sections]);
   
@@ -182,27 +190,21 @@ export default function Index() {
   }
 
 
-  //function to get size and pos of section given title ()
+  //function to get height and pos of section given title ()
   const getSectInfo = (sectionTitle: string): {height: number, position: number} => { //ONLY CALL WHEN ALREADY UNWRAPPED SECTION
-
-  const section : Section =  sections.find((s) => s.sectionTitle === sectionTitle && s.timePeriod === selected)!
-  var sectHeight : number = 51.666 + 10; //(30) {fontsize} + (10) {padding size}
-  var position : number = -1;
-  if(section){
-
-    const rows = Math.ceil((section.trackers.length +1)/ 4);
-    sectHeight += (itemSize) *(rows) +(spacing*(rows-1)); //spacing per row
-    position = section.position;
-    //add margin
-    //sectHeight += 17; //margin + border
-    //sectHeight += 22; //something unaccounted for unsure as of current
-  }
-  return {height: sectHeight, position: position}
+    const section : Section =  sections.find((s) => s.sectionTitle === sectionTitle && s.timePeriod === selected)!
+    var sectHeight : number = 51.666 + 10; //(30) {height in theory} + (10) {padding size} + 11.666 (unaccounted for in top)
+    var position : number = -1;
+    if(section){
+      const rows = Math.ceil((section.trackers.length +1)/ 4);
+      sectHeight += (itemSize) *(rows) +(spacing*(rows-1)); //spacing per row
+      position = section.position;
+    }
+    return {height: sectHeight, position: position}
   }
     
-  // For all sections map their heights
+  // For all sections map their heights according to position
   useEffect(() => {
-    console.log("HEIGHTS CHANGED")
     const heights = sections
       .filter((s) => s.timePeriod === selected)
       .sort((a, b) => a.position - b.position)
@@ -217,9 +219,6 @@ export default function Index() {
     //finds section given y coord
     const findSectionAtPosY = async (touchY: number): Promise<Section> => { 
       const toUse = useSectionStore.getState().sectionsH;
-      toUse.forEach(sect => {
-        console.log("section: "+sect.sectionTitle+" pos: "+sect.position);
-      });
     const measurements = await Promise.all(
         toUse.map(section => {
         return new Promise<{ id: string, y: number, height: number }>((resolve) => {
@@ -227,18 +226,16 @@ export default function Index() {
             if (!ref) return resolve({ id: `${section.sectionTitle}-${section.timePeriod}`, y: Infinity, height: 0 });
 
             ref.measure((x, y, width, height, pageX, pageY) => { //measurements of reference
-              //console.log("y: "+y)
             resolve({ id: `${section.sectionTitle}-${section.timePeriod}`, y: pageY, height });
             });
         });
         })
     );
+    
     const found = measurements.find(m => touchY >= m.y && touchY <= m.y + m.height);
     if (!found) throw new Error('No section found at touch position');
     const section = sections.find(section => `${section.sectionTitle}-${section.timePeriod}` === found.id);
     if (!section) throw new Error('Section not found in state');
-
-    console.log("Section found+  "+section.sectionTitle);
     return section;
   };
 
@@ -289,10 +286,7 @@ export default function Index() {
 
         const dy = gestureState.dy;
         const totalY = offsetY.current + dy + scrollingNumRef.current;
-        console.log("totalY: "+totalY)
         pan.setValue({ x: 0, y: totalY});
-
-       console.log("scrolledRef: "+scrolledRef.current+" AND "+(contentHeightRef.current-layoutHeightRef.current));
         const pageY = e.nativeEvent.pageY;
         if(pageY<(tabs + 30) && scrolledRef.current > 0){ 
           if (!autoScrollIntervalRef.current) {
@@ -393,8 +387,6 @@ export default function Index() {
         const visibleY = totalY;
 
         if(!checkedAlready.current){
-        console.log("thresholds: "+thresholdsRef.current);
-        console.log(thresholdsRef.current[pos + 1 + positionsMoved.current])
         if(thresholdsRef.current[pos + 1 + positionsMoved.current] !== null ){
           const thresholdDown = thresholdsRef.current[pos+1+positionsMoved.current]
           if (visibleY > thresholdDown){
@@ -497,7 +489,8 @@ export default function Index() {
         scrollingNumRef.current = 0;
       },
     }), [editMode, currentMovingSectionKey, selected, sections]);
-   
+
+    
   // Dynamic styles for square icon buttons
   const squareIconButtonStyle = (size: number) => ({
     ...styles.squareIconButton,
