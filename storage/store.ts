@@ -89,7 +89,7 @@ type SectionsHomeStore = {
   sectionsH: Section[]
   setSectionsH: (newSectionsH: Section[]) => void
   addSectionH: (sectionH: Section) => Promise<void>
-  moveSectionBy: (sectionH: Section, posChange: number) => void
+  moveSectionBy: (section_title : string, time_period : string, posChange: number) => void
   removeSectionH: (sectionHToRemove: Section) => void
   addTrackerToSection: (sectionTitle: string, time_period: string, tracker: Tracker) => Promise<void>
   initialAddTrackerToSection: (sectionTitle: string, time_period: string, tracker: Tracker) => void
@@ -114,14 +114,25 @@ export const useSectionStore = create<SectionsHomeStore>((set, get) => ({
 
     
   },
-
-  moveSectionBy: async(section,posChange) => {
+  
+  moveSectionBy: async(section_title, time_period,posChange) => {
     if (posChange === 0) return;
+    console.log("BEFORE STORE UPDATE:");
+    get().sectionsH.forEach(s => console.log(
+    `${s.sectionTitle} (${s.timePeriod}): pos=${s.position}`
+    ));
+
+    const {sectionsH} = get()
+
+    const section = sectionsH.find(s => 
+        s.sectionTitle === section_title && 
+        s.timePeriod === time_period
+    )!
 
     const currentPos = section.position;
     const targetPos = currentPos+posChange;
 
-    const {sectionsH} = get();
+    ;
 
     const updatedSections = sectionsH.map((s) => { //move section to position
         if (s.sectionTitle === section.sectionTitle && s.timePeriod === section.timePeriod) {
@@ -146,12 +157,12 @@ export const useSectionStore = create<SectionsHomeStore>((set, get) => ({
             return { ...s, position: s.position + 1 };
         }
         return s;
-    });
+    }) as Section[];
 
     try{
     //Move in database
     const db = await openDatabase();
-
+    console.log("flag1");
     //Firstly delete from database
     const section_idFetched = await db.getFirstAsync(
         `SELECT section_id FROM sections
@@ -167,28 +178,62 @@ export const useSectionStore = create<SectionsHomeStore>((set, get) => ({
         WHERE section_title = ? AND time_period = ?`,
         [section.sectionTitle,section.timePeriod]
     );
-
+    console.log("flag2");
     if(posChange > 0){
-        await db.runAsync(
-            `UPDATE sections
-                SET position = position - 1, last_modified = ?
-            WHERE position > ?`,
-            [Date.now(), section.position]
-        );
+        console.log("flag 3.5")
+        console.log("position: "+section.position+" targetPos: "+targetPos);
+        const rowsToMoveUp = await db.getAllAsync( //UP physically, -1 position
+            `SELECT section_id, position FROM sections
+             WHERE time_period = ? AND position > ? AND position <= ?
+             ORDER BY position ASC`,
+            [section.timePeriod,  section.position, targetPos]
+          ) as {section_id:number,position:number}[];
+          console.log("HELLO")
+          for (const row of rowsToMoveUp) {
+            console.log("toMove: pos="+row.position);
+            await db.runAsync(
+              `UPDATE sections SET position = ?, last_modified = ? WHERE section_id = ?`,
+              [row.position - 1, Date.now(), row.section_id]
+            );
+          }
     }else if(posChange < 0){
-        await db.runAsync(
-            `UPDATE sections
-                SET position = position + 1, Last_modified = ?
-            WHERE position < ?`,
-            [Date.now(), section.position]
-        );
+        console.log("flag 3.5")
+        console.log("position: "+section.position+" targetPos: "+targetPos);
+        const rowsToMoveDown = await db.getAllAsync( //down physically, +1 position
+            `SELECT section_id, position FROM sections
+             WHERE time_period = ? AND position < ? AND position >= ?
+             ORDER BY position DESC`,
+            [section.timePeriod,  section.position, targetPos]
+          ) as {section_id:number,position:number}[];
+          console.log("HELLO")
+          for (const row of rowsToMoveDown) {
+            console.log("toMove: pos="+row.position);
+            await db.runAsync(
+              `UPDATE sections SET position = ?, last_modified = ? WHERE section_id = ?`,
+              [row.position + 1, Date.now(), row.section_id]
+            );
+          }
     }
+
+    const sectionsInfo: SectionRow[] = await db.getAllAsync("SELECT section_id,section_title,time_period,position,last_modified FROM sections");
+    console.log("INSERTING INTO SECTIONS: ")
+    sectionsInfo.forEach(section => {
+      console.log(section.section_title +" pos: " + section.position+ " id: "+section.section_id)
+    });
+
     await db.runAsync(
         `INSERT INTO sections (section_id, section_title, time_period, position, last_modified)
        VALUES (?, ?, ?, ?, ?)`,
       [section_id, section.sectionTitle, section.timePeriod, targetPos, Date.now()]
     );
-    }catch(error) {console.error("didnt write to database");}
+    console.log("flag5");
+    }catch(error) {console.error("didnt write to database",error);}
+
+    //update store
+    useSectionStore.getState().setSectionsH(updatedSections);
+    useSectionStore.getState().sectionsH.forEach(s => console.log(
+        `${s.sectionTitle} (${s.timePeriod}): pos=${s.position}`
+      ));
 },
 
   removeSectionH: (sectionHToRemove) => set((state) => ({
