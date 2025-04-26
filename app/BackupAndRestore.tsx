@@ -15,7 +15,7 @@ export const supabase = createClient(supabaseUrl, supabaseKey);
 export default function AccountSettings() {
   const { currentTheme: theme } = useTheme();
   const { user } = useAuth();
-  const handleChangeEmail = async () => {
+  const handleBackup = async () => {
 
 
     const db = await openDatabase();
@@ -79,6 +79,15 @@ export default function AccountSettings() {
                 console.error('SectionTracker Error:', sectionTrackerError);
             } else {
               console.log('Upload successful');
+              await Alert.alert(
+                "Data Uploaded",
+                "Your data has been backed up to the cloud.",
+                [
+                  { text: "Okay", style: "cancel" },
+                ],
+                { cancelable: true }
+              )
+                router.back();
             }
           } catch (err) {
             console.error('Unexpected error:', err);
@@ -86,7 +95,7 @@ export default function AccountSettings() {
         }
       };
 
-  const handleChangePassword = async () => {
+  const handleRestore = async () => {
       // Get the current user
     if (user===null){
         console.log("Not logged in")
@@ -216,11 +225,11 @@ export default function AccountSettings() {
     <View style={[styles.container, { backgroundColor: theme["101010"] }]}>
       <Text style={[styles.header, { color: theme["FFFFFF"] }]}>Backup and Restore</Text>
 
-      <Pressable style={[styles.button, { backgroundColor: theme["101010"] }]} onPress={handleChangeEmail}>
+      <Pressable style={[styles.button, { backgroundColor: theme["101010"] }]} onPress={handleBackup}>
         <Text style={[styles.buttonText, { color: theme["FFFFFF"] }]}>Backup Data</Text>
       </Pressable>
 
-      <Pressable style={[styles.button, { backgroundColor: theme["101010"] }]} onPress={handleChangePassword}>
+      <Pressable style={[styles.button, { backgroundColor: theme["101010"] }]} onPress={handleRestore}>
         <Text style={[styles.buttonText, { color: theme["FFFFFF"] }]}>Restore Data</Text>
       </Pressable>
 
