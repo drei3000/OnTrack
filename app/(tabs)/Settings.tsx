@@ -1,3 +1,4 @@
+import { useState } from "react"; // Import useState for managing toggle state
 import { Text, View, Pressable, StyleSheet, ScrollView, SafeAreaView } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTheme } from "../ThemeContext"; // Import ThemeContext for theme management
@@ -6,6 +7,14 @@ import { useRouter } from "expo-router"; // Import router for navigation
 export default function Index() {
   const { isDarkMode, toggleTheme, currentTheme } = useTheme(); // Access theme and toggle function
   const router = useRouter(); // Router for navigation between screens
+
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true); // State for notifications toggle
+
+  const toggleNotifications = () => {
+    setNotificationsEnabled((prev) => !prev);
+    console.log(`Notifications ${!notificationsEnabled ? "enabled" : "disabled"}`);
+    // Add logic to enable/disable notifications here
+  };
 
   // Styles for the Settings screen
   const styles = StyleSheet.create({
@@ -36,7 +45,7 @@ export default function Index() {
       paddingHorizontal: 20,
       borderRadius: 10,
       marginBottom: 20,
-      marginTop: 5
+      marginTop: 5,
     },
     settingsTextContainer: {
       marginLeft: 10, // Space between icon and text
@@ -60,33 +69,38 @@ export default function Index() {
     footerText: {
       fontSize: 14,
     },
+    toggleContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: 20,
+      paddingHorizontal: 20,
+      borderRadius: 10,
+      marginBottom: 20,
+      marginTop: 5,
+      backgroundColor: currentTheme["101010"],
+      borderWidth: 1,
+      borderColor: currentTheme.dimgray,
+    },
+    toggleText: {
+      fontSize: 18,
+      marginLeft: 10,
+      color: currentTheme.white,
+    },
   });
 
   // List of settings items with their titles, descriptions, icons, and actions
   const settingsItems = [
     {
       title: "Account",
-      description: "Profile | Email | Password | Login",
+      description: "Profile | Email | Password",
       icon: "account",
       onPress: () => router.push("../accountSettings"), // Navigate to account settings
-    },
-    {
-      title: "Notifications",
-      description: "Push Notification | Sound Preferences",
-      icon: "bell",
-      onPress: () => router.push("../notificationSettings"), // Navigate to notification settings
     },
     {
       title: "Backup & Restore",
       description: "Cloud Sync | Export Trackers",
       icon: "cloud-upload",
       onPress: () => router.push("../BackupAndRestore"), // Placeholder for backup functionality
-    },
-    {
-      title: "Privacy & Security",
-      description: "App Permissions | Data Encryption | Biometrics",
-      icon: "shield-lock",
-      onPress: () => router.push("../privacySettings"), // Navigate to privacy settings
     },
     {
       title: "Tracker List",
@@ -96,7 +110,7 @@ export default function Index() {
     },
     {
       title: "Help & Support",
-      description: "FAQs | Contact Support | Report Issue",
+      description: "FAQs | Contact Support",
       icon: "help-circle",
       onPress: () => router.push("../helpSupport"), // Navigate to help and support
     },
@@ -152,9 +166,21 @@ export default function Index() {
               </View>
             </Pressable>
           ))}
-        </ScrollView>
 
-        
+          {/* Notifications Toggle */}
+          <View style={styles.toggleContainer}>
+            <MaterialCommunityIcons
+              name={notificationsEnabled ? "bell-ring" : "bell-off"}
+              size={24}
+              color={currentTheme.white}
+            />
+            <Pressable onPress={toggleNotifications}>
+              <Text style={styles.toggleText}>
+                {notificationsEnabled ? "Disable Notifications" : "Enable Notifications"}
+              </Text>
+            </Pressable>
+          </View>
+        </ScrollView>
       </View>
     </SafeAreaView>
   );
