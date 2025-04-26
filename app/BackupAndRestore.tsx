@@ -4,6 +4,8 @@ import { useTheme } from "./ThemeContext";
 import { createClient } from "@supabase/supabase-js";
 import { openDatabase } from "@/storage/sqlite";
 import {useAuth} from '@/app/LoginContext'
+import {setupDatabase} from "@/components/ZustandRefresh";
+import { router } from "expo-router";
 
 const supabaseUrl = 'https://fffxxiuqbfoitlnlqyxk.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmZnh4aXVxYmZvaXRsbmxxeXhrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI1OTU2NTIsImV4cCI6MjA1ODE3MTY1Mn0.Ak-pzqJ9NweyWdF7np4s-8BT7cKebyNRlQyyV-M5wIA';
@@ -136,6 +138,9 @@ export default function AccountSettings() {
       return;
     }
 
+    await db.runAsync('DELETE FROM trackers');
+    await db.runAsync('DELETE FROM sections');
+    await db.runAsync('DELETE FROM section_trackers');
     // Step 2: Populate SQLite database
     // Insert Trackers data into SQLite
     const trackerInsertPromises = trackers.map((tracker: any) => {
@@ -188,6 +193,18 @@ export default function AccountSettings() {
 
     await Promise.all(sectionTrackerInsertPromises);
 
+    console.log(sectionTrackerInsertPromises);
+    console.log(trackerInsertPromises);
+    setupDatabase();
+    Alert.alert(
+                  "Data Restored",
+                  "Your data has been restored from the cloud.",
+                  [
+                    { text: "Okay", style: "cancel" },
+                  ],
+                  { cancelable: true }
+                )
+    router.back();
     console.log("SQLite database successfully populated with Supabase data!");
   } catch (err) {
     console.error("Error populating SQLite database:", err);
