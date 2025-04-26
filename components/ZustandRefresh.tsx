@@ -2,6 +2,7 @@ import { openDatabase } from "@/storage/sqlite";
 import { exampleTrackers, TimePeriod, Tracker } from "@/types/Tracker";
 import { Section } from "@/types/Section";
 import { useSectionStore, useTrackerStore } from "@/storage/store";
+import { useHistoryStore } from "@/storage/store";
 
 export type SectionRow = {
   section_id: number;
@@ -26,13 +27,49 @@ export type SectionTrackerRelation = {
   section_id: number,
   tracker_id: number,
   tracker_position: number,
+};
+
+
+export type TrackerHistoryRow = {
+    history_id: number;
+    tracker_id: number;
+    date: string;
+    bound_amount: number;
+    current_amount: number;
+    unit?: string;
+    cloud_history_id?: number;
+    last_modified: number;
 }
+
 
 export const setupDatabase = async () => {
 
   try {
     const db = await openDatabase();
     console.log("Database initialized");
+
+    await db.execAsync(`
+        PRAGMA foreign_keys = ON;
+
+        CREATE TABLE IF NOT EXISTS tracker_history (
+            history_id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            tracker_id          INTEGER NOT NULL,
+            date                TEXT    NOT NULL,
+            bound_amount        REAL    NOT NULL,
+            current_amount      REAL    NOT NULL,
+            unit                TEXT,
+            cloud_history_id    INTEGER,
+            last_modified       INTEGER NOT NULL,
+            UNIQUE(tracker_id, date)
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_history_tracker
+            ON tracker_history (tracker_id);
+        `);
+
+    const { loadHistory } = useHistoryStore.getState();   // CHANGE:
+    await loadHistory();                                  // CHANGE:
+            
 
     const trackersInfo: TrackerRow[] = await db.getAllAsync("SELECT tracker_id,tracker_name,icon,time_period,unit,bound_amount,current_amount,last_modified FROM trackers");
     const sectionsInfo: SectionRow[] = await db.getAllAsync("SELECT section_id,section_title,time_period,position,last_modified FROM sections");

@@ -2,7 +2,10 @@ import { create } from 'zustand'
 import { TimePeriod, Tracker } from '@/types/Tracker'
 import { Section } from '@/types/Section'
 import { openDatabase } from '@/storage/sqlite' 
-import { SectionRow } from '@/components/ZustandRefresh'
+import { TrackerHistory } from '@/types/TrackerHistory'
+
+
+
 
 // Tracker Store section
 type TrackersStore = {
@@ -79,6 +82,24 @@ export const useTrackerStore = create<TrackersStore>((set, get) => ({
         WHERE tracker_name = ? AND time_period = ?`,
         [change, Date.now(), name, timePeriod],
         );
+
+        const [{ tracker_id }] = await db.getAllAsync<{ tracker_id: number }>(
+            `SELECT tracker_id FROM trackers
+               WHERE tracker_name = ? AND time_period = ?`,
+            [name, timePeriod]
+          );
+          
+          const today = new Date().toISOString().slice(0, 10);         // 'YYYY-MM-DD'
+          const trackerObj = get().getTracker(name, timePeriod)!;       // we just updated it
+          
+          await useHistoryStore.getState().addOrUpdate({
+            tracker_id,
+            date: today,
+            bound_amount: trackerObj.bound,
+            current_amount: trackerObj.currentAmount ?? 0,
+            unit: trackerObj.unit,
+          });
+
     },
   
   }));
@@ -412,3 +433,66 @@ export const useSectionStore = create<SectionsHomeStore>((set, get) => ({
 
 
 }));
+
+// History store
+type HistoryStore = {                                                     
+    history: TrackerHistory[];                                              
+    setHistory: (rows: TrackerHistory[]) => void;                           
+    loadHistory: () => Promise<void>;                                       
+    getHistory: (trackerId: number, date: string) => TrackerHistory|void;   
+    addOrUpdate: (row: Omit<TrackerHistory,                                  
+                            'history_id'|'last_modified'> &                 
+                            { history_id?: number }) => Promise<void>;      
+  };                                                                         
+  
+  export const useHistoryStore = create<HistoryStore>((set, get) => ({      
+    history: [],                                                            
+  
+    setHistory: rows => set({ history: rows }),                             
+  
+    // read whole table into memory once 
+    loadHistory: async () => {                                              
+      const db = await openDatabase();                                      
+      const rows = await db.getAllAsync<TrackerHistory>('SELECT * FROM tracker_history'); 
+      set({ history: rows });                                               
+    },                                                                      
+  
+    // helper to read one row 
+    getHistory: (trackerId, date) =>                                        
+      get().history.find(h => h.tracker_id === trackerId && h.date === date), 
+  
+    // insert or update (upsert) row, keep Zustand in sync 
+    addOrUpdate: async row => {                                             
+      const db = await openDatabase();                                      
+      await db.runAsync(                                                    
+        `INSERT INTO tracker_history                                        
+           (tracker_id,date,bound_amount,current_amount,unit,last_modified) 
+         VALUES (?,?,?,?,?,?)                                               
+         ON CONFLICT(tracker_id,date)                                       
+         DO UPDATE SET                                                      
+           bound_amount    = excluded.bound_amount,                         
+           current_amount  = excluded.current_amount,                       
+           unit            = excluded.unit,                                 
+           last_modified   = excluded.last_modified`,                       
+        [                                                                   
+          row.tracker_id,                                                   
+          row.date,                                                         
+          row.bound_amount,                                                 
+          row.current_amount,                                               
+          row.unit ?? null,                                                 
+          Date.now(),                                                       
+        ],                                                                  
+      );                                                                    
+  
+      // mirror into Zustand
+      const exists = get().getHistory(row.tracker_id, row.date);            
+      if (exists) {                                                         
+        set({ history: get().history.map(h =>                               
+          h === exists ? { ...exists, ...row, last_modified: Date.now() }   
+                        : h) });                                            
+      } else {                                                              
+        set({ history: [ ...get().history,                                  
+          { ...row, history_id: undefined, last_modified: Date.now() } ] }); 
+      }                                                                     
+    },                                                                      
+  }));                                                                      
