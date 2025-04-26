@@ -135,7 +135,7 @@ export const useSectionStore = create<SectionsHomeStore>((set, get) => ({
     ;
 
     const updatedSections = sectionsH.map((s) => { //move section to position
-        if (s.sectionTitle === section.sectionTitle && s.timePeriod === section.timePeriod) {
+        if (s.sectionTitle === section.sectionTitle && s.timePeriod === time_period) {
             return { ...s, position: targetPos };
           }
 
@@ -143,7 +143,8 @@ export const useSectionStore = create<SectionsHomeStore>((set, get) => ({
           if ( //moving down
             targetPos > currentPos &&
             s.position > currentPos &&
-            s.position <= targetPos
+            s.position <= targetPos &&
+            s.timePeriod === time_period
           ) {
             return { ...s, position: s.position - 1 };
           }
@@ -152,7 +153,8 @@ export const useSectionStore = create<SectionsHomeStore>((set, get) => ({
         if (
             targetPos < currentPos &&
             s.position < currentPos &&
-            s.position >= targetPos
+            s.position >= targetPos &&
+            s.timePeriod === time_period
          ) {
             return { ...s, position: s.position + 1 };
         }
@@ -163,6 +165,7 @@ export const useSectionStore = create<SectionsHomeStore>((set, get) => ({
     //Move in database
     const db = await openDatabase();
     console.log("flag1");
+
     //Firstly delete from database
     const section_idFetched = await db.getFirstAsync(
         `SELECT section_id FROM sections

@@ -80,40 +80,32 @@ export default function Index() {
   //heights and push function
   const sectionHeightsRef = useRef<number[]>([]);
 
-  //threshholds
   const ThresholdsFunc = (centralIndex: number, heights: number[]): number[] => {
-    heights.forEach(h => {
-      console.log("HEIGHTS LOGGING BLAH BLAH "+h);
-    });
-    var thresholdsToReturn = [...heights]; // Clone the sectionHeights array
-    if(centralIndex > 0){
-      // Adjust backward (to the left of centralIndex)
-      for (let i = centralIndex - 1; i >= 0; i--) {
-        thresholdsToReturn[i] *= -1; // Multiply by -1 for the inverse effect
-      }
-      thresholdsToReturn[centralIndex-1] -= marginBetweenSections; //- margin
-
-      // Adjust Behind
-      if (centralIndex > 1){
-        for (let i = centralIndex - 2; i >= 0; i--) {
-          thresholdsToReturn[i] = thresholdsToReturn[i + 1] + thresholdsToReturn[i]; // -Cumulative sum - margins 
-        }
-      }
+    const thresholdsToReturn = new Array(heights.length).fill(0);
+    heights.forEach((h) => {
+      console.log("height: "+h)
+    })
+    // Forward (right of centralIndex)
+    for (let i = centralIndex + 1; i <= heights.length - 1; i++) {
+      thresholdsToReturn[i] = thresholdsToReturn[i - 1] + heights[i - 1] + marginBetweenSections+2;
     }
-    // Adjust forward 
-    if(centralIndex != (thresholdsToReturn.length-1)){
-      for (let i = centralIndex + 2; i < sectionHeightsRef.current.length; i++) {
-        thresholdsToReturn[i] = thresholdsToReturn[i - 1] + thresholdsToReturn[i]; // Cumulative sum + marins
-      }
+  
+    // Backward (left of centralIndex)
+    for (let i = centralIndex - 1; i >= 0; i--) {
+      thresholdsToReturn[i] = - heights[i] + thresholdsToReturn[i + 1] - marginBetweenSections - 2;
     }
-
+  
+    // Center stays 0
     thresholdsToReturn[centralIndex] = 0;
-    return(thresholdsToReturn)
+  
+    return thresholdsToReturn;
   };
 
   //Edit mode refs
   const panRefs = useRef<{ [key: string]: Animated.ValueXY }>({}); //ref to all sections
   const pan = useRef(new Animated.ValueXY()).current; //ref to section being moved
+
+  //Scroll refs
   const scrollEnabledState = useRef(true); // Track scroll state
   const scrollRef = useRef<ScrollView>(null);
   const sectionRefs = useRef<{ [key: string]: View | null }>({});
@@ -128,46 +120,89 @@ export default function Index() {
   const autoScrollIntervalRef = useRef<NodeJS.Timer | null>(null);
   const gestureDyRef = useRef(0);
   const checkedAlready = useRef<boolean>(false);
-    function averageProgress(): number {
-        let totalRatio = 0;
-        let counted = 0;
-    
-        sections.filter(s => s.timePeriod === selected).forEach(section => {
-            section.trackers.forEach(t => {
-            // accept only trackers that have a target > 0
-            const target  = Number(t.bound ?? t.bound ?? t.bound ?? 0);
-            if (target <= 0) return;
-    
-            const current = Number(t.currentAmount ?? 0);
-            totalRatio += Math.min(1, current / target);
-            counted += 1;
-            });
-        });
-    
-        if (counted === 0) return 0;          
-        return totalRatio / counted; // return normalised value
+
+
+  const resetSectionState = () => {
+    // Reset Pan state for each section
+    sections.forEach(section => {
+      const key = `${section.sectionTitle}-${section.timePeriod}`;
+      panRefs.current[key]?.setValue({ x: 0, y: 0 });
+      panRefs.current[key]?.setOffset({ x: 0, y: 0 });
+    });
+  
+    // Reset other state variables
+    scrollEnabledState.current = true;
+    scrollingNumRef.current = 0;
+    thresholdsRef.current = [];
+    positionsMoved.current = 0;
+    movingSectionRef.current = false;
+    currentMovingRef.current = null;
+    checkedAlready.current = false;
+    gestureDyRef.current = 0;
+    offsetY.current = 0;
+  
+    // Clear the auto-scroll interval if it's active
+    if (autoScrollIntervalRef.current) {
+      clearInterval(autoScrollIntervalRef.current as any);
+      autoScrollIntervalRef.current = null;
     }
-
-
-    //function to get size and pos of section given title ()
-    const getSectInfo = (sectionTitle: string): {height: number, position: number} => { //ONLY CALL WHEN ALREADY UNWRAPPED SECTION
-
-    const section : Section =  sections.find((s) => s.sectionTitle === sectionTitle && s.timePeriod === selected)!
-    var sectHeight : number = 44; //(24) {fontsize} + (2 * 10) {padding size}
-    var position : number = -1;
-    //console.log("sect to add to 44: "+spacing *(Math.ceil((itemsPerRow +1)/ 4))+" calculation = "+Math.ceil((itemsPerRow + 1)/4))
-    if(section){
-
-      const rows = Math.ceil((section.trackers.length +1)/ 4);
-      sectHeight += (spacing + itemSize) *(rows); //spacing per row
-      position = section.position;
-      sectHeight += 22; //something unaccounted for unsure as of current
+  
+    // Re-enable scroll view if necessary
+    if (scrollRef.current) {
+      scrollRef.current.setNativeProps({ scrollEnabled: true });
     }
-    return {height: sectHeight, position: position}
-    }
+  };
+
+  
+  useEffect(() => {
+    // Reset the animation state when switching view mode
+    resetSectionState();
+  }, [selected,sections]);
+  
+
+
+  function averageProgress(): number {
+      let totalRatio = 0;
+      let counted = 0;
+  
+      sections.filter(s => s.timePeriod === selected).forEach(section => {
+          section.trackers.forEach(t => {
+          // accept only trackers that have a target > 0
+          const target  = Number(t.bound ?? t.bound ?? t.bound ?? 0);
+          if (target <= 0) return;
+  
+          const current = Number(t.currentAmount ?? 0);
+          totalRatio += Math.min(1, current / target);
+          counted += 1;
+          });
+      });
+  
+      if (counted === 0) return 0;          
+      return totalRatio / counted; // return normalised value
+  }
+
+
+  //function to get size and pos of section given title ()
+  const getSectInfo = (sectionTitle: string): {height: number, position: number} => { //ONLY CALL WHEN ALREADY UNWRAPPED SECTION
+
+  const section : Section =  sections.find((s) => s.sectionTitle === sectionTitle && s.timePeriod === selected)!
+  var sectHeight : number = 51.666 + 10; //(30) {fontsize} + (10) {padding size}
+  var position : number = -1;
+  if(section){
+
+    const rows = Math.ceil((section.trackers.length +1)/ 4);
+    sectHeight += (itemSize) *(rows) +(spacing*(rows-1)); //spacing per row
+    position = section.position;
+    //add margin
+    //sectHeight += 17; //margin + border
+    //sectHeight += 22; //something unaccounted for unsure as of current
+  }
+  return {height: sectHeight, position: position}
+  }
     
   // For all sections map their heights
   useEffect(() => {
+    console.log("HEIGHTS CHANGED")
     const heights = sections
       .filter((s) => s.timePeriod === selected)
       .sort((a, b) => a.position - b.position)
@@ -185,9 +220,7 @@ export default function Index() {
       toUse.forEach(sect => {
         console.log("section: "+sect.sectionTitle+" pos: "+sect.position);
       });
-      
     const measurements = await Promise.all(
-      
         toUse.map(section => {
         return new Promise<{ id: string, y: number, height: number }>((resolve) => {
             const ref = sectionRefs.current[`${section.sectionTitle}-${section.timePeriod}`];
@@ -200,7 +233,6 @@ export default function Index() {
         });
         })
     );
-
     const found = measurements.find(m => touchY >= m.y && touchY <= m.y + m.height);
     if (!found) throw new Error('No section found at touch position');
     const section = sections.find(section => `${section.sectionTitle}-${section.timePeriod}` === found.id);
@@ -210,16 +242,7 @@ export default function Index() {
     return section;
   };
 
-  //function that returns an array with 2 swapped values
-  function swap<Array>(arr: Array[], i: number, j: number): Array[] {
-    if (i === j) return [...arr]; // no need to swap
-  
-    const newArr = [...arr];
-    [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
-    return newArr;
-  }
-
-  //Function to respond to section movement
+  //Function to respond to section movement (WILL EDIT)
   const panResponderSection = useMemo(() => PanResponder.create({
 
       onPanResponderTerminationRequest: () => !editMode,
@@ -228,17 +251,21 @@ export default function Index() {
       onMoveShouldSetPanResponder: () => editMode, //edit mode also
 
       onPanResponderGrant: (e) => { //if granted (edit mode)
-        
+        //Set current scroll total to 0
         scrollingNumRef.current = 0;
         const touchY = e.nativeEvent.pageY;
+
+        //after finding a section set the movingkey 
         findSectionAtPosY(touchY).then((section) => {
           if (section) {
             const sectionKey = `${section.sectionTitle}-${section.timePeriod}`;
             setCurrentMovingSectionKey(sectionKey);
             currentMovingRef.current = section;
             
+
             thresholdsRef.current = ThresholdsFunc(section.position,sectionHeightsRef.current);
             const pan = panRefs.current[sectionKey];
+
             pan?.extractOffset();
           } else {
           }
@@ -255,7 +282,6 @@ export default function Index() {
 
 
       onPanResponderMove: (e, gestureState) => {
-        console.log("moved positions: "+positionsMoved.current);
         const pan = panRefs.current[currentMovingSectionKey!]; //force (oops)
         if(!pan) return;
         //setting the y to the offset + dy
@@ -266,12 +292,6 @@ export default function Index() {
         console.log("totalY: "+totalY)
         pan.setValue({ x: 0, y: totalY});
 
-        /*
-        console.log("pageY: "+e.nativeEvent.pageY);
-        console.log("scrolledref: "+scrolledRef.current);
-        console.log("tabls + 30: "+(tabs+30))
-        console.log("bottomthreshold "+(screenHeight - tabs - 30))
-        */
        console.log("scrolledRef: "+scrolledRef.current+" AND "+(contentHeightRef.current-layoutHeightRef.current));
         const pageY = e.nativeEvent.pageY;
         if(pageY<(tabs + 30) && scrolledRef.current > 0){ 
@@ -303,7 +323,7 @@ export default function Index() {
                     panToSwap?.flattenOffset();
                     panToSwap?.setOffset({ 
                       x: 0, 
-                      y: sectionHeightsRef.current[currentPos - 1 + moveCount] 
+                      y: sectionHeightsRef.current[pos] + 17 
                     });
                     panToSwap?.setValue({ x: 0, y: 0 });
                     
@@ -347,7 +367,7 @@ export default function Index() {
                   if (sectionToMove) {
                     const panToSwap = panRefs.current[`${sectionToMove.sectionTitle}-${sectionToMove.timePeriod}`];
                     panToSwap?.flattenOffset();
-                    panToSwap?.setOffset({ x: 0, y: -sectionHeightsRef.current[currentPos] });
+                    panToSwap?.setOffset({ x: 0, y: -sectionHeightsRef.current[currentPos] -17});
                     panToSwap?.setValue({ x: 0, y: 0 });
                     
                     // Update current section
@@ -379,21 +399,19 @@ export default function Index() {
           const thresholdDown = thresholdsRef.current[pos+1+positionsMoved.current]
           if (visibleY > thresholdDown){
             if(positionsMoved.current < 0) {
-              const sectionToMove = sections.find((s) => s.position === pos+positionsMoved.current)!
+              const sectionToMove = sections.find((s) => s.position === pos+positionsMoved.current && s.timePeriod === selected)!
               const panToSwap = panRefs.current[`${sectionToMove.sectionTitle}-${sectionToMove.timePeriod}`]
               currentMovingRef.current && panToSwap.flattenOffset();
               currentMovingRef.current && panToSwap.setOffset({x: 0, y: 0});
               currentMovingRef.current && panToSwap.setValue({ x: 0, y: 0 });
             }else{
-              const sectionToMove = sections.find((s) => s.position === pos+1+positionsMoved.current)!
+              const sectionToMove = sections.find((s) => s.position === pos+1+positionsMoved.current && s.timePeriod === selected)!
               const panToSwap = panRefs.current[`${sectionToMove.sectionTitle}-${sectionToMove.timePeriod}`]
               currentMovingRef.current && panToSwap.flattenOffset();
-              currentMovingRef.current && panToSwap.setOffset({x: 0, y: -sectionHeightsRef.current[pos]});
+              currentMovingRef.current && panToSwap.setOffset({x: 0, y: -sectionHeightsRef.current[pos] - 17});
               currentMovingRef.current && panToSwap.setValue({ x: 0, y: 0 });   
 
             }
-            
-            console.log("swap!")
             //pan.setOffset({ x: 0, y: 0});
             //pan.setValue({x:0,y:0});
             offsetY.current = visibleY - scrollingNumRef.current;
@@ -407,16 +425,16 @@ export default function Index() {
         if (visibleY < thresholdUp){
 
           if(positionsMoved.current > 0){ //going back, need to reswap
-            const sectionToMove = sections.find((s) => s.position === pos+positionsMoved.current)!
+            const sectionToMove = sections.find((s) => s.position === pos+positionsMoved.current && s.timePeriod === selected)!
             const panToSwap = panRefs.current[`${sectionToMove.sectionTitle}-${sectionToMove.timePeriod}`]
             currentMovingRef.current && panToSwap.flattenOffset();
             currentMovingRef.current && panToSwap.setOffset({x: 0, y: 0});
             currentMovingRef.current && panToSwap.setValue({ x: 0, y: 0 });
           }else{
-            const sectionToMove = sections.find((s) => s.position === pos-1+positionsMoved.current)!
+            const sectionToMove = sections.find((s) => s.position === pos-1+positionsMoved.current && s.timePeriod === selected)!
             const panToSwap = panRefs.current[`${sectionToMove.sectionTitle}-${sectionToMove.timePeriod}`]
             currentMovingRef.current && panToSwap.flattenOffset();
-            currentMovingRef.current && panToSwap.setOffset({x: 0, y: sectionHeightsRef.current[pos-1+positionsMoved.current]});
+            currentMovingRef.current && panToSwap.setOffset({x: 0, y: sectionHeightsRef.current[pos] + 17});
             currentMovingRef.current && panToSwap.setValue({ x: 0, y: 0 });
           }
           //pan.setOffset({ x: 0, y: 0 });
@@ -430,6 +448,10 @@ export default function Index() {
       },
 
       onPanResponderRelease: () => {
+        if (autoScrollIntervalRef.current) {
+          clearInterval(autoScrollIntervalRef.current as any);
+          autoScrollIntervalRef.current = null;
+        }
         
         setCurrentMovingSectionKey(null);
         setMovingSection(false);
@@ -474,7 +496,7 @@ export default function Index() {
         thresholdsRef.current = [];
         scrollingNumRef.current = 0;
       },
-    }), [editMode, currentMovingSectionKey]);
+    }), [editMode, currentMovingSectionKey, selected, sections]);
    
   // Dynamic styles for square icon buttons
   const squareIconButtonStyle = (size: number) => ({
@@ -609,7 +631,7 @@ export default function Index() {
             <View 
               key={`${section.sectionTitle}-${section.timePeriod}`}
               ref={ref => sectionRefs.current[`${section.sectionTitle}-${section.timePeriod}`] = ref}
-              onStartShouldSetResponder={() => true}
+              onStartShouldSetResponder={() => editMode}
               onResponderGrant={(e) => {
                 if (editMode) {
                   const touchY = e.nativeEvent.pageY;
@@ -661,7 +683,7 @@ export default function Index() {
 
               
               {/* Section Title */}
-              <Text style={[styles.title, { color: currentTheme.white, paddingLeft: 30}]}>
+              <Text style={[styles.title, { color: currentTheme.white, paddingLeft: 0}]}>
                 {section.sectionTitle}
               </Text>
               {editMode &&(
