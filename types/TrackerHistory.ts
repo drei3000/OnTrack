@@ -1,7 +1,7 @@
 // Tracker history, one row per day
 export interface TrackerHistory {
-    history_id?: number;           // local Primary key
-    tracker_id: number;            // FK to trackers.tracker_id
+    history_id?: number;           
+    tracker_id: number;            
     date: string;                  // 'YYYY-MM-DD'
     bound_amount: number;
     current_amount: number;

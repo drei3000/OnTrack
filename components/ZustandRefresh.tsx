@@ -48,27 +48,27 @@ export const setupDatabase = async () => {
     const db = await openDatabase();
     console.log("Database initialized");
 
-    await db.execAsync(`
-        PRAGMA foreign_keys = ON;
+    // await db.execAsync(`
+    //     PRAGMA foreign_keys = ON;
 
-        CREATE TABLE IF NOT EXISTS tracker_history (
-            history_id          INTEGER PRIMARY KEY AUTOINCREMENT,
-            tracker_id          INTEGER NOT NULL,
-            date                TEXT    NOT NULL,
-            bound_amount        REAL    NOT NULL,
-            current_amount      REAL    NOT NULL,
-            unit                TEXT,
-            cloud_history_id    INTEGER,
-            last_modified       INTEGER NOT NULL,
-            UNIQUE(tracker_id, date)
-        );
+    //     CREATE TABLE IF NOT EXISTS tracker_history (
+    //         history_id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    //         tracker_id          INTEGER NOT NULL,
+    //         date                TEXT    NOT NULL,x
+    //         bound_amount        REAL    NOT NULL,
+    //         current_amount      REAL    NOT NULL,
+    //         unit                TEXT,
+    //         cloud_history_id    INTEGER,
+    //         last_modified       INTEGER NOT NULL,
+    //         UNIQUE(tracker_id, date)
+    //     );
 
-        CREATE INDEX IF NOT EXISTS idx_history_tracker
-            ON tracker_history (tracker_id);
-        `);
+    //     CREATE INDEX IF NOT EXISTS idx_history_tracker
+    //         ON tracker_history (tracker_id);
+    //     `);
 
-    const { loadHistory } = useHistoryStore.getState();   // CHANGE:
-    await loadHistory();                                  // CHANGE:
+    // const { loadHistory } = useHistoryStore.getState();   // CHANGE:
+    // await loadHistory();                                  // CHANGE:
             
 
     const trackersInfo: TrackerRow[] = await db.getAllAsync("SELECT tracker_id,tracker_name,icon,time_period,unit,bound_amount,current_amount,last_modified FROM trackers");
