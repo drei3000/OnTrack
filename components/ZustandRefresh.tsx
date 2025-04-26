@@ -48,29 +48,6 @@ export const setupDatabase = async () => {
     const db = await openDatabase();
     console.log("Database initialized");
 
-    // await db.execAsync(`
-    //     PRAGMA foreign_keys = ON;
-
-    //     CREATE TABLE IF NOT EXISTS tracker_history (
-    //         history_id          INTEGER PRIMARY KEY AUTOINCREMENT,
-    //         tracker_id          INTEGER NOT NULL,
-    //         date                TEXT    NOT NULL,x
-    //         bound_amount        REAL    NOT NULL,
-    //         current_amount      REAL    NOT NULL,
-    //         unit                TEXT,
-    //         cloud_history_id    INTEGER,
-    //         last_modified       INTEGER NOT NULL,
-    //         UNIQUE(tracker_id, date)
-    //     );
-
-    //     CREATE INDEX IF NOT EXISTS idx_history_tracker
-    //         ON tracker_history (tracker_id);
-    //     `);
-
-    // const { loadHistory } = useHistoryStore.getState();   // CHANGE:
-    // await loadHistory();                                  // CHANGE:
-            
-
     const trackersInfo: TrackerRow[] = await db.getAllAsync("SELECT tracker_id,tracker_name,icon,time_period,unit,bound_amount,current_amount,last_modified FROM trackers");
     const sectionsInfo: SectionRow[] = await db.getAllAsync("SELECT section_id,section_title,time_period,position,last_modified FROM sections");
     const sectionTrackersInfo: SectionTrackerRelation[] = await db.getAllAsync("SELECT section_id,tracker_id,tracker_position FROM section_trackers");
@@ -89,13 +66,17 @@ export const setupDatabase = async () => {
     sectionTrackersInfo.forEach(relation => {
       console.log("sectionID: "+relation.section_id+" trackerID: "+relation.tracker_id+" position: "+relation.tracker_position)
     });
-    
+
     const { setTrackers, addTracker, getTracker } = useTrackerStore.getState();
     const { setSectionsH, addSectionH, initialAddTrackerToSection } = useSectionStore.getState();
 
     // Clear existing state
     setTrackers([]);
     setSectionsH([]);
+
+    // Load all tracker_historiy rows - loadHistory from store.ts
+    await useHistoryStore.getState().loadHistory();
+
 
     var trackersDBFormat: Tracker[] = []; //initialize trackers in db format to set
     const trackers: TrackerRow[] = trackersInfo.map((tracker) => {

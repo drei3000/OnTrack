@@ -1,4 +1,4 @@
-// Tracker history, one row per day
+// Tracker history
 export interface TrackerHistory {
     history_id?: number;           
     tracker_id: number;            
