@@ -16,7 +16,7 @@ Notifications.setNotificationHandler({
     shouldSetBadge: false,
   }),
 });
-
+/*
 export const deleteDatabase = async () => {
   try {
     // Provide the correct database name that you want to delete
@@ -26,7 +26,7 @@ export const deleteDatabase = async () => {
     console.error('Failed to delete database:', error);
   }
 };
-
+*/
 export default function Layout() {
   //deleteDatabase();
   const notificationMessages = [
