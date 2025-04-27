@@ -546,6 +546,7 @@ export default function Index() {
           flexDirection: 'row',
           paddingTop: insets.top,
           zIndex: 1,
+          //borderColor: 'white'
         }
       ]}>
         <Pressable
@@ -555,7 +556,7 @@ export default function Index() {
             router.push("/userLoggedIn")
           }
         }}
-          style={[ { backgroundColor: currentTheme["101010"], height: '100%', aspectRatio: 1, borderWidth: 1, justifyContent: 'center', alignItems: 'center' }]}
+          style={[ { backgroundColor: currentTheme["101010"], height: '100%', aspectRatio: 1, justifyContent: 'center', alignItems: 'center' }]}
         >
           <MaterialCommunityIcons name="account" size={40} color={currentTheme.white} />
         </Pressable>
@@ -596,7 +597,7 @@ export default function Index() {
         </View>
         <Pressable
           onPress={() => router.push("/newTrackerView")}
-          style={[ { backgroundColor: currentTheme["101010"], height: '100%', aspectRatio: 1, borderWidth: 1, justifyContent: 'center', alignItems: 'center' }]}
+          style={[ { backgroundColor: currentTheme["101010"], height: '100%', aspectRatio: 1, justifyContent: 'center', alignItems: 'center' }]}
         >
           <Entypo name="plus" size={40} color={currentTheme.white} />
         </Pressable>

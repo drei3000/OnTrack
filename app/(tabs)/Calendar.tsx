@@ -17,6 +17,14 @@ import { Section } from "@/types/Section";
 import { getImage } from "../trackerList"; 
 import { getIconInfo } from "@/types/Misc"; 
 import { useAuth } from "../LoginContext";
+import { openDatabaseSync } from "expo-sqlite";
+import { openDatabase } from "@/storage/sqlite";
+
+
+moment.updateLocale('en', {
+    week: { dow: 1, // Monday is the first day of the week
+    },
+  });
 
 const hexToRgba = (hex: string, alpha: number): string => {
     const h = hex.replace('#', '');
@@ -41,6 +49,57 @@ export default function Index() {
 
     // Selected date state
     const [selectedDate, setSelectedDate] = useState<string>(moment().format("YYYY-MM-DD"));
+    const [nameCurrentBound, setNameCurrentBound] = useState<{name: String,current: number, bound: number}[] | undefined>(undefined);
+
+    useEffect(() => {
+        setNameCurrentBound(undefined);
+    },[selected])
+    useEffect(() => {
+        console.log("CURRENT DATE: "+selectedDate)
+        const fetchData = async() => {
+            if(selectedDate != moment().format("YYYY-MM-DD")){
+            try{
+                const db = await openDatabase();
+                const nameCurrentBounds: { name: string, current: number, bound: number }[] = [];
+
+                for (const section of sections) {
+                    if (section.timePeriod === selected) {
+                      for (const tracker of section.trackers) {
+                        // fetch tracker_id from name (time period already unwrapped)
+                        const trackerIdResult = await db.getFirstAsync(
+                          `SELECT tracker_id FROM trackers WHERE tracker_name = ?`,
+                          [tracker.trackerName]
+                        ) as { tracker_id: number } | undefined;
+              
+                        if (trackerIdResult) {
+                          const tracker_id = trackerIdResult.tracker_id;
+              
+                          // tracker_id bound_amount and goal_amount for that tracker_id
+                          const results = await db.getFirstAsync(
+                            `SELECT bound_amount, current_amount
+                             FROM tracker_history
+                             WHERE tracker_id = ? AND Date = ?`,
+                            [tracker_id, selectedDate]
+                          ) as {bound_amount: number, current_amount: number } | undefined;
+                          if(results != undefined){
+                            nameCurrentBounds.push({name : tracker.trackerName, current: results.current_amount, bound:  results.bound_amount});
+                          }else{
+                            nameCurrentBounds.push({name : tracker.trackerName, current: 0, bound: 0});
+                          }
+                        }
+                      }
+                    }
+                  }
+                  setNameCurrentBound(nameCurrentBounds);
+
+                  
+            }catch(err){console.log("error: "+err)}
+        }else{
+            setNameCurrentBound(undefined);
+        }
+    }
+    fetchData();
+    },[selectedDate])
 
     // Zustand data constants
     const trackers = useTrackerStore((state) => state.trackers);
@@ -90,7 +149,7 @@ export default function Index() {
     if (selected === "Daily") {
         setSelectedDate(moment().format("YYYY-MM-DD"));
     } else if (selected === "Weekly") {
-        setSelectedDate(moment().startOf("week").format("YYYY-MM-DD"));
+        setSelectedDate(moment().startOf('isoWeek').format("YYYY-MM-DD"));
     } else if (selected === "Monthly") {
         setSelectedDate(moment().startOf("month").format("YYYY-MM-DD"));
     }
@@ -124,7 +183,7 @@ export default function Index() {
             router.push("/userLoggedIn")
           }
         }}
-          style={[ { backgroundColor: currentTheme["101010"], height: '100%', aspectRatio: 1, borderWidth: 1, justifyContent: 'center', alignItems: 'center' }]}
+          style={[ { backgroundColor: currentTheme["101010"], height: '100%', aspectRatio: 1,justifyContent: 'center', alignItems: 'center' }]}
         >
           <MaterialCommunityIcons name="account" size={40} color={currentTheme.white} />
         </Pressable>
@@ -166,7 +225,7 @@ export default function Index() {
         </View>
         <Pressable
           onPress={() => router.push("/newTrackerView")}
-          style={[ { backgroundColor: currentTheme["101010"], height: '100%', aspectRatio: 1, borderWidth: 1, justifyContent: 'center', alignItems: 'center' }]}
+          style={[ { backgroundColor: currentTheme["101010"], height: '100%', aspectRatio: 1, justifyContent: 'center', alignItems: 'center' }]}
         >
           <Entypo name="plus" size={40} color={currentTheme.white} />
         </Pressable>
@@ -220,11 +279,27 @@ export default function Index() {
                 const iconName = getIconInfo(tracker.icon).name;
                 const emptyBackgroundColor = hexToRgba(getIconInfo(tracker.icon).color, 0.15);
                 const fillBackgroundColor = hexToRgba(getIconInfo(tracker.icon).color, 0.5);
-                const bound = tracker.bound ?? 0;
-                const currentProgress = bound !== 0? Math.min(1, tracker.currentAmount / Math.abs(bound)) : 0;
+                //get current nameCurrentBound info
+                let ncm = 
+                    nameCurrentBound ?  // if nameCurrentBound is valid
+                    (nameCurrentBound.find((ncm) => ncm.name === tracker.trackerName) // find with explicit return
+                    ) as {name: string, current: number, bound: number} 
+                    : {name: tracker.trackerName, current: 0, bound: 0};
+                ncm = ncm === undefined  ? {name: tracker.trackerName, current: 0, bound: 0} : ncm;
+                const bound = 
+                (selected === "Daily") ? (selectedDate === moment().format('YYYY-MM-DD') ? (tracker.bound ?? 0) : (ncm.bound))
+                : (selected === 'Weekly') ?(selectedDate === moment().startOf('isoWeek').format('YYYY-MM-DD') ? (tracker.bound ?? 0) : (ncm.bound))
+                : (selectedDate === moment().startOf('month').format('YYYY-MM-DD') ? (tracker.bound ?? 0) : (ncm.bound)); //bound is got form currentBound if not the current date
+                const current = 
+                (selected === "Daily") ? (selectedDate === moment().format('YYYY-MM-DD') ? (tracker.currentAmount ?? 0) : (ncm.current))
+                : (selected === 'Weekly') ?(selectedDate === moment().startOf('isoWeek').format('YYYY-MM-DD') ? (tracker.currentAmount ?? 0) : (ncm.current))
+                : (selectedDate === moment().startOf('month').format('YYYY-MM-DD') ? (tracker.currentAmount ?? 0) : (ncm.current)); //bound is got form currentBound if not the current date
+
+                const currentProgress = (bound !== 0? Math.min(1, current / Math.abs(bound)) : 0) ;
 
                 // To test progress values, maybe add animations?
                 // const currentProgress = 0.6; 
+
 
                 return (
                     // Renders trackers, and their progress
@@ -235,7 +310,8 @@ export default function Index() {
                         <View style={{ position: "absolute", top: 0, left: 0, height: "100%", width: `${currentProgress * 100}%`, backgroundColor: fillBackgroundColor }} />
 
                     <Pressable
-                        onPress={() =>
+                        onPress={() =>{
+                        if (selectedDate === moment().format('YYYY-MM-DD')){
                         router.push({
                             pathname: "/editTracker",
                             params: {
@@ -246,6 +322,9 @@ export default function Index() {
                             },
                         })
                         }
+                    }
+                        }
+
                         style={buttonContentWrapper}
                     >
                         {
