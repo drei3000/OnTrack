@@ -157,90 +157,98 @@ export default function Index() {
 
     // Dynamic and static rendering
     return (
-    <SafeAreaView
-        style={[styles.calendarContainer, { backgroundColor: currentTheme["101010"], flexDirection: 'column' }]}
-    >
+    //whole screen
+    <SafeAreaView style={[
+      styles.safeArea, { 
+      //position: 'relative',
+      //backgroundColor: c',
+      backgroundColor: currentTheme["101010"],
+     }]}>
+      <View
+      style = {[{
+        minHeight: '100%',
+        backgroundColor: currentTheme['101010'],
+      }]}>
+
         <StatusBar style="light" />
         {/* Header buttons */}
+        {/* Top view row */}
         <View style={[
-        {
-          backgroundColor: currentTheme['101010'],
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: insets.top + 60,
-          alignContent: 'center',
-          flexDirection: 'row',
-          paddingTop: insets.top,
-          zIndex: 1,
-        }
-      ]}>
-        <Pressable
-          onPress={() => {if (user === null){
-            router.push("/Profile")} 
-          else{
-            router.push("/userLoggedIn")
-          }
-        }}
-          style={[ { backgroundColor: currentTheme["101010"], height: '100%', aspectRatio: 1,justifyContent: 'center', alignItems: 'center' }]}
-        >
-          <MaterialCommunityIcons name="account" size={40} color={currentTheme.white} />
-        </Pressable>
-        <View
-          style = {[
             {
-              flex: 1,
-              height: '100%',
-              flexDirection: 'row'
+            backgroundColor: currentTheme['101010'],
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 60,
+            alignContent: 'center',
+            flexDirection: 'row',
+            //paddingTop: insets.top,
+            zIndex: 1,
+            //borderColor: 'white'
             }
-          ]}
-        >
-        {buttons.map((btn) => (
-          <TouchableOpacity
-            key={btn}
-            style={{
-              flex: 1,
-              
-              alignItems: "center",
-              justifyContent: "center",
-              paddingHorizontal: 0,
-              paddingVertical: 8,
-              borderRadius: 10,
-              backgroundColor: "transparent", // Always transparent
+        ]}>
+            <Pressable
+            onPress={() => {if (user === null){
+                router.push("/Profile")} 
+            else{
+                router.push("/userLoggedIn")
+            }
             }}
-            onPress={() => setSelected(btn)}
-          >
-            <Text
-              style={{
-                color: selected === btn ? currentTheme.white : currentTheme.gray,
-                fontWeight: selected === btn ? "bold" : "500",
-                fontSize: selected === btn ? 15.1 : 15,
-              }}
+            style={[ { backgroundColor: currentTheme["101010"], height: '100%', aspectRatio: 1, justifyContent: 'center', alignItems: 'center' }]}
             >
-              {btn}
-            </Text>
-          </TouchableOpacity>
-        ))}
-        </View>
-        <Pressable
-          onPress={() => router.push("/newTrackerView")}
-          style={[ { backgroundColor: currentTheme["101010"], height: '100%', aspectRatio: 1, justifyContent: 'center', alignItems: 'center' }]}
-        >
-          <Entypo name="plus" size={40} color={currentTheme.white} />
-        </Pressable>
+            <MaterialCommunityIcons name="account" size={40} color={currentTheme.white} />
+            </Pressable>
+            <View
+            style = {[
+                {
+                flex: 1,
+                height: '100%',
+                flexDirection: 'row'
+                }
+            ]}
+            >
+            {buttons.map((btn) => (
+            <TouchableOpacity
+                key={btn}
+                style={{
+                flex: 1,
+                alignItems: "center",
+                justifyContent: "center",
+                paddingHorizontal: 0,
+                paddingVertical: 8,
+                borderRadius: 10,
+                backgroundColor: "transparent", // Always transparent
+                }}
+                onPress={() => setSelected(btn)}
+            >
+                <Text
+                style={{
+                    color: selected === btn ? currentTheme.white : currentTheme.gray,
+                    fontWeight: selected === btn ? "bold" : "500",
+                    fontSize: selected === btn ? 15.1 : 15,
+                }}
+                >
+                {btn}
+                </Text>
+            </TouchableOpacity>
+            ))}
+            </View>
+            <Pressable
+            onPress={() => router.push("/newTrackerView")}
+            style={[ { backgroundColor: currentTheme["101010"], height: '100%', aspectRatio: 1, justifyContent: 'center', alignItems: 'center' }]}
+            >
+            <Entypo name="plus" size={40} color={currentTheme.white} />
+            </Pressable>
         </View>
 
         {/* Calendar horizontal scroll */}
         <View
         style = {[{
-            height: 90,
+            height: 80,
             paddingTop: 5,
             alignItems: 'center',
             alignContent: 'center',
             justifyContent: 'center',
-            //backgroundColor: 'red',
-            marginTop: insets.top,
         }]}>
         <Calendar onSelectDate={setSelectedDate} selected={selectedDate || ""} mode={selected} />
         </View>
@@ -341,15 +349,21 @@ export default function Index() {
             </View>
             ))}
         </ScrollView>
+        </View>
     </SafeAreaView>
     );
 }
 
 // Stylesheet for stattic styles only
 const styles = StyleSheet.create({
+    safeArea: {
+        flex: 1,
+        justifyContent: "flex-start",
+        alignItems: "center",
+      },
   calendarContainer: {
-    flex: 1,
-    //flexDirection: 'column',
+    //flex: 1,
+    flexDirection: 'column',
     alignItems: "center",
   },
   header: {
