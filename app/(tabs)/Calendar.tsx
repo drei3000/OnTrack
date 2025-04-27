@@ -180,6 +180,7 @@ export default function Index() {
             left: 0,
             right: 0,
             height: 60,
+            width: '100%',
             alignContent: 'center',
             flexDirection: 'row',
             //paddingTop: insets.top,
