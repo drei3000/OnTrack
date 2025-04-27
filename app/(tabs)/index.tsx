@@ -15,7 +15,7 @@ import { useTrackerStore } from "@/storage/store"; // Import the Zustand store
 import { getImage } from "../trackerList"; // Import the getImage function
 import { CalendarProps } from "../../components/CalendarComponent";
 import NewSectionModal from "@/components/SectionModal";
-
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getIconInfo } from "@/types/Misc";
 
 import { useSectionStore } from "@/storage/store";
@@ -46,8 +46,9 @@ const sidesPadding = 16; // for grid mostly
 const itemSize = (screenWidth - totalSpacing - sidesPadding * 2) / itemsPerRow;
 const tabs = 120;
 const marginBetweenSections = 15;
-export default function Index() {
 
+export default function Index() {
+  const insets = useSafeAreaInsets();
   
   const router = useRouter();
   const { currentTheme } = useTheme(); // Get the current theme from context
@@ -528,10 +529,25 @@ export default function Index() {
 
   return (
     //whole screen
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: currentTheme["101010"] }]}>
-      <StatusBar style="light" />
-      {/* This view is for the top-left and top-right icons */}
-      <View style={styles.topRow}>
+    <SafeAreaView style={[styles.safeArea, { 
+      position: 'relative',
+    backgroundColor: currentTheme["101010"], }]}>
+      {/*<StatusBar style="light" />*/}
+      {/* Top view row */}
+      <View style={[
+        {
+          backgroundColor: currentTheme['101010'],
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: insets.top + 60,
+          alignContent: 'center',
+          flexDirection: 'row',
+          paddingTop: insets.top,
+          zIndex: 1,
+        }
+      ]}>
         <Pressable
           onPress={() => {if (user === null){
             router.push("/Profile")} 
@@ -539,10 +555,19 @@ export default function Index() {
             router.push("/userLoggedIn")
           }
         }}
-          style={[styles.cornerButton, { backgroundColor: currentTheme["101010"] }]}
+          style={[ { backgroundColor: currentTheme["101010"], height: '100%', aspectRatio: 1, borderWidth: 1, justifyContent: 'center', alignItems: 'center' }]}
         >
           <MaterialCommunityIcons name="account" size={40} color={currentTheme.white} />
         </Pressable>
+        <View
+          style = {[
+            {
+              flex: 1,
+              height: '100%',
+              flexDirection: 'row'
+            }
+          ]}
+        >
         {buttons.map((btn) => (
           <TouchableOpacity
             key={btn}
@@ -550,7 +575,7 @@ export default function Index() {
               flex: 1,
               alignItems: "center",
               justifyContent: "center",
-              paddingHorizontal: 16,
+              paddingHorizontal: 0,
               paddingVertical: 8,
               borderRadius: 10,
               backgroundColor: "transparent", // Always transparent
@@ -568,9 +593,10 @@ export default function Index() {
             </Text>
           </TouchableOpacity>
         ))}
+        </View>
         <Pressable
           onPress={() => router.push("/newTrackerView")}
-          style={[styles.cornerButton, { backgroundColor: currentTheme["101010"] }]}
+          style={[ { backgroundColor: currentTheme["101010"], height: '100%', aspectRatio: 1, borderWidth: 1, justifyContent: 'center', alignItems: 'center' }]}
         >
           <Entypo name="plus" size={40} color={currentTheme.white} />
         </Pressable>
@@ -616,6 +642,7 @@ export default function Index() {
         {
           width: 100,
           height:100,
+          marginTop: 60 + 28,
         }
         ]}>
           <Progress.Circle
@@ -841,7 +868,8 @@ export default function Index() {
                     setTargetSection(section);     // Store selected section
                     setIsModalVisible(true);       // Show modal
                   }}
-                  style={squareIconButtonStyle(itemSize)
+                  style={
+                    squareIconButtonStyle(itemSize)
                     
                   }
                 >

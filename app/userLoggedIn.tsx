@@ -2,8 +2,8 @@ import React from 'react';
 import { View, Text, StyleSheet, SafeAreaView, Pressable, Dimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useTheme } from './ThemeContext';  // Import the ThemeContext
-import { useAuth } from './LoginContext';  // Import the LoginContext
+import { useTheme } from './ThemeContext';
+import { useAuth } from './LoginContext'; 
 import { CommonStyles } from './CommonStyles';
 
 const width = Dimensions.get('window').width - 1;
@@ -16,7 +16,7 @@ export default function Profile() {
 
   const handleLogout = async () => {
     await logout();  // Call the logout function to log the user out
-    router.push("/");  // Redirect to the home page (or another page of your choice)
+    router.push("/");  // Redirect to the home page
   };
 
   return (
@@ -34,7 +34,6 @@ export default function Profile() {
         ) : (
           <Text style={{ color: currentTheme.lightblue }}>You are not logged in.</Text>
         )}
-
         {/* Logout Button */}
         {user && (
           <Pressable onPress={handleLogout} style={commonStyles.button}>

@@ -5,7 +5,7 @@ import { useTheme } from "../ThemeContext"; // Import the ThemeContext
 
 export default function TabLayout() {
   const { currentTheme } = useTheme(); // Access the current theme from ThemeContext
-  
+
   return (
     <Tabs
       screenOptions={{
