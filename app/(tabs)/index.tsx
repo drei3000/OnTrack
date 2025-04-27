@@ -551,7 +551,8 @@ export default function Index() {
           left: 0,
           right: 0,
           height: 60,
-          alignContent: 'center',
+          width: '100%',
+          //alignContent: 'center',
           flexDirection: 'row',
           //paddingTop: insets.top,
           zIndex: 1,
@@ -565,7 +566,7 @@ export default function Index() {
             router.push("/userLoggedIn")
           }
         }}
-          style={[ { backgroundColor: currentTheme["101010"], height: '100%', aspectRatio: 1, justifyContent: 'center', alignItems: 'center' }]}
+          style={[ { backgroundColor: currentTheme["101010"], height: '100%', aspectRatio: 1, justifyContent: 'center', alignItems: 'center'}]}
         >
           <MaterialCommunityIcons name="account" size={40} color={currentTheme.white} />
         </Pressable>
