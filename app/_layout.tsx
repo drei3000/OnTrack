@@ -5,7 +5,9 @@ import { ThemeProvider } from "./ThemeContext";
 import { setupDatabase } from "@/components/ZustandRefresh";
 import { LoginProvider } from './LoginContext';
 import * as Notifications from "expo-notifications";
-
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { SQLiteDatabase } from "expo-sqlite";
+import * as SQLite from 'expo-sqlite';
 // Set notification handler
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -15,8 +17,18 @@ Notifications.setNotificationHandler({
   }),
 });
 
-export default function Layout() {
+export const deleteDatabase = async () => {
+  try {
+    // Provide the correct database name that you want to delete
+    await SQLite.deleteDatabaseAsync('app.db');
+    console.log('Database deleted successfully');
+  } catch (error) {
+    console.error('Failed to delete database:', error);
+  }
+};
 
+export default function Layout() {
+  //deleteDatabase();
   const notificationMessages = [
     "Stay on track! Remember, every step counts!",
     "Keep pushing forward! You're doing great!",
@@ -31,12 +43,17 @@ export default function Layout() {
 
   const randomMessage = notificationMessages[Math.floor(Math.random() * notificationMessages.length)];
 
+  
+  
   // Runs on app launch
   useEffect(() => {
+    
     setupDatabase();
+      
+
     NavigationBar.setPositionAsync("absolute");
     NavigationBar.setBackgroundColorAsync("transparent");
-  }, []); // Empty dependency array ensures this runs only once
+  }, []); // runs once
 
   // Request notification permissions
   useEffect(() => {
