@@ -17,6 +17,14 @@ import { Section } from "@/types/Section";
 import { getImage } from "../trackerList"; 
 import { getIconInfo } from "@/types/Misc"; 
 import { useAuth } from "../LoginContext";
+import { openDatabaseSync } from "expo-sqlite";
+import { openDatabase } from "@/storage/sqlite";
+
+
+moment.updateLocale('en', {
+    week: { dow: 1, // Monday is the first day of the week
+    },
+  });
 
 const hexToRgba = (hex: string, alpha: number): string => {
     const h = hex.replace('#', '');
@@ -41,6 +49,57 @@ export default function Index() {
 
     // Selected date state
     const [selectedDate, setSelectedDate] = useState<string>(moment().format("YYYY-MM-DD"));
+    const [nameCurrentBound, setNameCurrentBound] = useState<{name: String,current: number, bound: number}[] | undefined>(undefined);
+
+    useEffect(() => {
+        setNameCurrentBound(undefined);
+    },[selected])
+    useEffect(() => {
+        console.log("CURRENT DATE: "+selectedDate)
+        const fetchData = async() => {
+            if(selectedDate != moment().format("YYYY-MM-DD")){
+            try{
+                const db = await openDatabase();
+                const nameCurrentBounds: { name: string, current: number, bound: number }[] = [];
+
+                for (const section of sections) {
+                    if (section.timePeriod === selected) {
+                      for (const tracker of section.trackers) {
+                        // fetch tracker_id from name (time period already unwrapped)
+                        const trackerIdResult = await db.getFirstAsync(
+                          `SELECT tracker_id FROM trackers WHERE tracker_name = ?`,
+                          [tracker.trackerName]
+                        ) as { tracker_id: number } | undefined;
+              
+                        if (trackerIdResult) {
+                          const tracker_id = trackerIdResult.tracker_id;
+              
+                          // tracker_id bound_amount and goal_amount for that tracker_id
+                          const results = await db.getFirstAsync(
+                            `SELECT bound_amount, current_amount
+                             FROM tracker_history
+                             WHERE tracker_id = ? AND Date = ?`,
+                            [tracker_id, selectedDate]
+                          ) as {bound_amount: number, current_amount: number } | undefined;
+                          if(results != undefined){
+                            nameCurrentBounds.push({name : tracker.trackerName, current: results.current_amount, bound:  results.bound_amount});
+                          }else{
+                            nameCurrentBounds.push({name : tracker.trackerName, current: 0, bound: 0});
+                          }
+                        }
+                      }
+                    }
+                  }
+                  setNameCurrentBound(nameCurrentBounds);
+
+                  
+            }catch(err){console.log("error: "+err)}
+        }else{
+            setNameCurrentBound(undefined);
+        }
+    }
+    fetchData();
+    },[selectedDate])
 
     // Zustand data constants
     const trackers = useTrackerStore((state) => state.trackers);
@@ -90,7 +149,7 @@ export default function Index() {
     if (selected === "Daily") {
         setSelectedDate(moment().format("YYYY-MM-DD"));
     } else if (selected === "Weekly") {
-        setSelectedDate(moment().startOf("week").format("YYYY-MM-DD"));
+        setSelectedDate(moment().startOf('isoWeek').format("YYYY-MM-DD"));
     } else if (selected === "Monthly") {
         setSelectedDate(moment().startOf("month").format("YYYY-MM-DD"));
     }
@@ -98,90 +157,99 @@ export default function Index() {
 
     // Dynamic and static rendering
     return (
-    <SafeAreaView
-        style={[styles.calendarContainer, { backgroundColor: currentTheme["101010"], flexDirection: 'column' }]}
-    >
+    //whole screen
+    <SafeAreaView style={[
+      styles.safeArea, { 
+      //position: 'relative',
+      //backgroundColor: c',
+      backgroundColor: currentTheme["101010"],
+     }]}>
+      <View
+      style = {[{
+        minHeight: '100%',
+        backgroundColor: currentTheme['101010'],
+      }]}>
+
         <StatusBar style="light" />
         {/* Header buttons */}
+        {/* Top view row */}
         <View style={[
-        {
-          backgroundColor: currentTheme['101010'],
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: insets.top + 60,
-          alignContent: 'center',
-          flexDirection: 'row',
-          paddingTop: insets.top,
-          zIndex: 1,
-        }
-      ]}>
-        <Pressable
-          onPress={() => {if (user === null){
-            router.push("/Profile")} 
-          else{
-            router.push("/userLoggedIn")
-          }
-        }}
-          style={[ { backgroundColor: currentTheme["101010"], height: '100%', aspectRatio: 1, borderWidth: 1, justifyContent: 'center', alignItems: 'center' }]}
-        >
-          <MaterialCommunityIcons name="account" size={40} color={currentTheme.white} />
-        </Pressable>
-        <View
-          style = {[
             {
-              flex: 1,
-              height: '100%',
-              flexDirection: 'row'
+            backgroundColor: currentTheme['101010'],
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 60,
+            width: '100%',
+            alignContent: 'center',
+            flexDirection: 'row',
+            //paddingTop: insets.top,
+            zIndex: 1,
+            //borderColor: 'white'
             }
-          ]}
-        >
-        {buttons.map((btn) => (
-          <TouchableOpacity
-            key={btn}
-            style={{
-              flex: 1,
-              
-              alignItems: "center",
-              justifyContent: "center",
-              paddingHorizontal: 0,
-              paddingVertical: 8,
-              borderRadius: 10,
-              backgroundColor: "transparent", // Always transparent
+        ]}>
+            <Pressable
+            onPress={() => {if (user === null){
+                router.push("/Profile")} 
+            else{
+                router.push("/userLoggedIn")
+            }
             }}
-            onPress={() => setSelected(btn)}
-          >
-            <Text
-              style={{
-                color: selected === btn ? currentTheme.white : currentTheme.gray,
-                fontWeight: selected === btn ? "bold" : "500",
-                fontSize: selected === btn ? 15.1 : 15,
-              }}
+            style={[ { backgroundColor: currentTheme["101010"], height: '100%', aspectRatio: 1, justifyContent: 'center', alignItems: 'center' }]}
             >
-              {btn}
-            </Text>
-          </TouchableOpacity>
-        ))}
-        </View>
-        <Pressable
-          onPress={() => router.push("/newTrackerView")}
-          style={[ { backgroundColor: currentTheme["101010"], height: '100%', aspectRatio: 1, borderWidth: 1, justifyContent: 'center', alignItems: 'center' }]}
-        >
-          <Entypo name="plus" size={40} color={currentTheme.white} />
-        </Pressable>
+            <MaterialCommunityIcons name="account" size={40} color={currentTheme.white} />
+            </Pressable>
+            <View
+            style = {[
+                {
+                flex: 1,
+                height: '100%',
+                flexDirection: 'row'
+                }
+            ]}
+            >
+            {buttons.map((btn) => (
+            <TouchableOpacity
+                key={btn}
+                style={{
+                flex: 1,
+                alignItems: "center",
+                justifyContent: "center",
+                paddingHorizontal: 0,
+                paddingVertical: 8,
+                borderRadius: 10,
+                backgroundColor: "transparent", // Always transparent
+                }}
+                onPress={() => setSelected(btn)}
+            >
+                <Text
+                style={{
+                    color: selected === btn ? currentTheme.white : currentTheme.gray,
+                    fontWeight: selected === btn ? "bold" : "500",
+                    fontSize: selected === btn ? 15.1 : 15,
+                }}
+                >
+                {btn}
+                </Text>
+            </TouchableOpacity>
+            ))}
+            </View>
+            <Pressable
+            onPress={() => router.push("/newTrackerView")}
+            style={[ { backgroundColor: currentTheme["101010"], height: '100%', aspectRatio: 1, justifyContent: 'center', alignItems: 'center' }]}
+            >
+            <Entypo name="plus" size={40} color={currentTheme.white} />
+            </Pressable>
         </View>
 
         {/* Calendar horizontal scroll */}
         <View
         style = {[{
-            height: 90,
+            height: 80,
             paddingTop: 5,
             alignItems: 'center',
             alignContent: 'center',
             justifyContent: 'center',
-            //backgroundColor: 'red',
-            marginTop: insets.top,
         }]}>
         <Calendar onSelectDate={setSelectedDate} selected={selectedDate || ""} mode={selected} />
         </View>
@@ -220,11 +288,27 @@ export default function Index() {
                 const iconName = getIconInfo(tracker.icon).name;
                 const emptyBackgroundColor = hexToRgba(getIconInfo(tracker.icon).color, 0.15);
                 const fillBackgroundColor = hexToRgba(getIconInfo(tracker.icon).color, 0.5);
-                const bound = tracker.bound ?? 0;
-                const currentProgress = bound !== 0? Math.min(1, tracker.currentAmount / Math.abs(bound)) : 0;
+                //get current nameCurrentBound info
+                let ncm = 
+                    nameCurrentBound ?  // if nameCurrentBound is valid
+                    (nameCurrentBound.find((ncm) => ncm.name === tracker.trackerName) // find with explicit return
+                    ) as {name: string, current: number, bound: number} 
+                    : {name: tracker.trackerName, current: 0, bound: 0};
+                ncm = ncm === undefined  ? {name: tracker.trackerName, current: 0, bound: 0} : ncm;
+                const bound = 
+                (selected === "Daily") ? (selectedDate === moment().format('YYYY-MM-DD') ? (tracker.bound ?? 0) : (ncm.bound))
+                : (selected === 'Weekly') ?(selectedDate === moment().startOf('isoWeek').format('YYYY-MM-DD') ? (tracker.bound ?? 0) : (ncm.bound))
+                : (selectedDate === moment().startOf('month').format('YYYY-MM-DD') ? (tracker.bound ?? 0) : (ncm.bound)); //bound is got form currentBound if not the current date
+                const current = 
+                (selected === "Daily") ? (selectedDate === moment().format('YYYY-MM-DD') ? (tracker.currentAmount ?? 0) : (ncm.current))
+                : (selected === 'Weekly') ?(selectedDate === moment().startOf('isoWeek').format('YYYY-MM-DD') ? (tracker.currentAmount ?? 0) : (ncm.current))
+                : (selectedDate === moment().startOf('month').format('YYYY-MM-DD') ? (tracker.currentAmount ?? 0) : (ncm.current)); //bound is got form currentBound if not the current date
+
+                const currentProgress = (bound !== 0? Math.min(1, current / Math.abs(bound)) : 0) ;
 
                 // To test progress values, maybe add animations?
                 // const currentProgress = 0.6; 
+
 
                 return (
                     // Renders trackers, and their progress
@@ -235,7 +319,8 @@ export default function Index() {
                         <View style={{ position: "absolute", top: 0, left: 0, height: "100%", width: `${currentProgress * 100}%`, backgroundColor: fillBackgroundColor }} />
 
                     <Pressable
-                        onPress={() =>
+                        onPress={() =>{
+                        if (selectedDate === moment().format('YYYY-MM-DD')){
                         router.push({
                             pathname: "/editTracker",
                             params: {
@@ -246,6 +331,9 @@ export default function Index() {
                             },
                         })
                         }
+                    }
+                        }
+
                         style={buttonContentWrapper}
                     >
                         {
@@ -262,15 +350,21 @@ export default function Index() {
             </View>
             ))}
         </ScrollView>
+        </View>
     </SafeAreaView>
     );
 }
 
 // Stylesheet for stattic styles only
 const styles = StyleSheet.create({
+    safeArea: {
+        flex: 1,
+        justifyContent: "flex-start",
+        alignItems: "center",
+      },
   calendarContainer: {
-    flex: 1,
-    //flexDirection: 'column',
+    //flex: 1,
+    flexDirection: 'column',
     alignItems: "center",
   },
   header: {

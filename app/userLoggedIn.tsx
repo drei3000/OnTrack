@@ -16,7 +16,9 @@ export default function Profile() {
 
   const handleLogout = async () => {
     await logout();  // Call the logout function to log the user out
-    router.push("/");  // Redirect to the home page
+    setTimeout(() => {
+      router.back(); // Navigate back after a tiny delay
+    }, 100)  // Redirect to the home page
   };
 
   return (

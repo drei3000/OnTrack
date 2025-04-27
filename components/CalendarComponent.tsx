@@ -4,6 +4,11 @@ import moment, { Moment } from 'moment';
 import Date from './DateComponent'; 
 import { useTheme } from '../app/ThemeContext'; // Import useTheme
 
+moment.updateLocale('en', {
+  week: { dow: 1, // Monday is the first day of the week
+  },
+});
+
 // Prop types for the Calendar component
 export interface CalendarProps {
   onSelectDate: (date: string) => void;
@@ -36,7 +41,7 @@ const Calendar: React.FC<CalendarProps> = ({ onSelectDate, selected, mode }) => 
     const _weeks: Moment[] = [];
     for (let i = -5; i <= 5; i++) {
       // Start of the week (Sunday by default, can be Monday if you configure moment locale)
-      const startOfWeek = moment().add(i, 'weeks').startOf('week');
+      const startOfWeek = moment().add(i, 'weeks').startOf('isoWeek');
       _weeks.push(startOfWeek);
     }
     setDates(_weeks);
