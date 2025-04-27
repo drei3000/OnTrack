@@ -87,12 +87,12 @@ export default function Index() {
   const ThresholdsFunc = (centralIndex: number, heights: number[]): number[] => {
     const thresholdsToReturn = new Array(heights.length).fill(0);
 
-    // Forward (right of centralIndex)
+    // right of centralIndex
     for (let i = centralIndex + 1; i <= heights.length - 1; i++) {
       thresholdsToReturn[i] = thresholdsToReturn[i - 1] + heights[i - 1] + marginBetweenSections+2;
     }
   
-    // Backward (left of centralIndex)
+    // left of centralIndex
     for (let i = centralIndex - 1; i >= 0; i--) {
       thresholdsToReturn[i] = - heights[i] + thresholdsToReturn[i + 1] - marginBetweenSections - 2;
     }
@@ -529,23 +529,33 @@ export default function Index() {
 
   return (
     //whole screen
-    <SafeAreaView style={[styles.safeArea, { 
-      position: 'relative',
-    backgroundColor: currentTheme["101010"], }]}>
+    <SafeAreaView style={[
+      styles.safeArea, { 
+      //position: 'relative',
+      //backgroundColor: c',
+      backgroundColor: currentTheme["101010"],
+     }]}>
+      <View
+      style = {[{
+        minHeight: '100%',
+        backgroundColor: currentTheme['101010'],
+      }]}>
+
+      
       {/*<StatusBar style="light" />*/}
       {/* Top view row */}
       <View style={[
         {
           backgroundColor: currentTheme['101010'],
-          position: 'absolute',
           top: 0,
           left: 0,
           right: 0,
-          height: insets.top + 60,
+          height: 60,
           alignContent: 'center',
           flexDirection: 'row',
-          paddingTop: insets.top,
+          //paddingTop: insets.top,
           zIndex: 1,
+          //borderColor: 'white'
         }
       ]}>
         <Pressable
@@ -555,7 +565,7 @@ export default function Index() {
             router.push("/userLoggedIn")
           }
         }}
-          style={[ { backgroundColor: currentTheme["101010"], height: '100%', aspectRatio: 1, borderWidth: 1, justifyContent: 'center', alignItems: 'center' }]}
+          style={[ { backgroundColor: currentTheme["101010"], height: '100%', aspectRatio: 1, justifyContent: 'center', alignItems: 'center' }]}
         >
           <MaterialCommunityIcons name="account" size={40} color={currentTheme.white} />
         </Pressable>
@@ -596,13 +606,16 @@ export default function Index() {
         </View>
         <Pressable
           onPress={() => router.push("/newTrackerView")}
-          style={[ { backgroundColor: currentTheme["101010"], height: '100%', aspectRatio: 1, borderWidth: 1, justifyContent: 'center', alignItems: 'center' }]}
+          style={[ { backgroundColor: currentTheme["101010"], height: '100%', aspectRatio: 1, justifyContent: 'center', alignItems: 'center' }]}
         >
           <Entypo name="plus" size={40} color={currentTheme.white} />
         </Pressable>
       </View>
 
       <ScrollView
+      style = {[{
+        flex: 1,
+      }]}
         onLayout={(e) => {
           layoutHeightRef.current = e.nativeEvent.layout.height;
         }}
@@ -642,7 +655,7 @@ export default function Index() {
         {
           width: 100,
           height:100,
-          marginTop: 60 + 28,
+          //marginTop: 10,
         }
         ]}>
           <Progress.Circle
@@ -973,6 +986,7 @@ export default function Index() {
         />
         </Pressable>
       </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }
